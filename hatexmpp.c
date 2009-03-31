@@ -102,17 +102,10 @@ int main (int argc, char **argv)
 
 	config = g_new0(ClientConfig, 1);
 
-<<<<<<< HEAD:hatexmpp.c
 	config->server = "jabber.ru";
 	config->username = "lexszer0";
 	config->password = "123123123";
 	config->resource = "hatexmpp";
-=======
-	config->server = "server.ru";
-	config->username = "user";
-	config->password = "passw";
-
->>>>>>> 0a90758fe85daaf937967bca8a8997cfc9cdf3a5:hatexmpp.c
 	context = g_main_context_new();
         connection = lm_connection_new_with_context (config->server, context);
 
