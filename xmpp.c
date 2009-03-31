@@ -7,15 +7,19 @@ LmConnection *connection;
 Roster *roster_add(Roster **p, RosterItem item)
 {
 	Roster *n = malloc(sizeof(Roster));
-	if (n == NULL)
+	size_t s;
+
+	if (!n) {
+		perror("out of memory!!1111");
 		return NULL;
+	}
 	g_print ( "Adding JID: %s; Nick: %s\n", item.jid, item.nick );
 	n->next = *p;
-	*p=n;
-	n->item.jid = malloc(strlen(item.jid));
-	strcpy(n->item.jid,item.jid);
-	n->item.nick = malloc(strlen(item.nick));
-	strcpy(n->item.nick,item.nick);
+	*p = n;
+	n->item.jid = malloc(s = (strlen(item.jid) + 1));
+	memcpy(n->item.jid, item.jid, s);
+	n->item.nick = malloc(s = (strlen(item.nick) + 1));
+	memcpy(n->item.nick, item.nick, s);
 	return *p;
 }
 
@@ -57,6 +61,7 @@ static LmHandlerResult roster_rcvd_cb(LmMessageHandler *handler, LmConnection *c
 {
 	LmMessageNode *query, *item;
 	Roster *buddy;
+
 	query = lm_message_node_get_child(m->node, "query");
 	item  = lm_message_node_get_child (query, "item");
 	while (item)

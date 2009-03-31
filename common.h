@@ -1,12 +1,14 @@
 #include <glib.h>
 #include <pthread.h>
+#include <stdlib.h>
+#include <string.h>
 
 typedef struct {
 	int c;
 	char **v;
 } fsinit_arg;
 
-extern int fsinit(void *);
+extern void * fsinit(void *);
 
 typedef struct {
         const char *server;

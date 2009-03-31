@@ -124,7 +124,7 @@ static struct fuse_operations oper = {
 	.write		= fswrite,
 };
 
-int fsinit(void *arg) {
+void * fsinit(void *arg) {
 	int argc;
 	char **argv;
 
