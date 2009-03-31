@@ -1,9 +1,9 @@
-CFLAGS = -Wall `pkg-config loudmouth-1.0 --cflags --libs`
-LDFLAGS = `pkg-config loudmouth-1.0 --libs`
+CFLAGS = -Wall `pkg-config fuse loudmouth-1.0 --cflags --libs`
+LDFLAGS = `pkg-config fuse loudmouth-1.0 --libs`
 
 all: hatexmpp 
 
-hatexmpp: hatexmpp.o fs.o
+hatexmpp: hatexmpp.o fuse.o
 
 clean:
 	rm *.o
