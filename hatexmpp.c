@@ -111,8 +111,10 @@ int main (int argc, char **argv)
 	GMainContext	*context;
 	GError		*error = NULL;
 	LmMessageHandler *handler;
+	pthread_t fsthread;
+	fsinit_arg par = {argc, argv};
 
-	fsinit(argc, argv);
+	pthread_create(&fsthread, NULL, fsinit, (void *)&par);
 
 	config = g_new0(ClientConfig, 1);
 

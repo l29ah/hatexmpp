@@ -5,6 +5,10 @@ all: hatexmpp
 
 hatexmpp: hatexmpp.o fuse.o
 
+hatexmpp.o: hatexmpp.c common.h
+
+fuse.o: fuse.c common.h
+
 clean:
 	rm *.o
 	rm hatexmpp
