@@ -49,9 +49,9 @@ int main (int argc, char **argv)
 
 	config = g_new0(ClientConfig, 1);
 
-	config->server = "swamp.ru";
-	config->username = "lexszero";
-	config->password = "uhfyfnjvtn";
+	config->server = "server.ru";
+	config->username = "user";
+	config->password = "passw";
 
 	context = g_main_context_new();
         connection = lm_connection_new_with_context (config->server, context);
