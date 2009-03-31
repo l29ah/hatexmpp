@@ -9,7 +9,7 @@
 #include <sys/un.h>
 
 
-#define UNIX_PATH_MAX    108
+#define UNIX_PATH_MAX    108	/* from stupid man */
 /*
 #undef _POSIX_PATH_MAX
 #define _POSIX_PATH_MAX UNIX_PATH_MAX
@@ -52,8 +52,9 @@ muc makemuc(char *Name) {
 int makejid(char *Name, char *BasePath) {
 	int sock;
 	static char tmppath[_POSIX_PATH_MAX];
-		
-	snprintf(tmppath, _POSIX_PATH_MAX, "%s/%s", BasePath, Name);
+	
+	if (BasePath)
+		snprintf(tmppath, _POSIX_PATH_MAX, "%s/%s", BasePath, Name);
 	sock = makesocket(tmppath);
 
 	return sock;
@@ -63,7 +64,7 @@ int makesocket(char *Path) {
         int sock;
         struct sockaddr_un addr;
 
-        sock = socket(AF_UNIX, SOCK_STREAM, 0);
+        sock = socket(AF_UNIX, SOCK_DGRAM, 0);
 	if (sock < 0) {
 		perror("omg can't create socket");
 		exit(1);
