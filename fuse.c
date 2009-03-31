@@ -6,7 +6,7 @@
 #include <errno.h>
 #include <fcntl.h>
 
-static char basepath[_POSIX_PATH_MAX] = "hatexmpp";
+//static char basepath[_POSIX_PATH_MAX] = "hatexmpp";
 
 /*
 static int hello_getattr(const char *path, struct stat *stbuf)
@@ -28,22 +28,21 @@ static int hello_getattr(const char *path, struct stat *stbuf)
 }
 */
 
-static int hello_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
+static int fsreaddir(const char *path, void *buf, fuse_fill_dir_t filler,
 			 off_t offset, struct fuse_file_info *fi)
 {
 	(void) offset;
 	(void) fi;
 
-	if (strcmp(path, "/") != 0)
-		return -ENOENT;
-
-	filler(buf, ".", NULL, 0);
-	filler(buf, "..", NULL, 0);
-	filler(buf, hello_path + 1, NULL, 0);
-
+	if (strcmp(path, "/") == 0) {
+		filler(buf, ".", NULL, 0);
+		filler(buf, "..", NULL, 0);
+		filler(buf, hello_path + 1, NULL, 0);
+	} else {
+	}
 	return 0;
 }
-
+/*
 static int hello_open(const char *path, struct fuse_file_info *fi)
 {
 	if (strcmp(path, hello_path) != 0)
@@ -73,12 +72,13 @@ static int hello_read(const char *path, char *buf, size_t size, off_t offset,
 
 	return size;
 }
+*/
 
 static struct fuse_operations oper = {
 //	.getattr	= hello_getattr,
-	.readdir	= hello_readdir,
-	.open		= hello_open,
-	.read		= hello_read,
+	.readdir	= fsreaddir,
+//	.open		= hello_open,
+//	.read		= hello_read,
 };
 
 int init(void) {
