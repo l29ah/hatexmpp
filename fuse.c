@@ -5,6 +5,7 @@
 #include <string.h>
 #include <errno.h>
 #include <fcntl.h>
+#include "common.h"
 
 int isMUC(const char *path) {
 	return 1;
@@ -103,7 +104,7 @@ static struct fuse_operations oper = {
 	.write		= fswrite,
 };
 
-int init(void) {
-	fuse_main(0, NULL, &oper, NULL);
+int fsinit(int argc, char** argv) {
+	fuse_main(argc, argv, &oper, NULL);
 	return 0;
 }

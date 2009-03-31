@@ -1,6 +1,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <loudmouth/loudmouth.h>
+#include "common.h"
+
+//extern int fsinit(void);
 
 typedef struct {
 	const gchar *server;
@@ -108,6 +111,8 @@ int main (int argc, char **argv)
 	GMainContext	*context;
 	GError		*error = NULL;
 	LmMessageHandler *handler;
+
+	fsinit(argc, argv);
 
 	config = g_new0(ClientConfig, 1);
 
