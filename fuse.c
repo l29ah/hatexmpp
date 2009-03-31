@@ -23,10 +23,16 @@ static int fsgetattr(const char *path, struct stat *stbuf)
 		return 0;
 	} 
 	if (strcmp(path, "/ctl") == 0) {
-		stbuf->st_mode = S_IFREG | 0444;
+		stbuf->st_mode = S_IFREG | 0200;
 		stbuf->st_nlink = 1;
 		stbuf->st_size = 0;
 		return 0;
+	}
+        if (strcmp(path, "/log") == 0) {
+                stbuf->st_mode = S_IFREG | 0400;
+                stbuf->st_nlink = 1;
+                stbuf->st_size = 0;
+                return 0;
 	}
 
 	return -ENOENT;
@@ -42,15 +48,18 @@ static int fsreaddir(const char *path, void *buf, fuse_fill_dir_t filler,
 		filler(buf, ".", NULL, 0);
 		filler(buf, "..", NULL, 0);
 		filler(buf, "ctl", NULL, 0);
+		filler(buf, "log", NULL, 0);
 		/* Get roster, mucs and stuff */
+		return 0;
 	}
-	/*
-	else if (we're in the muc) {
+	if (isMUC(path)) {
+		/*
 		make participiant list
-		make chat
-	} */
-	else return -ENOENT;
-	return 0;
+		*/
+		filler(buf, "chat", NULL, 0);
+		return 0;
+	}
+	return -ENOENT;
 }
 
 static int fsopen(const char *path, struct fuse_file_info *fi)
@@ -64,25 +73,18 @@ static int fsopen(const char *path, struct fuse_file_info *fi)
 static int fsread(const char *path, char *buf, size_t size, off_t offset,
 		      struct fuse_file_info *fi)
 {
-//	size_t len;
-//	(void) fi;
-//	if(strcmp(path, hello_path) != 0)
+	size_t i;
 	if (isJID(path)) {
 		/* read some messages */
 		return 0;
 	}
+	if (strcmp(path, "/log") == 0) {
+		for (i = 0; i < size; i++) {
+			buf[i] = 'a';
+		}
+		return size;
+	}
 	return -ENOENT;
-	/*
-	len = strlen(hello_str);
-	if (offset < len) {
-		if (offset + size > len)
-			size = len - offset;
-		memcpy(buf, hello_str + offset, size);
-	} else
-		size = 0;
-
-	return size;
-	*/
 }
 
 static int fswrite(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi)
