@@ -6,29 +6,30 @@
 #include <errno.h>
 #include <fcntl.h>
 
-//static char basepath[_POSIX_PATH_MAX] = "hatexmpp";
+int isMUC(const char *path) {
+	return 1;
+}
 
+int isJID(const char *path) {
+	return 1;
+}
 
 static int fsgetattr(const char *path, struct stat *stbuf)
 {
-	int res = 0;
-
 	memset(stbuf, 0, sizeof(struct stat));
 	if (strcmp(path, "/") == 0) {
 		stbuf->st_mode = S_IFDIR | 0755;
 		stbuf->st_nlink = 2;
+		return 0;
 	} 
-	/*
-	else if (strcmp(path, hello_path) == 0) {
+	if (strcmp(path, "/ctl") == 0) {
 		stbuf->st_mode = S_IFREG | 0444;
 		stbuf->st_nlink = 1;
-		stbuf->st_size = strlen(hello_str);
-	} 
-	*/
-	else
-		res = -ENOENT;
+		stbuf->st_size = 0;
+		return 0;
+	}
 
-	return res;
+	return -ENOENT;
 }
 
 static int fsreaddir(const char *path, void *buf, fuse_fill_dir_t filler,
@@ -38,11 +39,12 @@ static int fsreaddir(const char *path, void *buf, fuse_fill_dir_t filler,
 	(void) fi;
 
 	if (strcmp(path, "/") == 0) {
-		/* make ctl */
 		filler(buf, ".", NULL, 0);
 		filler(buf, "..", NULL, 0);
+		filler(buf, "ctl", NULL, 0);
 		/* Get roster, mucs and stuff */
-	} /*
+	}
+	/*
 	else if (we're in the muc) {
 		make participiant list
 		make chat
@@ -53,14 +55,10 @@ static int fsreaddir(const char *path, void *buf, fuse_fill_dir_t filler,
 
 static int fsopen(const char *path, struct fuse_file_info *fi)
 {
-	/*
-	if (strcmp(path, hello_path) != 0)
-		return -ENOENT;
+	if (isJID(path))
+		return 0;
 
-	if ((fi->flags & 3) != O_RDONLY)
-		return -EACCES;
-	*/
-	return 0;
+	return -ENOENT;
 }
 
 static int fsread(const char *path, char *buf, size_t size, off_t offset,
@@ -69,7 +67,11 @@ static int fsread(const char *path, char *buf, size_t size, off_t offset,
 //	size_t len;
 //	(void) fi;
 //	if(strcmp(path, hello_path) != 0)
-		return -ENOENT;
+	if (isJID(path)) {
+		/* read some messages */
+		return 0;
+	}
+	return -ENOENT;
 	/*
 	len = strlen(hello_str);
 	if (offset < len) {
@@ -83,11 +85,20 @@ static int fsread(const char *path, char *buf, size_t size, off_t offset,
 	*/
 }
 
+static int fswrite(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi)
+{
+	if (strcmp(path, "/ctl") == 0) {
+		/* call mum */
+		return 0;
+	} else return 0;
+}
+
 static struct fuse_operations oper = {
 	.getattr	= fsgetattr,
 	.readdir	= fsreaddir,
 	.open		= fsopen,
 	.read		= fsread,
+	.write		= fswrite,
 };
 
 int init(void) {
