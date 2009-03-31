@@ -3,6 +3,35 @@
 
 LmConnection *connection;
 
+
+Roster *roster_add(Roster **p, RosterItem item)
+{
+	Roster *n = malloc(sizeof(Roster));
+	if (n == NULL)
+		return NULL;
+	g_print ( "Adding JID: %s; Nick: %s\n", item.jid, item.nick );
+	n->next = *p;
+	*p=n;
+	n->item.jid = malloc(strlen(item.jid));
+	strcpy(n->item.jid,item.jid);
+	n->item.nick = malloc(strlen(item.nick));
+	strcpy(n->item.nick,item.nick);
+	return *p;
+}
+
+void roster_print(Roster *n)
+{
+	if (n == NULL)
+	{
+		g_print("list is empty\n");
+	}
+	while (n != NULL)
+	{
+		g_print ( "%p %p JID: %s; Nick: %s\n",n, n->next, n->item.jid, n->item.nick );
+		n = n->next;
+	}
+}
+
 static gchar *get_nick(const gchar *jid)
 {
 	const gchar *ch;
@@ -27,19 +56,19 @@ static LmHandlerResult message_rcvd_cb(LmMessageHandler *handler, LmConnection *
 static LmHandlerResult roster_rcvd_cb(LmMessageHandler *handler, LmConnection *connection, LmMessage *m, gpointer data)
 {
 	LmMessageNode *query, *item;
-	GError *error = NULL;
 	Roster *buddy;
 	query = lm_message_node_get_child(m->node, "query");
 	item  = lm_message_node_get_child (query, "item");
 	while (item)
 	{
-		const gchar *jid, *nick;
-		jid = lm_message_node_get_attribute (item, "jid");
-		nick = get_nick(jid);
-		g_print ( "JID: %s; Nick: %s\n", jid, nick );
+		RosterItem roster_item;
+		roster_item.jid = lm_message_node_get_attribute (item, "jid");
+		roster_item.nick = get_nick(roster_item.jid);
+		roster_add(&roster,roster_item);
 		item = item->next;
 	}
 	lm_message_node_unref(query);
+	roster_print(roster);
 	return LM_HANDLER_RESULT_REMOVE_MESSAGE;
 }
 
@@ -69,10 +98,10 @@ static void connection_auth_cb(LmConnection *connection, gboolean success, void 
 
 static void connection_open_cb (LmConnection *connection, gboolean success, void *data)
 {
-        GError *error = NULL;
+	g_print("desudesu\n");
 	if (!success)
 		g_error("Cannot open connection");
-	if (!lm_connection_authenticate (connection, config->username, config->password, config->resource, (LmResultFunction) connection_auth_cb, NULL, g_free, &error))
+	if (!lm_connection_authenticate (connection, config->username, config->password, config->resource, (LmResultFunction) connection_auth_cb, NULL, g_free, NULL))
 		g_error ("lm_connection_authenticate failed");
 }
 

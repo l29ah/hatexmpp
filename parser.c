@@ -1,12 +1,11 @@
 #include "common.h"
 
-gchar *parse(gchar *str)
+extern gchar *parse(gchar *str)
 {
-	gchar *token;
-	token = strtok(str," ");
-	while (token) 
-	{
-		if (strcmp(token,"send")) 
-		token = strtok(str," ,.-"); 
-	}
+	gchar *cmd,*param1,*param2;
+	int len;
+	len = strchr(str, ' ')-str;
+	strncpy(cmd, str, len);
+	cmd[len]='\0';
+	g_print("%s",cmd);
 }

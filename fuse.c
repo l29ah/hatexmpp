@@ -5,6 +5,7 @@
 #include <string.h>
 #include <errno.h>
 #include "common.h"
+#include "parser.h"
 
 int isMUC(const char *path) {
 	return 1;
@@ -34,6 +35,13 @@ static int fsgetattr(const char *path, struct stat *stbuf)
                 stbuf->st_size = 0;
                 return 0;
 	}
+	
+
+	if (strcmp(path, "/roster/") == 0) {
+		stbuf->st_mode = S_IFDIR | 0755;
+		stbuf->st_nlink = 2;
+		return 0;
+	} 
 
 	return -ENOENT;
 }
@@ -50,6 +58,7 @@ static int fsreaddir(const char *path, void *buf, fuse_fill_dir_t filler,
 		filler(buf, "ctl", NULL, 0);
 		filler(buf, "log", NULL, 0);
 		/* Get roster, mucs and stuff */
+		if (roster) filler(buf, "roster",NULL, 0);
 		return 0;
 	}
 	if (isMUC(path)) {
@@ -58,6 +67,18 @@ static int fsreaddir(const char *path, void *buf, fuse_fill_dir_t filler,
 		*/
 		filler(buf, "chat", NULL, 0);
 		return 0;
+	}
+	if (strcmp(path, "/roster/") == 0)
+	{
+		filler(buf, ".", NULL, 0);
+		filler(buf, "..", NULL, 0);
+		Roster *curr;
+		curr=roster;
+		while (curr)
+		{
+			filler(buf, curr->item.jid, NULL, 0);
+			curr = curr->next;
+		}
 	}
 	return -ENOENT;
 }

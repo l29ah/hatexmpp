@@ -16,8 +16,12 @@ typedef struct {
 } ClientConfig;
 
 typedef struct {
-        const char *jid;
-        const char *nick;
+        char *jid;
+        char *nick;
+} RosterItem;
+
+typedef struct {
+	RosterItem item;
         struct Roster *next;
 } Roster;
 
