@@ -41,23 +41,28 @@ static gchar *get_nick(const gchar *jid)
         return g_strndup (jid, ch-jid);
 }
 
+static LmHandlerResult message_rcvd_cb(LmMessageHandler *handler, LmConnection *connection, LmMessage *m, gpointer data)
+{
+	gchar *from, *to, *body;
+	from = lm_message_node_get_attribute(m->node, "from");
+	to = lm_message_node_get_attribute(m->node, "to");
+	body = lm_message_node_get_value(lm_message_node_get_child(m->node, "body"));
+	g_print("Message from %s to %s: %s\n", from, to, body );
+	return LM_HANDLER_RESULT_REMOVE_MESSAGE;
+}
+
 static LmHandlerResult roster_rcvd_cb(LmMessageHandler *handler, LmConnection *connection, LmMessage *m, gpointer data)
 {
-	LmMessage *msg, *roster;
 	LmMessageNode *query, *item;
 	GError *error = NULL;
 	Roster *buddy;
-	g_print("\n--------------------------------------------------------------\nenter callback\n");
 	query = lm_message_node_get_child(m->node, "query");
 	item  = lm_message_node_get_child (query, "item");
-//	roster = malloc(sizeof(struct Roster));
-//	buddy=roster;
 	while (item)
 	{
 		const gchar *jid, *nick;
 		jid = lm_message_node_get_attribute (item, "jid");
 		nick = get_nick(jid);
-//		roster_add(roster, jid, nick);
 		g_print ( "JID: %s; Nick: %s\n", jid, nick );
 		item = item->next;
 	}
@@ -70,18 +75,21 @@ static void connection_auth_cb(LmConnection *connection, gboolean success, void 
 	LmMessage *m;
 	LmMessageHandler *handler;
 	gboolean result;
-	GError *error = NULL;
-	if (!success)
-		g_error ("Authentication failed");
-	m = lm_message_new_with_sub_type(NULL, LM_MESSAGE_TYPE_IQ, LM_MESSAGE_SUB_TYPE_GET);
-	handler = lm_message_handler_new(roster_rcvd_cb, NULL, NULL );
-	lm_message_node_set_attribute(lm_message_node_add_child(m->node, "query", NULL), "xmlns", "jabber:iq:roster");
-        result = lm_connection_send_with_reply(connection, m, handler, &error);
-	lm_message_handler_unref(handler);
-        lm_message_unref (m);
-        if (!result)
+	if (success)
 	{
-		g_error ("lm_connection_send failed");
+		m = lm_message_new_with_sub_type(NULL, LM_MESSAGE_TYPE_PRESENCE, LM_MESSAGE_SUB_TYPE_AVAILABLE);
+		lm_connection_send(connection, m, NULL);
+		lm_message_unref(m);
+
+		m = lm_message_new_with_sub_type(NULL, LM_MESSAGE_TYPE_IQ, LM_MESSAGE_SUB_TYPE_GET);
+		handler = lm_message_handler_new(roster_rcvd_cb, NULL, NULL );
+		lm_message_node_set_attribute(lm_message_node_add_child(m->node, "query", NULL), "xmlns", "jabber:iq:roster");
+        	result = lm_connection_send_with_reply(connection, m, handler, NULL);
+		lm_message_handler_unref(handler);
+        	lm_message_unref (m);
+	} else
+	{
+		g_error ("Authentication failed");
 		lm_connection_close (connection, NULL);
 	}
 }
@@ -99,6 +107,7 @@ int main (int argc, char **argv)
 {
 	GMainContext	*context;
 	GError		*error = NULL;
+	LmMessageHandler *handler;
 
 	config = g_new0(ClientConfig, 1);
 
@@ -111,6 +120,8 @@ int main (int argc, char **argv)
 
         if (!lm_connection_open (connection, (LmResultFunction) connection_open_cb, NULL, g_free, &error))
 		g_error ("lm_connection_open failed");
+	
+	lm_connection_register_message_handler(connection, lm_message_handler_new(message_rcvd_cb, NULL, NULL), LM_MESSAGE_TYPE_MESSAGE, LM_HANDLER_PRIORITY_NORMAL);
 
         main_loop = g_main_loop_new (context, FALSE);
         g_main_loop_run (main_loop);
