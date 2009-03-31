@@ -27,6 +27,11 @@ typedef struct {
 
 static char basepath[_POSIX_PATH_MAX] = "hatexmpp";
 
+/* Interface goes here */
+muc makemuc(char *Name);
+int makejid(char *Name, char *BasePath);
+/* --- */
+
 static char *striplower(char *s) {
         char *p = NULL;
         for(p = s; p && *p; p++) {
@@ -70,7 +75,7 @@ int makesocket(char *Path) {
 }
 
 void killsocket(int Sock) {
-	shutdown(Sock, 2);
+	shutdown(Sock, SHUT_RDWR);
 }
 
 //void updateroster(roster) {}
