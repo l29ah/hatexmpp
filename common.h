@@ -10,6 +10,8 @@
 #include <fuse.h>
 
 extern void * fsinit(void *);
+extern void logs(const char *, size_t);
+extern void logstr(const char *);
 
 typedef struct {
         const char *server;
@@ -33,5 +35,5 @@ GMainContext *context;
 ClientConfig *config;
 Roster *roster;
 
-FILE *LogFile;
-
+extern char LogBuf[];
+extern int LogBufEnd;

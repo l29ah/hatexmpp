@@ -33,7 +33,7 @@ static int fsgetattr(const char *path, struct stat *stbuf)
         if (strcmp(path, "/log") == 0) {
                 stbuf->st_mode = S_IFREG | 0444;
                 stbuf->st_nlink = 1;
- 	        stbuf->st_size = 4096;	/* TODO: actual log buffer size */
+ 	        stbuf->st_size = LogBufEnd;
                 return 0;
 	}
 	
@@ -103,13 +103,9 @@ static int fsread(const char *path, char *buf, size_t size, off_t offset,
 	}
 	if (strcmp(path, "/log") == 0) {
 		printf("reading log\n");
-		/* TODO: read log buffer */
-		/*
-		fsetpos(LogFile, 
-		i = read(*LogFile, buf, size);
-		return i;
-		*/
-		return 0;
+		memcpy(buf, LogBuf + offset, size);
+		/* TODO: checks, lock */
+		return size;
 	}
 	return -ENOENT;
 }
