@@ -28,13 +28,12 @@ static int fsgetattr(const char *path, struct stat *stbuf)
 	if (strcmp(path, "/ctl") == 0) {
 		stbuf->st_mode = S_IFREG | 0200;
 		stbuf->st_nlink = 1;
-		stbuf->st_size = 0;
 		return 0;
 	}
         if (strcmp(path, "/log") == 0) {
-                stbuf->st_mode = S_IFREG | 0400;
+                stbuf->st_mode = S_IFREG | 0444;
                 stbuf->st_nlink = 1;
-                stbuf->st_size = 123;
+ 	        stbuf->st_size = 4096;	/* TODO: actual log buffer size */
                 return 0;
 	}
 	
@@ -99,17 +98,18 @@ static int fsread(const char *path, char *buf, size_t size, off_t offset,
 {
 	size_t i;
 	if (isJID(path)) {
-		/* read some messages */
+		/* TODO: read some messages */
 		return 0;
 	}
 	if (strcmp(path, "/log") == 0) {
-#ifdef DEBUG
 		printf("reading log\n");
-#endif
-		for (i = 0; i < size; i++) {
-			buf[i] = 'a';
-		}
-		return size;
+		/* TODO: read log buffer */
+		/*
+		fsetpos(LogFile, 
+		i = read(*LogFile, buf, size);
+		return i;
+		*/
+		return 0;
 	}
 	return -ENOENT;
 }
@@ -117,9 +117,10 @@ static int fsread(const char *path, char *buf, size_t size, off_t offset,
 static int fswrite(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi)
 {
 	if (strcmp(path, "/ctl") == 0) {
-		/* call mum */
+		/* TODO: call mum */
 		return 0;
-	} else return 0;
+	}
+	return 0;
 }
 
 static struct fuse_operations oper = {
@@ -138,6 +139,6 @@ void * fsinit(void *arg) {
 	argv = ((struct fuse_args *)arg)->argv;
 	fuse_main(argc, argv, &oper, NULL);
 	perror("fuse_main terminated");
-	exit(12);
+	exit(1);
 	return 0;
 }

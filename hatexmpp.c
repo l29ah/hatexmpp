@@ -16,6 +16,7 @@ int main (int argc, char **argv)
 	pthread_t fsthread;
 	struct fuse_args par = FUSE_ARGS_INIT(argc, argv);
 
+	LogFile = tmpfile();
 	pthread_create(&fsthread, NULL, fsinit, (void *)&par);
 
 	config = g_new0(ClientConfig, 1);

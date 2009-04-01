@@ -9,13 +9,6 @@
 #include <unistd.h>
 #include <fuse.h>
 
-/* OBSOLETE
-typedef struct {
-	int c;
-	char **v;
-} fsinit_arg;
-*/
-
 extern void * fsinit(void *);
 
 typedef struct {
@@ -39,3 +32,6 @@ static GMainLoop *main_loop;
 GMainContext *context;
 ClientConfig *config;
 Roster *roster;
+
+FILE *LogFile;
+
