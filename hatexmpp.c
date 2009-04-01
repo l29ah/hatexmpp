@@ -14,7 +14,7 @@ static gchar *get_nick(const gchar *jid)
 int main (int argc, char **argv)
 {
 	pthread_t fsthread;
-	fsinit_arg par = {argc, argv};
+	struct fuse_args par = FUSE_ARGS_INIT(argc, argv);
 
 	pthread_create(&fsthread, NULL, fsinit, (void *)&par);
 
@@ -27,6 +27,7 @@ int main (int argc, char **argv)
 	xmpp_connect();
         main_loop = g_main_loop_new (context, FALSE);
 	g_print("asdfasdf");
-        g_main_loop_run (main_loop);
+        //g_main_loop_run (main_loop);
+	sleep(-1);
         return 0;
 }

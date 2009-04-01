@@ -1,12 +1,20 @@
+
+#define FUSE_USE_VERSION 26
+
 #include <glib.h>
 #include <pthread.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <fuse.h>
 
+/* OBSOLETE
 typedef struct {
 	int c;
 	char **v;
 } fsinit_arg;
+*/
 
 extern void * fsinit(void *);
 

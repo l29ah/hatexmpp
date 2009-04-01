@@ -1,6 +1,3 @@
-#define FUSE_USE_VERSION 26
-
-#include <fuse.h>
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
@@ -8,11 +5,16 @@
 #include "parser.h"
 
 int isMUC(const char *path) {
-	return 1;
+	return 0;
 }
 
 int isJID(const char *path) {
-	return 1;
+	return 0;
+}
+
+int fileexists(const char *path) {
+	if (strcmp(path, "/log") == 0) return 1;
+	return 0;
 }
 
 static int fsgetattr(const char *path, struct stat *stbuf)
@@ -32,7 +34,7 @@ static int fsgetattr(const char *path, struct stat *stbuf)
         if (strcmp(path, "/log") == 0) {
                 stbuf->st_mode = S_IFREG | 0400;
                 stbuf->st_nlink = 1;
-                stbuf->st_size = 0;
+                stbuf->st_size = 123;
                 return 0;
 	}
 	
@@ -73,6 +75,7 @@ static int fsreaddir(const char *path, void *buf, fuse_fill_dir_t filler,
 		filler(buf, ".", NULL, 0);
 		filler(buf, "..", NULL, 0);
 		Roster *curr;
+
 		curr=roster;
 		while (curr)
 		{
@@ -85,7 +88,7 @@ static int fsreaddir(const char *path, void *buf, fuse_fill_dir_t filler,
 
 static int fsopen(const char *path, struct fuse_file_info *fi)
 {
-	if (isJID(path))
+	if (fileexists(path))
 		return 0;
 
 	return -ENOENT;
@@ -100,6 +103,9 @@ static int fsread(const char *path, char *buf, size_t size, off_t offset,
 		return 0;
 	}
 	if (strcmp(path, "/log") == 0) {
+#ifdef DEBUG
+		printf("reading log\n");
+#endif
 		for (i = 0; i < size; i++) {
 			buf[i] = 'a';
 		}
@@ -128,8 +134,10 @@ void * fsinit(void *arg) {
 	int argc;
 	char **argv;
 
-	argc = ((fsinit_arg*)arg)->c;
-	argv = ((fsinit_arg*)arg)->v;
+	argc = ((struct fuse_args *)arg)->argc;
+	argv = ((struct fuse_args *)arg)->argv;
 	fuse_main(argc, argv, &oper, NULL);
+	perror("fuse_main terminated");
+	exit(12);
 	return 0;
 }
