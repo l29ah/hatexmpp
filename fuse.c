@@ -17,6 +17,22 @@ int fileexists(const char *path) {
 	return 0;
 }
 
+void lineparse(char **linestart, const char *buf, size_t len, void callb(const char *)) {
+	int i = 0;
+
+	while (1) {
+		while(i < len && buf[i]) {
+			i++;
+		}
+		if(i == len) return;
+		else {
+			callb(*linestart);
+			*linestart = buf + (++i); 
+		}
+	}
+	return;
+}
+
 static int fsgetattr(const char *path, struct stat *stbuf)
 {
 	memset(stbuf, 0, sizeof(struct stat));

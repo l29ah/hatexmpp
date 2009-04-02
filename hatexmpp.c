@@ -1,7 +1,9 @@
 #include "common.h"
 #include "xmpp.h"
 
-char LogBuf[1000000];
+#define LOGBUFSIZE 1000000
+
+char LogBuf[LOGBUFSIZE];	/* TODO dynamic array */
 int LogBufEnd = 0;
 
 void logs(const char *msg, size_t len) {
@@ -32,7 +34,7 @@ int main (int argc, char **argv)
 	struct fuse_args par = FUSE_ARGS_INIT(argc, argv);
 	
 	logstr("hi all\n");
-	pthread_create(&fsthread, NULL, fsinit, (void *)&par);
+	pthread_create(&fsthread, NULL, fsinit, (void *)&par); 
 
 	logstr("fuse is going up\n");
 	config = g_new0(ClientConfig, 1);
@@ -46,7 +48,8 @@ int main (int argc, char **argv)
         main_loop = g_main_loop_new (context, FALSE);
 	g_print("asdfasdf");
 	/* TODO: fix segfaults (valgrind is your friend?) */
-        //g_main_loop_run (main_loop);
+        g_main_loop_run (main_loop);
 	sleep(-1);	/* I don't want to die so soon */
+	/* TODO fuse shutdown */
         return 0;
 }
