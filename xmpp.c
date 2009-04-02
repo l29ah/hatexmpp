@@ -5,7 +5,6 @@ void xmpp_send(const gchar *to, const gchar *body);
 
 LmConnection *connection;
 
-
 Roster *roster_add(Roster **p, RosterItem item)
 {
 	Roster *n = malloc(sizeof(Roster));
@@ -22,6 +21,8 @@ Roster *roster_add(Roster **p, RosterItem item)
 	memcpy(n->item.jid, item.jid, s);
 	n->item.nick = malloc(s = (strlen(item.nick) + 1));
 	memcpy(n->item.nick, item.nick, s);
+
+	g_hash_table_insert(TalkLog, g_strdup(item.jid), g_array_new(FALSE, FALSE, 1));
 	return *p;
 }
 
@@ -29,11 +30,11 @@ void roster_print(Roster *n)
 {
 	if (n == NULL)
 	{
-		g_print("list is empty\n");
+		logstr("list is empty\n");
 	}
 	while (n != NULL)
 	{
-		g_print ( "%p %p JID: %s; Nick: %s\n",n, n->next, n->item.jid, n->item.nick );
+		logf( "%p %p JID: %s; Nick: %s\n",n, n->next, n->item.jid, n->item.nick );
 		n = n->next;
 	}
 }
@@ -51,11 +52,22 @@ static gchar *get_nick(const gchar *jid)
 static LmHandlerResult message_rcvd_cb(LmMessageHandler *handler, LmConnection *connection, LmMessage *m, gpointer data)
 {
 	const gchar *from, *to, *body;
+	gchar *jid;
+	gpointer log;
+
 	from = lm_message_node_get_attribute(m->node, "from");
 	to = lm_message_node_get_attribute(m->node, "to");
 	body = lm_message_node_get_value(lm_message_node_get_child(m->node, "body"));
-	g_print("Message from %s to %s: %s\n", from, to, body );
-	xmpp_send(from, body);
+	logf("Message from %s to %s: %s\n", from, to, body );
+	//xmpp_send(from, body);
+	jid = g_strndup(from, strrchr(from, '/') - from);
+	log = g_hash_table_lookup(TalkLog, jid);
+	if(log) {
+		logf("appending to %s\n", jid);
+		g_array_append_vals(log, body, strlen(body));
+	} else {
+		logf("JID %s is not in TalkLog, ignoring message", jid);
+	}
 	return LM_HANDLER_RESULT_REMOVE_MESSAGE;
 }
 

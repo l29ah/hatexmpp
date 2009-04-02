@@ -8,6 +8,7 @@ ClientConfig *config;
 Roster *roster;
 
 GArray *LogBuf;
+GHashTable *TalkLog;
 
 inline void logs(const char *msg, size_t len) {
 	g_array_append_vals(LogBuf, msg, len);
@@ -72,6 +73,7 @@ int main (int argc, char **argv)
 	
 	LogBuf = g_array_sized_new(FALSE, FALSE, 1, 512);
 	logstr("hi all\n");
+	TalkLog = g_hash_table_new(g_str_hash, g_str_equal);
 	pthread_create(&fsthread, NULL, fsinit, (void *)&par); 
 
 	logstr("fuse is going up\n");

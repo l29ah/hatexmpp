@@ -64,10 +64,17 @@ static int fsgetattr(const char *path, struct stat *stbuf)
 		return 0;
 	}
 	if (strncmp(path, "/roster/", 8) == 0) {
+		GArray *log;
+
 		path += 8;
 		stbuf->st_mode = S_IFREG | 0666;
 		stbuf->st_nlink = 1;
-		stbuf->st_size = 0;	/* TODO */
+		log = g_hash_table_lookup(TalkLog, path);
+		if(log) {
+			logf("jid %s log len is %u\n", path, log->len);
+			stbuf->st_size = log->len;
+
+		} else return -ENOENT;
 		return 0;
 	}
 
@@ -135,6 +142,21 @@ static int fsread(const char *path, char *buf, size_t size, off_t offset,
 		/* TODO: checks, lock */
 		return size;
 	}
+	if (strncmp(path, "/roster/", 8) == 0) {
+		GArray *log;
+
+		path += 8;
+		log = g_hash_table_lookup(TalkLog, path);
+		if(log) {
+			if(offset + size < log->len) {
+				memcpy(buf, log->data + offset, size);
+				return size;
+			} else {
+				memcpy(buf, log->data + offset, log->len - offset);
+				return log->len - offset;
+			}
+		} else return -ENOENT;
+	}
 	return -ENOENT;
 }
 
@@ -148,7 +170,6 @@ static int fswrite(const char *path, const char *buf, size_t size, off_t offset,
 		char *msg;
 
 		path += 8;
-		logstr("heya, write!");
 		msg = malloc(size + 1);
 		memcpy(msg, buf, size);
 		msg[size] = 0;
