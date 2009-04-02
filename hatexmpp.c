@@ -38,6 +38,8 @@ int main (int argc, char **argv)
 	pthread_t fsthread;
 	struct fuse_args par = FUSE_ARGS_INIT(argc, argv);
 	
+	/* TODO */
+	//g_thread_init(NULL);
 	LogBuf = g_array_sized_new(FALSE, FALSE, 1, 512);
 	logstr("hi all\n");
 	RosterHT = g_hash_table_new(g_str_hash, g_str_equal);
@@ -58,6 +60,7 @@ int main (int argc, char **argv)
 	sleep(-1);	/* I don't want to die so soon */
 	/* TODO fuse shutdown */
 	g_array_free(LogBuf, TRUE);
-	
+	/* TODO free everything */
+
         return 0;
 }

@@ -1,0 +1,8 @@
+hatexmpp is a xmpp-client featuring ii-like interface
+
+deps: glib (~>=2.18.4), fuse (~>=2.7.4), loudmouth (~>=1.4.3)
+
+synopsis: ./hatexmpp <mountpoint> -d
+
+to get the freshest one, use 'git clone git://github.com/l29ah/hatexmpp.git'
+
