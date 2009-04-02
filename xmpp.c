@@ -1,6 +1,8 @@
 #include "common.h"
 #include <loudmouth/loudmouth.h>
 
+void xmpp_send(const gchar *to, const gchar *body);
+
 LmConnection *connection;
 
 
@@ -48,12 +50,12 @@ static gchar *get_nick(const gchar *jid)
 
 static LmHandlerResult message_rcvd_cb(LmMessageHandler *handler, LmConnection *connection, LmMessage *m, gpointer data)
 {
-	gchar *from, *to, *body;
+	const gchar *from, *to, *body;
 	from = lm_message_node_get_attribute(m->node, "from");
 	to = lm_message_node_get_attribute(m->node, "to");
 	body = lm_message_node_get_value(lm_message_node_get_child(m->node, "body"));
 	g_print("Message from %s to %s: %s\n", from, to, body );
-	xmpp_send(from,body);
+	xmpp_send(from, body);
 	return LM_HANDLER_RESULT_REMOVE_MESSAGE;
 }
 
@@ -62,12 +64,13 @@ static LmHandlerResult roster_rcvd_cb(LmMessageHandler *handler, LmConnection *c
 	LmMessageNode *query, *item;
 	Roster *buddy;
 
+	logstr("Roster callback!\n");
 	query = lm_message_node_get_child(m->node, "query");
 	item  = lm_message_node_get_child (query, "item");
 	while (item)
 	{
 		RosterItem roster_item;
-		roster_item.jid = lm_message_node_get_attribute (item, "jid");
+		roster_item.jid = (gchar *)lm_message_node_get_attribute(item, "jid");
 		roster_item.nick = get_nick(roster_item.jid);
 		roster_add(&roster,roster_item);
 		item = item->next;
@@ -82,6 +85,8 @@ static void connection_auth_cb(LmConnection *connection, gboolean success, void 
 	LmMessage *m;
 	LmMessageHandler *handler;
 	gboolean result;
+
+	logstr("connection_auth_cb\n");
 	if (success)
 	{
 		m = lm_message_new_with_sub_type(NULL, LM_MESSAGE_TYPE_PRESENCE, LM_MESSAGE_SUB_TYPE_AVAILABLE);
@@ -103,7 +108,7 @@ static void connection_auth_cb(LmConnection *connection, gboolean success, void 
 
 static void connection_open_cb (LmConnection *connection, gboolean success, void *data)
 {
-	//g_print("desudesu\n");
+	logstr("connection_open_cb\n");
 	if (!success)
 		g_error("Cannot open connection");
 	if (!lm_connection_authenticate (connection, config->username, config->password, config->resource, (LmResultFunction) connection_auth_cb, NULL, g_free, NULL))
@@ -112,14 +117,13 @@ static void connection_open_cb (LmConnection *connection, gboolean success, void
 
 extern void xmpp_connect()
 {
-	
 	connection = lm_connection_new_with_context (config->server, context);
         if (!lm_connection_open (connection, (LmResultFunction) connection_open_cb, NULL, g_free, NULL))
 		g_error ("lm_connection_open failed");
 	lm_connection_register_message_handler(connection, lm_message_handler_new(message_rcvd_cb, NULL, NULL), LM_MESSAGE_TYPE_MESSAGE, LM_HANDLER_PRIORITY_NORMAL);
-}
+} 
 
-extern void xmpp_send(gchar *to, gchar *body)
+void xmpp_send(const gchar *to, const gchar *body)
 {
 	LmMessage *m;
 	m = lm_message_new(to, LM_MESSAGE_TYPE_MESSAGE);

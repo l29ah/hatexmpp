@@ -9,13 +9,6 @@
 #include <unistd.h>
 #include <fuse.h>
 
-extern void * fsinit(void *);
-extern void logs(const char *, size_t);
-extern const char * logstr(const char *); 
-extern char * make_message(const char *fmt, ...);
-
-#define logf(FMT,ARGS...) free(logstr(make_message(FMT, ##ARGS)))
-
 typedef struct {
         const char *server;
         const char *username;
@@ -28,15 +21,28 @@ typedef struct {
         char *nick;
 } RosterItem;
 
-typedef struct {
+typedef struct Roster_s {
 	RosterItem item;
-        struct Roster *next;
+        struct Roster_s *next;
 } Roster;
 
-static GMainLoop *main_loop;
-GMainContext *context;
-ClientConfig *config;
-Roster *roster;
+typedef struct ptrlist_s {
+	void *v;
+	struct ptrlist_s *n;
+} ptrlist;
 
+extern GMainLoop *main_loop;
+extern GMainContext *context;
+extern ClientConfig *config;
+extern Roster *roster;
+
+/* Logging stuff */
+extern void * fsinit(void *);
+extern void logs(const char *, size_t);
+extern char * logstr(const char *);
+extern char * make_message(const char *fmt, ...);
+#define logf(FMT,ARGS...) free(logstr(make_message(FMT, ##ARGS)))
 extern char LogBuf[];
 extern int LogBufEnd;
+
+extern void xmpp_send(const gchar *to, const gchar *body);

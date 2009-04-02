@@ -3,6 +3,11 @@
 
 #define LOGBUFSIZE 1000000
 
+GMainLoop *main_loop;
+GMainContext *context;
+ClientConfig *config;
+Roster *roster;
+
 char LogBuf[LOGBUFSIZE];	/* TODO dynamic array */
 int LogBufEnd = 0;
 
@@ -11,7 +16,7 @@ void logs(const char *msg, size_t len) {
 	LogBufEnd += len;
 }
 
-const char * logstr(const char *msg) {
+char * logstr(const char *msg) {
 	size_t len;
 
 	len = strlen(msg);
@@ -81,7 +86,6 @@ int main (int argc, char **argv)
 	xmpp_connect();
 	logstr("server connected\n");
         main_loop = g_main_loop_new (context, FALSE);
-	g_print("asdfasdf");
 	/* TODO: fix segfaults (valgrind is your friend?) */
         g_main_loop_run (main_loop);
 	sleep(-1);	/* I don't want to die so soon */
