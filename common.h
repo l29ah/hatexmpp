@@ -2,10 +2,10 @@
 #define FUSE_USE_VERSION 26
 
 #include <glib.h>
+#include <glib/gprintf.h>
 #include <pthread.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 #include <unistd.h>
 #include <fuse.h>
 
@@ -47,8 +47,7 @@ extern Roster *roster;
 extern void * fsinit(void *);
 extern void logs(const char *, size_t);
 extern char * logstr(char *);
-extern char * make_message(const char *fmt, ...);
-#define logf(FMT,ARGS...) free(logstr(make_message(FMT, ##ARGS)))
+#define logf(FMT,ARGS...) free(logstr(g_strdup_printf(FMT, ##ARGS)))
 extern GArray *LogBuf;
 extern GHashTable *RosterHT;
 
