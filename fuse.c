@@ -42,11 +42,6 @@ void breakparse(char **linestart, const char *buf, size_t len, const char chr, v
 static int fsgetattr(const char *path, struct stat *stbuf)
 {
 	memset(stbuf, 0, sizeof(struct stat));
-	if (strcmp(path, "/") == 0) {
-		stbuf->st_mode = S_IFDIR | 0755;
-		stbuf->st_nlink = 2;
-		return 0;
-	} 
 	if (strcmp(path, "/ctl") == 0) {
 		stbuf->st_mode = S_IFREG | 0200;
 		stbuf->st_nlink = 1;
@@ -58,10 +53,17 @@ static int fsgetattr(const char *path, struct stat *stbuf)
  	        stbuf->st_size = LogBuf->len;
                 return 0;
 	}
-	if (strcmp(path, "/roster") == 0) {
+	if ((strcmp(path, "/roster") == 0) || 
+	    (strcmp(path, "/config") == 0) ||
+	    (strcmp(path, "/") == 0)) {
 		stbuf->st_mode = S_IFDIR | 0755;
 		stbuf->st_nlink = 2;
 		return 0;
+	}
+	if (strncmp(path, "/config/", 8) == 0) {
+		path += 8;
+
+		/* TODO */
 	}
 	if (strncmp(path, "/roster/", 8) == 0) {
 		rosteritem *ri;
@@ -94,7 +96,7 @@ static int fsreaddir(const char *path, void *buf, fuse_fill_dir_t filler,
 		filler(buf, "..", NULL, 0);
 		filler(buf, "ctl", NULL, 0);
 		filler(buf, "log", NULL, 0);
-		/* Get roster, mucs and stuff */
+		filler(buf, "config", NULL, 0);
 		if (roster) filler(buf, "roster",NULL, 0);
 		return 0;
 	}
@@ -103,6 +105,11 @@ static int fsreaddir(const char *path, void *buf, fuse_fill_dir_t filler,
 		make participiant list
 		*/
 		filler(buf, "chat", NULL, 0);
+		return 0;
+	}
+	if (strcmp(path, "/roster") == 0) {
+	        filler(buf, ".", NULL, 0);
+		filler(buf, "..", NULL, 0);
 		return 0;
 	}
 	if (strcmp(path, "/roster") == 0)
