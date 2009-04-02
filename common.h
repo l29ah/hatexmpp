@@ -31,11 +31,15 @@ typedef struct ptrlist_s {
 	struct ptrlist_s *n;
 } ptrlist;
 
+#define MUC 2
+#define GUY 1
+
 typedef struct rosteritem_s {
 	gchar *jid;
 	gchar *resource;
 	GArray *log;
 	time_t lastmsgtime;
+	unsigned type;
 } rosteritem;
 
 extern GMainLoop *main_loop;
