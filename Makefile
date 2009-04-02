@@ -1,4 +1,4 @@
-CFLAGS = -Wall `pkg-config fuse loudmouth-1.0 --cflags --libs` -DDEBUG
+CFLAGS = -Wall `pkg-config fuse loudmouth-1.0 --cflags` -DDEBUG
 LDFLAGS = `pkg-config fuse loudmouth-1.0 --libs`
 
 all: hatexmpp 
@@ -9,7 +9,7 @@ hatexmpp.o: hatexmpp.c common.h xmpp.h
 
 fuse.o: fuse.c common.h parser.h
 
-xmpp.o: xmpp.c xmpp.h
+xmpp.o: xmpp.c xmpp.h common.h
 
 parser.o: parser.c parser.h
 

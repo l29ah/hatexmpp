@@ -10,10 +10,10 @@ Roster *roster_add(Roster **p, RosterItem item)
 	size_t s;
 
 	if (!n) {
-		perror("out of memory!!1111");
+		logstr("Can't allocate memory for roster item!");
 		return NULL;
 	}
-	g_print ( "Adding JID: %s; Nick: %s\n", item.jid, item.nick );
+	logf( "Adding JID: %s; Nick: %s\n", item.jid, item.nick );
 	n->next = *p;
 	*p = n;
 	n->item.jid = malloc(s = (strlen(item.jid) + 1));
@@ -103,7 +103,7 @@ static void connection_auth_cb(LmConnection *connection, gboolean success, void 
 
 static void connection_open_cb (LmConnection *connection, gboolean success, void *data)
 {
-	g_print("desudesu\n");
+	//g_print("desudesu\n");
 	if (!success)
 		g_error("Cannot open connection");
 	if (!lm_connection_authenticate (connection, config->username, config->password, config->resource, (LmResultFunction) connection_auth_cb, NULL, g_free, NULL))
