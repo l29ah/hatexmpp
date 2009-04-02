@@ -31,6 +31,13 @@ typedef struct ptrlist_s {
 	struct ptrlist_s *n;
 } ptrlist;
 
+typedef struct rosteritem_s {
+	gchar *jid;
+	gchar *resource;
+	GArray *log;
+	time_t lastmsgtime;
+} rosteritem;
+
 extern GMainLoop *main_loop;
 extern GMainContext *context;
 extern ClientConfig *config;
@@ -39,10 +46,10 @@ extern Roster *roster;
 /* Logging stuff */
 extern void * fsinit(void *);
 extern void logs(const char *, size_t);
-extern char * logstr(const char *);
+extern char * logstr(char *);
 extern char * make_message(const char *fmt, ...);
 #define logf(FMT,ARGS...) free(logstr(make_message(FMT, ##ARGS)))
 extern GArray *LogBuf;
-extern GHashTable *TalkLog;
+extern GHashTable *RosterHT;
 
 extern void xmpp_send(const gchar *to, const gchar *body);

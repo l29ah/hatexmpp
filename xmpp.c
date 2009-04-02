@@ -9,6 +9,7 @@ Roster *roster_add(Roster **p, RosterItem item)
 {
 	Roster *n = malloc(sizeof(Roster));
 	size_t s;
+	rosteritem *ri;
 
 	if (!n) {
 		logstr("Can't allocate memory for roster item!");
@@ -22,7 +23,11 @@ Roster *roster_add(Roster **p, RosterItem item)
 	n->item.nick = malloc(s = (strlen(item.nick) + 1));
 	memcpy(n->item.nick, item.nick, s);
 
-	g_hash_table_insert(TalkLog, g_strdup(item.jid), g_array_new(FALSE, FALSE, 1));
+	ri = malloc(sizeof(rosteritem));
+	ri->jid = g_strdup(item.jid);
+	ri->resource = NULL;
+	ri->log = g_array_new(FALSE, FALSE, 1);
+	g_hash_table_insert(RosterHT, g_strdup(item.jid), ri);
 	return *p;
 }
 
@@ -54,6 +59,7 @@ static LmHandlerResult message_rcvd_cb(LmMessageHandler *handler, LmConnection *
 	const gchar *from, *to, *body;
 	gchar *jid;
 	gpointer log;
+	rosteritem *ri;
 
 	from = lm_message_node_get_attribute(m->node, "from");
 	to = lm_message_node_get_attribute(m->node, "to");
@@ -61,7 +67,9 @@ static LmHandlerResult message_rcvd_cb(LmMessageHandler *handler, LmConnection *
 	logf("Message from %s to %s: %s\n", from, to, body );
 	//xmpp_send(from, body);
 	jid = g_strndup(from, strrchr(from, '/') - from);
-	log = g_hash_table_lookup(TalkLog, jid);
+	ri = g_hash_table_lookup(RosterHT, jid);
+	ri->lastmsgtime = time(NULL);
+	log = ri->log;
 	if(log) {
 		logf("appending to %s\n", jid);
 		g_array_append_vals(log, body, strlen(body));
@@ -74,7 +82,7 @@ static LmHandlerResult message_rcvd_cb(LmMessageHandler *handler, LmConnection *
 static LmHandlerResult roster_rcvd_cb(LmMessageHandler *handler, LmConnection *connection, LmMessage *m, gpointer data)
 {
 	LmMessageNode *query, *item;
-	Roster *buddy;
+//	Roster *buddy;
 
 	logstr("Roster callback!\n");
 	query = lm_message_node_get_child(m->node, "query");

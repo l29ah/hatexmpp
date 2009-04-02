@@ -17,7 +17,7 @@ int fileexists(const char *path) {
 	if (strncmp(path, "/roster/", 8) == 0) return 1;
 	return 0;
 }
-
+/*
 void breakparse(char **linestart, const char *buf, size_t len, const char chr, void callb(const char *)) {
 	int i = 0;
 
@@ -33,7 +33,7 @@ void breakparse(char **linestart, const char *buf, size_t len, const char chr, v
 	}
 	return;
 }
-
+*/
 //void postparse(char **linestart, 
 
 
@@ -64,12 +64,14 @@ static int fsgetattr(const char *path, struct stat *stbuf)
 		return 0;
 	}
 	if (strncmp(path, "/roster/", 8) == 0) {
+		rosteritem *ri;
 		GArray *log;
 
 		path += 8;
 		stbuf->st_mode = S_IFREG | 0666;
 		stbuf->st_nlink = 1;
-		log = g_hash_table_lookup(TalkLog, path);
+		ri = g_hash_table_lookup(RosterHT, path);
+		log = ri->log;
 		if(log) {
 			logf("jid %s log len is %u\n", path, log->len);
 			stbuf->st_size = log->len;
@@ -131,7 +133,7 @@ static int fsopen(const char *path, struct fuse_file_info *fi)
 static int fsread(const char *path, char *buf, size_t size, off_t offset,
 		      struct fuse_file_info *fi)
 {
-	size_t i;
+//	size_t i;
 	if (isJID(path)) {
 		/* TODO: read some messages */
 		return 0;
@@ -144,9 +146,11 @@ static int fsread(const char *path, char *buf, size_t size, off_t offset,
 	}
 	if (strncmp(path, "/roster/", 8) == 0) {
 		GArray *log;
+		rosteritem *ri;
 
 		path += 8;
-		log = g_hash_table_lookup(TalkLog, path);
+		ri = g_hash_table_lookup(RosterHT, path);
+		log = ri->log;
 		if(log) {
 			if(offset + size < log->len) {
 				memcpy(buf, log->data + offset, size);
