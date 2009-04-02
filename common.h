@@ -42,7 +42,6 @@ extern void logs(const char *, size_t);
 extern char * logstr(const char *);
 extern char * make_message(const char *fmt, ...);
 #define logf(FMT,ARGS...) free(logstr(make_message(FMT, ##ARGS)))
-extern char LogBuf[];
-extern int LogBufEnd;
+extern GArray *LogBuf;
 
 extern void xmpp_send(const gchar *to, const gchar *body);

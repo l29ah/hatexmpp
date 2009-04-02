@@ -55,7 +55,7 @@ static int fsgetattr(const char *path, struct stat *stbuf)
         if (strcmp(path, "/log") == 0) {
                 stbuf->st_mode = S_IFREG | 0444;
                 stbuf->st_nlink = 1;
- 	        stbuf->st_size = LogBufEnd;
+ 	        stbuf->st_size = LogBuf->len;
                 return 0;
 	}
 	if (strcmp(path, "/roster") == 0) {
@@ -131,7 +131,7 @@ static int fsread(const char *path, char *buf, size_t size, off_t offset,
 	}
 	if (strcmp(path, "/log") == 0) {
 		printf("reading log\n");
-		memcpy(buf, LogBuf + offset, size);
+		memcpy(buf, LogBuf->data + offset, size);
 		/* TODO: checks, lock */
 		return size;
 	}

@@ -1,19 +1,16 @@
 #include "common.h"
 #include "xmpp.h"
 
-#define LOGBUFSIZE 1000000
 
 GMainLoop *main_loop;
 GMainContext *context;
 ClientConfig *config;
 Roster *roster;
 
-char LogBuf[LOGBUFSIZE];	/* TODO dynamic array */
-int LogBufEnd = 0;
+GArray *LogBuf;
 
-void logs(const char *msg, size_t len) {
-	memcpy(LogBuf + LogBufEnd, msg, len);
-	LogBufEnd += len;
+inline void logs(const char *msg, size_t len) {
+	g_array_append_vals(LogBuf, msg, len);
 }
 
 char * logstr(const char *msg) {
@@ -73,6 +70,7 @@ int main (int argc, char **argv)
 	pthread_t fsthread;
 	struct fuse_args par = FUSE_ARGS_INIT(argc, argv);
 	
+	LogBuf = g_array_sized_new(FALSE, FALSE, 1, 512);
 	logstr("hi all\n");
 	pthread_create(&fsthread, NULL, fsinit, (void *)&par); 
 
@@ -90,5 +88,7 @@ int main (int argc, char **argv)
         g_main_loop_run (main_loop);
 	sleep(-1);	/* I don't want to die so soon */
 	/* TODO fuse shutdown */
+	g_array_free(LogBuf, TRUE);
+	
         return 0;
 }
