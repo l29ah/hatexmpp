@@ -39,6 +39,16 @@ void breakparse(char **linestart, const char *buf, size_t len, const char chr, v
 
 /* FS calls */
 
+static int fscreate(const char *path, mode_t mode, struct fuse_file_info *fi) {
+	/* TODO add roster items */
+	return 0;
+}
+
+static int fsmknod(const char *path, mode_t mode, dev_t type) {
+	/* TODO */
+	return 0;
+}
+
 static int fsmkdir(const char *path, mode_t mode) {
 	if (strncmp(path, "/roster/", 8) == 0) {
 		path += 8;
@@ -110,18 +120,14 @@ static int fsreaddir(const char *path, void *buf, fuse_fill_dir_t filler,
 		if (roster) filler(buf, "roster",NULL, 0);
 		return 0;
 	}
+	/* obsolete? */
+	/*
 	if (isMUC(path)) {
-		/*
-		make participiant list
-		*/
+		//make participiant list
 		filler(buf, "chat", NULL, 0);
 		return 0;
 	}
-	if (strcmp(path, "/roster") == 0) {
-	        filler(buf, ".", NULL, 0);
-		filler(buf, "..", NULL, 0);
-		return 0;
-	}
+	*/
 	if (strcmp(path, "/roster") == 0)
 	{
 		filler(buf, ".", NULL, 0);
@@ -134,17 +140,22 @@ static int fsreaddir(const char *path, void *buf, fuse_fill_dir_t filler,
 			filler(buf, curr->item.jid, NULL, 0);
 			curr = curr->next;
 		}
+		/* TODO updated roster */
+		filler(buf, "anime@conference.jabber.ru", NULL, 0);
+		filler(buf, "hatexmpp@conference.jabber.ru", NULL, 0);
 		return 0;
 	}
-	return -ENOENT;
+	//return -ENOENT;
+	return 0;
 }
 
 static int fsopen(const char *path, struct fuse_file_info *fi)
 {
 	if (fileexists(path))
 		return 0;
-
-	return -ENOENT;
+	/* TODO */
+	//return -ENOENT;
+	return 0;
 }
 
 static int fsread(const char *path, char *buf, size_t size, off_t offset,
@@ -213,6 +224,8 @@ static struct fuse_operations oper = {
 	.write		= fswrite,
 	.setxattr	= fssetxattr,
 	.mkdir		= fsmkdir,
+	.mknod		= fsmknod,
+	.create		= fscreate,
 };
 
 void * fsinit(void *arg) {

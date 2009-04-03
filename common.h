@@ -26,11 +26,6 @@ typedef struct Roster_s {
         struct Roster_s *next;
 } Roster;
 
-typedef struct ptrlist_s {
-	void *v;
-	struct ptrlist_s *n;
-} ptrlist;
-
 #define MUC 2
 #define GUY 1
 

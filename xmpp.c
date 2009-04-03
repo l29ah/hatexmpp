@@ -11,6 +11,7 @@ int joinmuc(const char *jid, const char *password, const char *nick) {
 	LmMessage *m;
 	LmMessageNode *node;
 	gchar *id_str, *to;
+	rosteritem *ri;
 	static int id;	/* TODO what's this!? */
 
 	if(!nick) nick = "hatexmpp";
@@ -28,6 +29,13 @@ int joinmuc(const char *jid, const char *password, const char *nick) {
 	lm_message_node_set_attribute (m->node, "id", id_str);
         lm_connection_send(connection, m, NULL);
 	lm_message_unref(m);
+
+	ri = malloc(sizeof(rosteritem));
+	ri->jid = g_strdup(jid);
+	ri->log = g_array_new(FALSE, FALSE, 1);
+	ri->type = MUC;
+	g_hash_table_insert(RosterHT, g_strdup(jid), ri);
+
 	g_free(id_str);
 	g_free(to);
 	++id;
@@ -56,6 +64,7 @@ Roster *roster_add(Roster **p, RosterItem item)
 	ri->jid = g_strdup(item.jid);
 	ri->resource = NULL;
 	ri->log = g_array_new(FALSE, FALSE, 1);
+	ri->type = GUY;
 	g_hash_table_insert(RosterHT, g_strdup(item.jid), ri);
 	return *p;
 }
@@ -93,19 +102,23 @@ static LmHandlerResult message_rcvd_cb(LmMessageHandler *handler, LmConnection *
 	from = lm_message_node_get_attribute(m->node, "from");
 	to = lm_message_node_get_attribute(m->node, "to");
 	body = lm_message_node_get_value(lm_message_node_get_child(m->node, "body"));
-	logf("Message from %s to %s: %s\n", from, to, body );
-	//xmpp_send(from, body);
-	jid = g_strndup(from, strrchr(from, '/') - from);
-	ri = g_hash_table_lookup(RosterHT, jid);
-	ri->lastmsgtime = time(NULL);
-	log = ri->log;
-	if(log) {
-		logf("appending to %s\n", jid);
-		g_array_append_vals(log, body, strlen(body));
-		g_array_append_vals(log, "\n", 2);
-	} else {
-		logf("JID %s is not in TalkLog, ignoring message", jid);
-	}
+	/* TODO fix awful malloc */
+	/*
+	if (from && body) {
+		logf("Message from %s to %s: %s\n", from, to, body );
+		jid = g_strndup(from, strrchr(from, '/') - from);
+		ri = g_hash_table_lookup(RosterHT, jid);
+		if(ri) {
+			ri->lastmsgtime = time(NULL);
+			log = ri->log;
+			logf("appending to %s\n", jid);
+			g_array_append_vals(log, body, strlen(body));
+			g_array_append_vals(log, "\n", 2);
+		} else {
+			logf("JID %s is not in TalkLog, ignoring message", jid);
+		}
+	} else logf("Message from noone or empty one!\n");
+	*/
 	return LM_HANDLER_RESULT_REMOVE_MESSAGE;
 }
 
@@ -176,7 +189,13 @@ extern void xmpp_connect()
 void xmpp_send(const gchar *to, const gchar *body)
 {
 	LmMessage *m;
+	rosteritem *ri;
+
 	m = lm_message_new(to, LM_MESSAGE_TYPE_MESSAGE);
+	ri = g_hash_table_lookup(RosterHT, to);
+	if(ri) {
+		if(ri->type == MUC) lm_message_node_set_attribute(m->node, "type", "groupchat");
+	}
 	lm_message_node_add_child(m->node, "body", body);
 	lm_connection_send(connection, m, NULL);
 	lm_message_unref(m);
