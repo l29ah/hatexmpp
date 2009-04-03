@@ -7,7 +7,7 @@ void xmpp_send(const gchar *to, const gchar *body);
 
 LmConnection *connection;
 
-static gchar *get_resource(const gchar *jid)
+gchar *get_resource(const gchar *jid)
 {
 	gchar *res;
 	res = strchr(jid,'/')+1;
@@ -16,11 +16,20 @@ static gchar *get_resource(const gchar *jid)
 	return NULL;
 }
 
+gchar *get_jid(gchar *jid)
+{
+	gchar *ch;
+	ch = strchr(jid, '/');
+	if (ch) 
+		return g_strndup(jid, ch - jid);
+	else
+		return g_strdup(jid);
+}
+
 void roster_add(rosteritem *ri)
 {
-	logf( "Adding %s/%s to roster\n", ri->jid, ri->resource);
-	printf( "Adding %s/%s to roster\n", ri->jid, ri->resource);
-//	printf("Adding to roster:\n   JID: %s\n   MUC: %s\n", ri->jid, ri->muc);
+	logf( "Adding %s to roster\n", ri->jid);
+	ri->resources = g_ptr_array_new();
 	ri->log = g_array_new(FALSE, FALSE, 1);
 	g_hash_table_insert(roster, g_strdup(ri->jid), ri);
 }
@@ -58,7 +67,7 @@ int joinmuc(const char *jid, const char *password, const char *nick) {
         lm_connection_send(connection, m, NULL);
 	lm_message_unref(m);
 
-	ri = malloc(sizeof(rosteritem));
+	ri = g_new(rosteritem, 1);
 	ri->jid = g_strdup(jid);
 	ri->type = MUC;
 	roster_add(ri);
@@ -68,36 +77,36 @@ int joinmuc(const char *jid, const char *password, const char *nick) {
 
 static LmHandlerResult presence_rcvd_cb(LmMessageHandler *handler, LmConnection *connection, LmMessage *m, gpointer data)
 {
-	gchar *from, *jid, *resource;
-	gpointer log;
+	gchar *from, *jid, *res;
 	rosteritem *ri;
+	resourceitem *resource;
 
 	from = lm_message_node_get_attribute(m->node, "from");
-	jid = g_strndup(from, strrchr(from, '/') - from);
-	resource = get_resource(from);
-	printf("asdfasdasfda");
-
+	jid = get_jid(from);
+	res = get_resource(from);
 	ri = g_hash_table_lookup(roster, jid);
+
 	if (ri)	{
-		ri->presence = PRESENCE_ONLINE;		// TODO: work with presence better that just set `online'
-		ri = g_malloc(sizeof(rosteritem));
-		ri->resource = resource;
-	}
-	else {
-		rosteritem *ri_new = g_malloc(sizeof(rosteritem));
-		ri_new->jid = g_strdup(jid);
-		ri_new->resource = resource;
-		// TODO: add stuff for MUCs
-		printf("asdfasdasfda");
-		roster_add(ri_new);
-	}
+		// TODO: do something better with presence
+		logf("Adding resource %s to %s\n", res, jid);
+		if (res) {
+			resource = g_new(resourceitem, 1);
+			resource->name = "desu";
+			resource->presence = PRESENCE_ONLINE;
+			g_ptr_array_add(ri->resources, resource);
+		}
+		lm_message_unref(m);
+
+	} else
+		logf("Presence from unknown (%s), ignoring\n", from);
 	return LM_HANDLER_RESULT_REMOVE_MESSAGE;
 }
+
 
 static LmHandlerResult message_rcvd_cb(LmMessageHandler *handler, LmConnection *connection, LmMessage *m, gpointer data)
 {
 	const gchar *from, *to, *body;
-	gchar *jid;
+	gchar *jid, *log_str;
 	gpointer log;
 	rosteritem *ri;
 
@@ -107,47 +116,46 @@ static LmHandlerResult message_rcvd_cb(LmMessageHandler *handler, LmConnection *
 	/* TODO fix awful malloc */
 	if (from && body) {
 		logf("Message from %s to %s: %s\n", from, to, body );
-		jid = g_strndup(from, strrchr(from, '/') - from);
+		jid = get_jid(from);
 		ri = g_hash_table_lookup(roster, jid);
 		if(ri) {
 			ri->lastmsgtime = time(NULL);
 			log = ri->log;
-			logf("appending to %s\n", jid);
-//			body = g_sprintf("%s: %s", ri->jid, body);
-			g_array_append_vals(log, body, strlen(body));
-			g_array_append_vals(log, "\n", 2);
+			log_str = g_strdup_printf("%s: %s\n", jid, body);
+			g_array_append_vals(log, log_str, strlen(log_str));
 		} else {
 			logf("JID %s is not in TalkLog, ignoring message", jid);
 		}
 	} else logf("Message from noone or empty one!\n");
-
+	g_free(log_str);
+	lm_message_unref(m);
 	return LM_HANDLER_RESULT_REMOVE_MESSAGE;
 }
 
-static LmHandlerResult roster_rcvd_cb(LmMessageHandler *handler, LmConnection *connection, LmMessage *m, gpointer data)
+static LmHandlerResult iq_rcvd_cb(LmMessageHandler *handler, LmConnection *connection, LmMessage *m, gpointer data)
 {
 	LmMessageNode *query, *item;
-
-	logstr("Roster callback!\n");
+	
+	// TODO: parse other IQs too
 	query = lm_message_node_get_child(m->node, "query");
-	item  = lm_message_node_get_child (query, "item");
-	while (item)
-	{
-		rosteritem *ri = g_malloc(sizeof(rosteritem));
-		ri->jid = g_strdup(lm_message_node_get_attribute(item, "jid"));
-		ri->resource = NULL;
-		ri->type = GUY;
-		roster_add(ri);
-		item = item->next;
+	if (query) {
+		item  = lm_message_node_get_child (query, "item");
+		while (item) {
+			rosteritem *ri = g_new(rosteritem,1);
+			ri->jid = g_strdup(lm_message_node_get_attribute(item, "jid"));
+			ri->type = GUY;
+			roster_add(ri);
+			item = item->next;
+		}
+		lm_message_node_unref(query);
 	}
-	lm_message_node_unref(query);
+	lm_message_unref(m);
 	return LM_HANDLER_RESULT_REMOVE_MESSAGE;
 }
 
 static void connection_auth_cb(LmConnection *connection, gboolean success, void *data)
 {
 	LmMessage *m;
-	LmMessageHandler *handler;
 	gboolean result;
 
 	logstr("connection_auth_cb\n");
@@ -158,48 +166,48 @@ static void connection_auth_cb(LmConnection *connection, gboolean success, void 
 		lm_message_unref(m);
 
 		m = lm_message_new_with_sub_type(NULL, LM_MESSAGE_TYPE_IQ, LM_MESSAGE_SUB_TYPE_GET);
-		handler = lm_message_handler_new(roster_rcvd_cb, NULL, NULL );
+		lm_connection_register_message_handler(connection, lm_message_handler_new(iq_rcvd_cb, NULL, NULL ), LM_MESSAGE_TYPE_IQ, LM_HANDLER_PRIORITY_NORMAL);
+		lm_connection_register_message_handler(connection, lm_message_handler_new(presence_rcvd_cb, NULL, NULL), LM_MESSAGE_TYPE_PRESENCE, LM_HANDLER_PRIORITY_NORMAL);
+		lm_connection_register_message_handler(connection, lm_message_handler_new(message_rcvd_cb, NULL, NULL), LM_MESSAGE_TYPE_MESSAGE, LM_HANDLER_PRIORITY_NORMAL);
 		lm_message_node_set_attribute(lm_message_node_add_child(m->node, "query", NULL), "xmlns", "jabber:iq:roster");
-        	result = lm_connection_send_with_reply(connection, m, handler, NULL);
-		lm_message_handler_unref(handler);
+        	result = lm_connection_send(connection, m, NULL);
         	lm_message_unref (m);
 	} else
 	{
-		g_error ("Authentication failed");
-		lm_connection_close (connection, NULL);
+		logstr("Authentication failed");
 	}
 }
 
 static void connection_open_cb (LmConnection *connection, gboolean success, void *data)
 {
-	logstr("connection_open_cb\n");
 	if (!success)
-		g_error("Cannot open connection");
+		logstr("Cannot open connection");
 	if (!lm_connection_authenticate (connection, config->username, config->password, config->resource, (LmResultFunction) connection_auth_cb, NULL, g_free, NULL))
-		g_error ("lm_connection_authenticate failed");
+		logstr("lm_connection_authenticate failed");
 }
 
 extern void xmpp_connect()
 {
 	connection = lm_connection_new_with_context (config->server, context);
         if (!lm_connection_open (connection, (LmResultFunction) connection_open_cb, NULL, g_free, NULL))
-		g_error ("lm_connection_open failed");
-	lm_connection_register_message_handler(connection, lm_message_handler_new(presence_rcvd_cb, NULL, NULL), LM_MESSAGE_TYPE_PRESENCE, LM_HANDLER_PRIORITY_NORMAL);
-	lm_connection_register_message_handler(connection, lm_message_handler_new(message_rcvd_cb, NULL, NULL), LM_MESSAGE_TYPE_MESSAGE, LM_HANDLER_PRIORITY_NORMAL);
+		logstr("lm_connection_open failed");
 } 
 
 void xmpp_send(const gchar *to, const gchar *body)
 {
 	LmMessage *m;
 	rosteritem *ri;
+	gchar *log_str;
 
 	m = lm_message_new(to, LM_MESSAGE_TYPE_MESSAGE);
 	ri = g_hash_table_lookup(roster, to);
 	if(ri) {
-		if(ri->type == GUY) lm_message_node_set_attribute(m->node, "type", "groupchat");
-		g_array_append_vals(ri->log, body, strlen(body));
+		if(ri->type == MUC) lm_message_node_set_attribute(m->node, "type", "groupchat");
+		log_str = g_strdup_printf("%s: %s\n", config->username, body);
+		g_array_append_vals(ri->log, log_str, strlen(log_str));
 		g_array_append_vals(ri->log, "\n", 2);
 	}
+	g_free(log_str);
 	lm_message_node_add_child(m->node, "body", body);
 	lm_connection_send(connection, m, NULL);
 	lm_message_unref(m);

@@ -15,7 +15,8 @@ inline void logs(const char *msg, size_t len) {
 
 char * logstr(char *msg) {
 	size_t len;
-
+	
+	g_printf("%s",msg);
 	len = strlen(msg);
 	logs(msg, len);
 

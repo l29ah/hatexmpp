@@ -5,6 +5,9 @@
 #include "parser.h"
 
 int isMUC(const char *path) {
+	rosteritem *ri;
+	ri = g_hash_table_lookup(roster, path+1);
+	if (ri && ri->type == MUC) return 1;
 	return 0;
 }
 
@@ -75,7 +78,8 @@ static int fsgetattr(const char *path, struct stat *stbuf)
 	}
 	if ((strcmp(path, "/roster") == 0) || 
 	    (strcmp(path, "/config") == 0) ||
-	    (strcmp(path, "/") == 0)) {
+	    (strcmp(path, "/") == 0) ||
+	    isMUC(path+1)) {
 		stbuf->st_mode = S_IFDIR | 0755;
 		stbuf->st_nlink = 2;
 		return 0;
@@ -101,7 +105,10 @@ static int fsgetattr(const char *path, struct stat *stbuf)
 		} else return -ENOENT;
 		return 0;
 	}
-
+	if (isMUC(path)) {
+		stbuf->st_mode = S_IFDIR | 0755;
+		stbuf->st_nlink = 2;
+	}
 	return -ENOENT;
 }
 
@@ -199,7 +206,7 @@ static int fswrite(const char *path, const char *buf, size_t size, off_t offset,
 	}
 	if (strncmp(path, "/roster/", 8) == 0) {
 		char *msg;
-
+		// TODO: delete trailing \n, it looks awful in chat
 		path += 8;
 		msg = malloc(size + 1);
 		memcpy(msg, buf, size);

@@ -22,9 +22,14 @@ typedef struct {
 #define PRESENCE_OFFLINE 0
 #define PRESENCE_ONLINE 1
 
+typedef struct recourceitem_s {
+	gchar *name;
+	unsigned presence;
+} resourceitem;
+
 typedef struct rosteritem_s {
 	gchar *jid;
-	gchar *resource;
+	GPtrArray *resources;
 	GArray *log;
 	unsigned presence;
 	time_t lastmsgtime;
