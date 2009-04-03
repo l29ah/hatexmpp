@@ -92,7 +92,7 @@ static int fsgetattr(const char *path, struct stat *stbuf)
 		path += 8;
 		stbuf->st_mode = S_IFREG | 0666;
 		stbuf->st_nlink = 1;
-		ri = g_hash_table_lookup(RosterHT, path);
+		ri = g_hash_table_lookup(roster, path);
 		if(ri) {
 			log = ri->log;
 			logf("jid %s log len is %u\n", path, log->len);
@@ -132,14 +132,17 @@ static int fsreaddir(const char *path, void *buf, fuse_fill_dir_t filler,
 	{
 		filler(buf, ".", NULL, 0);
 		filler(buf, "..", NULL, 0);
-		Roster *curr;
+// Testing new roster!!!
+	GHashTableIter *iter;
+	iter=g_malloc(sizeof(GHashTableIter));
+	gpointer jid;
+	g_hash_table_iter_init (iter, roster);
+	while (g_hash_table_iter_next (iter, &jid, NULL))
+	{
+		filler(buf, jid, NULL, 0);
+	}
+	
 
-		curr=roster;
-		while (curr)
-		{
-			filler(buf, curr->item.jid, NULL, 0);
-			curr = curr->next;
-		}
 		/* TODO updated roster */
 		filler(buf, "anime@conference.jabber.ru", NULL, 0);
 		filler(buf, "hatexmpp@conference.jabber.ru", NULL, 0);
@@ -178,7 +181,7 @@ static int fsread(const char *path, char *buf, size_t size, off_t offset,
 		rosteritem *ri;
 
 		path += 8;
-		ri = g_hash_table_lookup(RosterHT, path);
+		ri = g_hash_table_lookup(roster, path);
 		log = ri->log;
 		if(log) {
 			if(offset + size < log->len) {

@@ -7,6 +7,12 @@ void xmpp_send(const gchar *to, const gchar *body);
 
 LmConnection *connection;
 
+static gchar *get_resource(const gchar *jid)
+{
+	g_return_val_if_fail(jid != NULL, NULL);
+	return g_strdup (strchr(jid,'/'));
+}
+
 int partmuc(const char *jid, const char *nick) {
         LmMessage *m;
 //        LmMessageNode *node;
@@ -24,9 +30,8 @@ int partmuc(const char *jid, const char *nick) {
 int joinmuc(const char *jid, const char *password, const char *nick) {
 	LmMessage *m;
 	LmMessageNode *node;
-	gchar *id_str, *to;
+	gchar *to;
 	rosteritem *ri;
-	static int id;	/* TODO what's this!? */
 
 	if(!nick) nick = "hatexmpp";
 	to = g_strdup_printf("%s/%s", jid, nick);
@@ -39,8 +44,9 @@ int joinmuc(const char *jid, const char *password, const char *nick) {
 	        lm_message_node_add_child (node, "password", password);
 	}
 
-	id_str = g_strdup_printf ("muc_join_%d", id);
-	lm_message_node_set_attribute (m->node, "id", id_str);
+// 	Forget id, just some random key, seems like loudmouth generates it by itself
+//	id_str = g_strdup_printf ("muc_join_%d", id);
+//	lm_message_node_set_attribute (m->node, "id", id_str); 
         lm_connection_send(connection, m, NULL);
 	lm_message_unref(m);
 
@@ -48,62 +54,23 @@ int joinmuc(const char *jid, const char *password, const char *nick) {
 	ri->jid = g_strdup(jid);
 	ri->log = g_array_new(FALSE, FALSE, 1);
 	ri->type = MUC;
-	g_hash_table_insert(RosterHT, g_strdup(jid), ri);
+	g_hash_table_insert(roster, g_strdup(jid), ri);
 
-	g_free(id_str);
 	g_free(to);
-	++id;
 	return 0;
 }
 
-Roster *roster_add(Roster **p, RosterItem item)
+void roster_add(rosteritem *ri)
 {
-	Roster *n = malloc(sizeof(Roster));
-	size_t s;
-	rosteritem *ri;
-
-	if (!n) {
+/*	if (!n) {
 		logstr("Can't allocate memory for roster item!");
 		return NULL;
 	}
-	logf( "Adding JID: %s; Nick: %s\n", item.jid, item.nick );
-	n->next = *p;
-	*p = n;
-	n->item.jid = malloc(s = (strlen(item.jid) + 1));
-	memcpy(n->item.jid, item.jid, s);
-	n->item.nick = malloc(s = (strlen(item.nick) + 1));
-	memcpy(n->item.nick, item.nick, s);
+*/
+	logf( "Adding %s to roster\n", ri->jid );
 
-	ri = malloc(sizeof(rosteritem));
-	ri->jid = g_strdup(item.jid);
-	ri->resource = NULL;
 	ri->log = g_array_new(FALSE, FALSE, 1);
-	ri->type = GUY;
-	g_hash_table_insert(RosterHT, g_strdup(item.jid), ri);
-	return *p;
-}
-
-void roster_print(Roster *n)
-{
-	if (n == NULL)
-	{
-		logstr("list is empty\n");
-	}
-	while (n != NULL)
-	{
-		logf( "%p %p JID: %s; Nick: %s\n",n, n->next, n->item.jid, n->item.nick );
-		n = n->next;
-	}
-}
-
-static gchar *get_nick(const gchar *jid)
-{
-	const gchar *ch;
-	g_return_val_if_fail(jid != NULL, NULL);
-	ch = strchr(jid, '@');
-	if (!ch)
-		return (gchar *) jid;
-	return g_strndup (jid, ch-jid);
+	g_hash_table_insert(roster, g_strdup(ri->jid), ri);
 }
 
 static LmHandlerResult message_rcvd_cb(LmMessageHandler *handler, LmConnection *connection, LmMessage *m, gpointer data)
@@ -117,11 +84,10 @@ static LmHandlerResult message_rcvd_cb(LmMessageHandler *handler, LmConnection *
 	to = lm_message_node_get_attribute(m->node, "to");
 	body = lm_message_node_get_value(lm_message_node_get_child(m->node, "body"));
 	/* TODO fix awful malloc */
-	/*
 	if (from && body) {
 		logf("Message from %s to %s: %s\n", from, to, body );
 		jid = g_strndup(from, strrchr(from, '/') - from);
-		ri = g_hash_table_lookup(RosterHT, jid);
+		ri = g_hash_table_lookup(roster, jid);
 		if(ri) {
 			ri->lastmsgtime = time(NULL);
 			log = ri->log;
@@ -132,28 +98,26 @@ static LmHandlerResult message_rcvd_cb(LmMessageHandler *handler, LmConnection *
 			logf("JID %s is not in TalkLog, ignoring message", jid);
 		}
 	} else logf("Message from noone or empty one!\n");
-	*/
+
 	return LM_HANDLER_RESULT_REMOVE_MESSAGE;
 }
 
 static LmHandlerResult roster_rcvd_cb(LmMessageHandler *handler, LmConnection *connection, LmMessage *m, gpointer data)
 {
 	LmMessageNode *query, *item;
-//	Roster *buddy;
 
 	logstr("Roster callback!\n");
 	query = lm_message_node_get_child(m->node, "query");
 	item  = lm_message_node_get_child (query, "item");
 	while (item)
 	{
-		RosterItem roster_item;
-		roster_item.jid = (gchar *)lm_message_node_get_attribute(item, "jid");
-		roster_item.nick = get_nick(roster_item.jid);
-		roster_add(&roster,roster_item);
+		rosteritem *ri = g_malloc(sizeof(rosteritem));
+		ri->jid = g_strdup(lm_message_node_get_attribute(item, "jid"));
+		ri->resource = NULL;
+		roster_add(ri);
 		item = item->next;
 	}
 	lm_message_node_unref(query);
-	roster_print(roster);
 	return LM_HANDLER_RESULT_REMOVE_MESSAGE;
 }
 
@@ -206,7 +170,7 @@ void xmpp_send(const gchar *to, const gchar *body)
 	rosteritem *ri;
 
 	m = lm_message_new(to, LM_MESSAGE_TYPE_MESSAGE);
-	ri = g_hash_table_lookup(RosterHT, to);
+	ri = g_hash_table_lookup(roster, to);
 	if(ri) {
 		if(ri->type == MUC) lm_message_node_set_attribute(m->node, "type", "groupchat");
 	}

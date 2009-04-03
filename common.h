@@ -16,16 +16,6 @@ typedef struct {
         const char *resource;
 } ClientConfig;
 
-typedef struct {
-        char *jid;
-        char *nick;
-} RosterItem;
-
-typedef struct Roster_s {
-	RosterItem item;
-        struct Roster_s *next;
-} Roster;
-
 #define MUC 2
 #define GUY 1
 
@@ -40,7 +30,7 @@ typedef struct rosteritem_s {
 extern GMainLoop *main_loop;
 extern GMainContext *context;
 extern ClientConfig *config;
-extern Roster *roster;
+extern GHashTable *roster;
 
 /* Logging stuff */
 extern void * fsinit(void *);
@@ -48,7 +38,6 @@ extern void logs(const char *, size_t);
 extern char * logstr(char *);
 #define logf(FMT,ARGS...) free(logstr(g_strdup_printf(FMT, ##ARGS)))
 extern GArray *LogBuf;
-extern GHashTable *RosterHT;
 
 extern void xmpp_send(const gchar *to, const gchar *body);
 extern int joinmuc(const char *jid, const char *password, const char *nick);
