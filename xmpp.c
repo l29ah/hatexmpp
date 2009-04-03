@@ -73,6 +73,7 @@ static LmHandlerResult message_rcvd_cb(LmMessageHandler *handler, LmConnection *
 	if(log) {
 		logf("appending to %s\n", jid);
 		g_array_append_vals(log, body, strlen(body));
+		g_array_append_vals(log, "\n", 2);
 	} else {
 		logf("JID %s is not in TalkLog, ignoring message", jid);
 	}

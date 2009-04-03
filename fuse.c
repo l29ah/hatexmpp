@@ -39,6 +39,16 @@ void breakparse(char **linestart, const char *buf, size_t len, const char chr, v
 
 /* FS calls */
 
+static int fsmkdir(const char *path, mode_t mode) {
+	if (strncmp(path, "/roster/", 8) == 0) {
+		path += 8;
+		logf("join conference %s!\n", path);
+		/* TODO join conference */
+		return 0;
+	}
+	return -EPERM;
+}
+
 static int fsgetattr(const char *path, struct stat *stbuf)
 {
 	memset(stbuf, 0, sizeof(struct stat));
@@ -73,8 +83,8 @@ static int fsgetattr(const char *path, struct stat *stbuf)
 		stbuf->st_mode = S_IFREG | 0666;
 		stbuf->st_nlink = 1;
 		ri = g_hash_table_lookup(RosterHT, path);
-		log = ri->log;
-		if(log) {
+		if(ri) {
+			log = ri->log;
 			logf("jid %s log len is %u\n", path, log->len);
 			stbuf->st_size = log->len;
 
@@ -202,6 +212,7 @@ static struct fuse_operations oper = {
 	.read		= fsread,
 	.write		= fswrite,
 	.setxattr	= fssetxattr,
+	.mkdir		= fsmkdir,
 };
 
 void * fsinit(void *arg) {
