@@ -56,3 +56,4 @@ extern GArray *LogBuf;
 extern GHashTable *RosterHT;
 
 extern void xmpp_send(const gchar *to, const gchar *body);
+extern int joinmuc(const char *jid, const char *password, const char *nick);

@@ -43,7 +43,7 @@ static int fsmkdir(const char *path, mode_t mode) {
 	if (strncmp(path, "/roster/", 8) == 0) {
 		path += 8;
 		logf("join conference %s!\n", path);
-		/* TODO join conference */
+		joinmuc(path, NULL, NULL);
 		return 0;
 	}
 	return -EPERM;

@@ -1,9 +1,38 @@
 #include "common.h"
 #include <loudmouth/loudmouth.h>
 
+#define XMPP_MUC_XMLNS "http://jabber.org/protocol/muc"
+
 void xmpp_send(const gchar *to, const gchar *body);
 
 LmConnection *connection;
+
+int joinmuc(const char *jid, const char *password, const char *nick) {
+	LmMessage *m;
+	LmMessageNode *node;
+	gchar *id_str, *to;
+	static int id;	/* TODO what's this!? */
+
+	if(!nick) nick = "hatexmpp";
+	to = g_strdup_printf("%s/%s", jid, nick);
+	m = lm_message_new_with_sub_type(to, LM_MESSAGE_TYPE_PRESENCE, LM_MESSAGE_SUB_TYPE_AVAILABLE);
+	node = lm_message_node_add_child(m->node, "x", NULL);
+	lm_message_node_set_attribute(node, "xmlns", XMPP_MUC_XMLNS);
+	lm_message_node_add_child (m->node, "show", "available");
+
+	if (password) {
+	        lm_message_node_add_child (node, "password", password);
+	}
+
+	id_str = g_strdup_printf ("muc_join_%d", id);
+	lm_message_node_set_attribute (m->node, "id", id_str);
+        lm_connection_send(connection, m, NULL);
+	lm_message_unref(m);
+	g_free(id_str);
+	g_free(to);
+	++id;
+	return 0;
+}
 
 Roster *roster_add(Roster **p, RosterItem item)
 {
