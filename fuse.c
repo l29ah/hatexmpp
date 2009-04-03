@@ -132,21 +132,16 @@ static int fsreaddir(const char *path, void *buf, fuse_fill_dir_t filler,
 	{
 		filler(buf, ".", NULL, 0);
 		filler(buf, "..", NULL, 0);
-// Testing new roster!!!
-	GHashTableIter *iter;
-	iter=g_malloc(sizeof(GHashTableIter));
-	gpointer jid;
-	g_hash_table_iter_init (iter, roster);
-	while (g_hash_table_iter_next (iter, &jid, NULL))
-	{
-		filler(buf, jid, NULL, 0);
-	}
-	
+		
+		// Testing new roster!!!
+		GHashTableIter iter;
+		rosteritem *ri;
+		g_hash_table_iter_init (&iter, roster);
+		while (g_hash_table_iter_next(&iter, NULL, (gpointer) &ri))
+		{
+			filler(buf, ri->jid, NULL, 0);
+		}	
 
-		/* TODO updated roster */
-		filler(buf, "anime@conference.jabber.ru", NULL, 0);
-		filler(buf, "hatexmpp@conference.jabber.ru", NULL, 0);
-		filler(buf, "megabreds@conference.jabber.ru", NULL, 0);
 		return 0;
 	}
 	//return -ENOENT;

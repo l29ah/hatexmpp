@@ -19,10 +19,14 @@ typedef struct {
 #define MUC 2
 #define GUY 1
 
+#define PRESENCE_OFFLINE 0
+#define PRESENCE_ONLINE 1
+
 typedef struct rosteritem_s {
 	gchar *jid;
 	gchar *resource;
 	GArray *log;
+	unsigned presence;
 	time_t lastmsgtime;
 	unsigned type;
 } rosteritem;
