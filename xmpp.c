@@ -7,6 +7,20 @@ void xmpp_send(const gchar *to, const gchar *body);
 
 LmConnection *connection;
 
+int partmuc(const char *jid, const char *nick) {
+        LmMessage *m;
+//        LmMessageNode *node;
+	gchar *to;
+	
+	to = g_strdup_printf("%s/%s", jid, nick);
+	m = lm_message_new_with_sub_type(to, LM_MESSAGE_TYPE_PRESENCE, LM_MESSAGE_SUB_TYPE_AVAILABLE);
+	lm_message_node_set_attribute(m->node, "type", "unavailable");
+	/* TODO part message */
+	//node = lm_message_node_add_child(m->node, "status", "bye! your hatexmpp.");
+	lm_connection_send(connection, m, NULL);
+	lm_message_unref(m);
+}
+
 int joinmuc(const char *jid, const char *password, const char *nick) {
 	LmMessage *m;
 	LmMessageNode *node;

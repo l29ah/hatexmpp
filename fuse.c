@@ -143,6 +143,7 @@ static int fsreaddir(const char *path, void *buf, fuse_fill_dir_t filler,
 		/* TODO updated roster */
 		filler(buf, "anime@conference.jabber.ru", NULL, 0);
 		filler(buf, "hatexmpp@conference.jabber.ru", NULL, 0);
+		filler(buf, "megabreds@conference.jabber.ru", NULL, 0);
 		return 0;
 	}
 	//return -ENOENT;
