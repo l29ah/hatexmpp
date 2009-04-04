@@ -1,10 +1,9 @@
 #include "common.h"
 #include "xmpp.h"
 
-
 GMainLoop *main_loop;
 GMainContext *context;
-ClientConfig *config;
+GHashTable *config;
 GHashTable *roster;
 
 GArray *LogBuf;
@@ -22,18 +21,6 @@ char * logstr(char *msg) {
 
 	return msg;
 }
-
-/* OBSOLETE
-static gchar *get_nick(const gchar *jid)
-{
-	const gchar *ch;
-	g_return_val_if_fail(jid != NULL, NULL);
-	ch = strchr(jid, '@');
-        if (!ch) 
-                return (gchar *) jid;
-        return g_strndup (jid, ch-jid);
-}
-*/
 
 void free_all()		// trying to make a general cleanup
 {
@@ -54,26 +41,43 @@ void free_all()		// trying to make a general cleanup
 	}
 	g_hash_table_unref(roster);
 	g_array_free(LogBuf, TRUE);
+	g_hash_table_unref(config);
+}
+
+gchar *conf_read(GKeyFile *cf, gchar *section, gchar *key, gchar *def)
+{
+	GError *error;
+	gchar *val = g_key_file_get_string(cf, section, key, NULL);
+	if (!val)
+		return g_strdup(def);
+	return val;
 }
 
 int main (int argc, char **argv)
 {
 	pthread_t fsthread;
 	struct fuse_args par = FUSE_ARGS_INIT(argc, argv);
-	
 	/* TODO */
 	//g_thread_init(NULL);
 	LogBuf = g_array_sized_new(FALSE, FALSE, 1, 512);
 	logstr("hi all\n");
 	roster = g_hash_table_new(g_str_hash, g_str_equal);
 	pthread_create(&fsthread, NULL, fsinit, (void *)&par); 
+	
+	GKeyFile *cf = g_key_file_new();
+	if (!g_key_file_load_from_file(cf, "hatexmpp.conf", G_KEY_FILE_KEEP_COMMENTS, NULL)) {
+		g_error("Couldn't read config file %s\n", DEFAULT_CONFIG);		
+		return -1;
+	}
+	config = g_hash_table_new(g_str_hash, g_str_equal);
+	g_hash_table_insert(config, "server", conf_read(cf, "login", "server", ""));
+	g_hash_table_insert(config, "username", conf_read(cf, "login", "username", ""));
+	g_hash_table_insert(config, "password", conf_read(cf, "login", "password", ""));
+	g_hash_table_insert(config, "resource", conf_read(cf, "login", "resource", ""));
+	g_hash_table_insert(config, "muc_default_nick", conf_read(cf, "login", "muc_default_nick", ""));
+	g_key_file_free(cf);
 
 	logstr("fuse is going up\n");
-	config = g_new0(ClientConfig, 1);
-	config->server = "jabber.ru";
-	config->username = "lexszer0";
-	config->password = "123123123";
-	config->resource = "hatexmpp";
 	context = g_main_context_new();
 	xmpp_connect();
 	logstr("server connected\n");

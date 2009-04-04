@@ -2,7 +2,6 @@
 #include <string.h>
 #include <errno.h>
 #include "common.h"
-#include "parser.h"
 
 int isMUC(const char *path) {
 	rosteritem *ri;
@@ -94,7 +93,10 @@ static int fsgetattr(const char *path, struct stat *stbuf)
 	}
 	if (strncmp(path, "/config/", 8) == 0) {
 		path += 8;
-
+		stbuf->st_mode = S_IFREG | 0644;
+		stbuf->st_nlink = 2;
+		return 0;
+		
 		/* TODO */
 	}
 	if (strncmp(path, "/roster/", 8) == 0) {
@@ -109,7 +111,7 @@ static int fsgetattr(const char *path, struct stat *stbuf)
 				stbuf->st_nlink = 2;
 				return 0;
 			}
-			stbuf->st_mode = S_IFREG | 0666;
+			stbuf->st_mode = S_IFREG | 0644;
 			stbuf->st_nlink = 1;
 			logf("jid %s log len is %u\n", path, ri->log->len);
 			stbuf->st_size = ri->log->len;
@@ -134,6 +136,17 @@ static int fsreaddir(const char *path, void *buf, fuse_fill_dir_t filler,
 		filler(buf, "config", NULL, 0);
 		if (roster) filler(buf, "roster",NULL, 0);
 		return 0;
+	}
+	if (strcmp(path, "/config") == 0) {
+		filler(buf, ".", NULL, 0);
+		filler(buf, "..", NULL, 0);
+		GHashTableIter iter;
+		gchar *key;
+		g_hash_table_iter_init (&iter, config);
+		while (g_hash_table_iter_next(&iter, &key, NULL)) {
+			filler(buf, key, NULL, 0);
+		}
+
 	}
 	if (strcmp(path, "/roster") == 0)
 	{
@@ -187,10 +200,16 @@ static int fsread(const char *path, char *buf, size_t size, off_t offset,
 		return 0;
 	}
 	if (strcmp(path, "/log") == 0) {
-		printf("reading log\n");
 		memcpy(buf, LogBuf->data + offset, size);
 		/* TODO: checks, lock */
 		return size;
+	}
+	if (strncmp(path, "/config/", 8) == 0) {
+		path += 8;
+		gchar *val = g_hash_table_lookup(config, path);
+		logf("Getting config option %s = %s\n", path, val);
+		memcpy(buf, val, strlen(val));
+		return strlen(val);
 	}
 	if (strncmp(path, "/roster/", 8) == 0) {
 		GArray *log;
@@ -223,7 +242,13 @@ static int fswrite(const char *path, const char *buf, size_t size, off_t offset,
 		char *msg;
 		size_t msg_len = size;
 		path += 8;
-		if (strrchr(buf,'\n')) msg_len--;
+		gchar *res = get_resource(path);
+		if (res && (strncmp(res, "__chat", 6) == 0 )) {
+			path = get_jid(path);
+			logf("Sending to groupchat: %s\n", path);
+		}
+		if (strrchr(buf,'\n'))
+			msg_len--;
 		msg = malloc(msg_len+1);
 		memcpy(msg, buf, msg_len);
 		msg[msg_len] = 0;

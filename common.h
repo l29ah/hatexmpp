@@ -9,12 +9,17 @@
 #include <unistd.h>
 #include <fuse.h>
 
+#define DEFAULT_CONFIG "hatexmpp.h"
+
+/*
 typedef struct {
         const char *server;
         const char *username;
         const char *password;
         const char *resource;
+	const char *muc_default_nick;
 } ClientConfig;
+*/
 
 #define MUC 2
 #define GUY 1
@@ -38,7 +43,7 @@ typedef struct rosteritem_s {
 
 extern GMainLoop *main_loop;
 extern GMainContext *context;
-extern ClientConfig *config;
+extern GHashTable *config;
 extern GHashTable *roster;
 
 /* Logging stuff */
@@ -48,5 +53,7 @@ extern char * logstr(char *);
 #define logf(FMT,ARGS...) free(logstr(g_strdup_printf(FMT, ##ARGS)))
 extern GArray *LogBuf;
 
+extern gchar *get_resource(gchar *jid);
+extern gchar *get_jid(gchar *jid);
 extern void xmpp_send(const gchar *to, const gchar *body);
 extern int joinmuc(const char *jid, const char *password, const char *nick);

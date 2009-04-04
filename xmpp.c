@@ -7,7 +7,7 @@ void xmpp_send(const gchar *to, const gchar *body);
 
 LmConnection *connection;
 
-gchar *get_resource(const gchar *jid)
+gchar *get_resource(gchar *jid)
 {
 	gchar *res;
 	res = strchr(jid,'/');
@@ -54,7 +54,7 @@ int joinmuc(const char *jid, const char *password, const char *nick) {
 	gchar *to;
 	rosteritem *ri;
 
-	if(!nick) nick = "hatexmpp";
+	if (!nick) nick = (gchar *) g_hash_table_lookup(config, "muc_default_nick");
 	to = g_strdup_printf("%s/%s", jid, nick);
 	m = lm_message_new_with_sub_type(to, LM_MESSAGE_TYPE_PRESENCE, LM_MESSAGE_SUB_TYPE_AVAILABLE);
 	node = lm_message_node_add_child(m->node, "x", NULL);
@@ -106,8 +106,7 @@ static LmHandlerResult presence_rcvd_cb(LmMessageHandler *handler, LmConnection 
 
 static LmHandlerResult message_rcvd_cb(LmMessageHandler *handler, LmConnection *connection, LmMessage *m, gpointer data)
 {
-	const gchar *from, *to, *body;
-	gchar *jid, *log_str;
+	const gchar *from, *to, *body, *jid, *log_str;
 	rosteritem *ri;
 
 	from = lm_message_node_get_attribute(m->node, "from");
@@ -128,7 +127,6 @@ static LmHandlerResult message_rcvd_cb(LmMessageHandler *handler, LmConnection *
 			logf("JID %s is not in TalkLog, ignoring message", jid);
 		}
 	} else logf("Message from noone or empty one!\n");
-	g_free(log_str);
 	lm_message_unref(m);
 	return LM_HANDLER_RESULT_REMOVE_MESSAGE;
 }
@@ -184,13 +182,17 @@ static void connection_open_cb (LmConnection *connection, gboolean success, void
 {
 	if (!success)
 		logstr("Cannot open connection");
-	if (!lm_connection_authenticate (connection, config->username, config->password, config->resource, (LmResultFunction) connection_auth_cb, NULL, g_free, NULL))
+	if (!lm_connection_authenticate (connection, 
+					 (gchar *) g_hash_table_lookup(config, "username"),
+					 (gchar *) g_hash_table_lookup(config, "password"),
+					 (gchar *) g_hash_table_lookup(config, "resource"),
+					 (LmResultFunction) connection_auth_cb, NULL, g_free, NULL))
 		logstr("lm_connection_authenticate failed");
 }
 
 extern void xmpp_connect()
 {
-	connection = lm_connection_new_with_context (config->server, context);
+	connection = lm_connection_new_with_context ((gchar *) g_hash_table_lookup(config, "server"), context);
         if (!lm_connection_open (connection, (LmResultFunction) connection_open_cb, NULL, g_free, NULL))
 		logstr("lm_connection_open failed");
 } 
@@ -205,11 +207,10 @@ void xmpp_send(const gchar *to, const gchar *body)
 	ri = g_hash_table_lookup(roster, to);
 	if(ri) {
 		if(ri->type == MUC) lm_message_node_set_attribute(m->node, "type", "groupchat");
-		log_str = g_strdup_printf("%s: %s\n", config->username, body);
+		log_str = g_strdup_printf("%s: %s\n", (gchar *) g_hash_table_lookup(config, "muc_default_nick"), body);
 		g_array_append_vals(ri->log, log_str, strlen(log_str));
 		g_array_append_vals(ri->log, "\n", 2);
 	}
-	g_free(log_str);
 	lm_message_node_add_child(m->node, "body", body);
 	lm_connection_send(connection, m, NULL);
 	lm_message_unref(m);

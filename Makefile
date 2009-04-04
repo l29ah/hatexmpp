@@ -7,7 +7,7 @@ hatexmpp: hatexmpp.o fuse.o xmpp.o
 
 hatexmpp.o: hatexmpp.c common.h xmpp.h
 
-fuse.o: fuse.c common.h parser.h
+fuse.o: fuse.c common.h
 
 xmpp.o: xmpp.c xmpp.h common.h
 
