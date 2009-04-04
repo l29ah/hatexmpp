@@ -112,7 +112,6 @@ static LmHandlerResult message_rcvd_cb(LmMessageHandler *handler, LmConnection *
 	from = lm_message_node_get_attribute(m->node, "from");
 	to = lm_message_node_get_attribute(m->node, "to");
 	body = lm_message_node_get_value(lm_message_node_get_child(m->node, "body"));
-	/* TODO fix awful malloc */
 	if (from && body) {
 		logf("Message from %s to %s: %s\n", from, to, body );
 		jid = get_jid((gchar *) from);
