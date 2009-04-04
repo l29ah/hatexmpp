@@ -240,15 +240,11 @@ void xmpp_send(const gchar *to, const gchar *body)
 {
 	LmMessage *m;
 	rosteritem *ri;
-	gchar *log_str;
 
 	m = lm_message_new(to, LM_MESSAGE_TYPE_MESSAGE);
 	ri = g_hash_table_lookup(roster, to);
 	if(ri) {
 		if(ri->type == MUC) lm_message_node_set_attribute(m->node, "type", "groupchat");
-		log_str = g_strdup_printf("%s: %s\n", (gchar *) g_hash_table_lookup(config, "muc_default_nick"), body);
-		g_array_append_vals(ri->log, log_str, strlen(log_str));
-		g_array_append_vals(ri->log, "\n", 2);
 	}
 	lm_message_node_add_child(m->node, "body", body);
 	lm_connection_send(connection, m, NULL);
