@@ -28,16 +28,31 @@ int addri(const char *jid, GPtrArray *resources, unsigned type) {
 	logf("Adding %s to roster\n", jid);
 	ri = g_new(rosteritem, 1);
 	ri->jid = g_strdup(jid);
-	ri->resources = resources;	/* TODO */
+	if (resources)
+		ri->resources = resources;	/* TODO */
+	else
+		ri->resources = g_ptr_array_new();
 	ri->log = g_array_new(FALSE, FALSE, 1);
+	ri->type = type;
 	g_hash_table_insert(roster, g_strdup(ri->jid), ri);
 
 	return 0;
 }
 
+int destroyresource(resourceitem *res) {
+	if (res->name) g_free (res->name);
+	return 0;
+}
+
 int destroyri(rosteritem *RI) {
 	if(RI->jid) g_free(RI->jid);
-	if(RI->resources) g_ptr_array_free(RI->resources, TRUE); /* TODO free properly */
+	if(RI->resources) {
+		int i;
+		resourceitem *res;
+		for (i=0; i < RI->resources->len; i++)
+			destroyresource(g_ptr_array_index(RI->resources, i));
+		g_ptr_array_free(RI->resources, TRUE);
+	}
 	if(RI->log) g_array_free(RI->log, TRUE);
 
 	return 0;
@@ -47,19 +62,9 @@ void free_all()		// trying to make a general cleanup
 {
 	GHashTableIter iter;
 	rosteritem *ri;
-	resourceitem *res;
-	int i;
-
 	g_hash_table_iter_init (&iter, roster);
-	while (g_hash_table_iter_next(&iter, NULL, (gpointer) &ri)) {
-		g_free(ri->jid);
-		for (i=0; i < ri->resources->len; i++) {
-			res = g_ptr_array_index(ri->resources, i);
-			g_free(res->name);
-		}
-		g_ptr_array_free(ri->resources, TRUE);
-		g_array_free(ri->log, TRUE);
-	}
+	while (g_hash_table_iter_next(&iter, NULL, (gpointer) &ri)) 
+		destroyri(ri);
 	g_hash_table_unref(roster);
 	g_array_free(LogBuf, TRUE);
 	g_hash_table_unref(config);
@@ -86,7 +91,7 @@ int main (int argc, char **argv)
 	pthread_create(&fsthread, NULL, fsinit, (void *)&par); 
 	
 	GKeyFile *cf = g_key_file_new();
-	if (!g_key_file_load_from_file(cf, "hatexmpp.conf", G_KEY_FILE_KEEP_COMMENTS, NULL)) {
+	if (!g_key_file_load_from_file(cf, DEFAULT_CONFIG, G_KEY_FILE_KEEP_COMMENTS, NULL)) {
 		g_error("Couldn't read config file %s\n", DEFAULT_CONFIG);		
 		return -1;
 	}

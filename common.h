@@ -9,7 +9,7 @@
 #include <unistd.h>
 #include <fuse.h>
 
-#define DEFAULT_CONFIG "hatexmpp.h"
+#define DEFAULT_CONFIG "hatexmpp.conf"
 
 /*
 typedef struct {

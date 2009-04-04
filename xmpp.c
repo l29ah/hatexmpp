@@ -56,7 +56,6 @@ int joinmuc(const char *jid, const char *password, const char *nick) {
 	LmMessage *m;
 	LmMessageNode *node;
 	gchar *to;
-	rosteritem *ri;
 
 	if (!nick) nick = (gchar *) g_hash_table_lookup(config, "muc_default_nick");
 	to = g_strdup_printf("%s/%s", jid, nick);
@@ -79,7 +78,7 @@ int joinmuc(const char *jid, const char *password, const char *nick) {
 
 static LmHandlerResult presence_rcvd_cb(LmMessageHandler *handler, LmConnection *connection, LmMessage *m, gpointer data)
 {
-	gchar *from, *jid, *res;
+	gchar *from, *jid, *res, *type;
 	rosteritem *ri;
 	resourceitem *resource;
 
@@ -88,19 +87,32 @@ static LmHandlerResult presence_rcvd_cb(LmMessageHandler *handler, LmConnection 
 	res = get_resource(from);
 	ri = g_hash_table_lookup(roster, jid);
 
-	if (ri)	{
+	if (ri && res)	{
 		// TODO: do something better with presence
-		logf("Adding resource %s to %s\n", res, jid);
-		if (res) {
+		type = lm_message_node_get_attribute(m->node, "type");
+		if (type && (strcmp(type, "unavailable") == 0) && (ri->resources->len > 0)) {
+			logf("Deleting resource %s from %s\n", res, jid);
+			int i;
+			for (i = 0; i < ri->resources->len; i++) {
+				resource = g_ptr_array_index(ri->resources, i);
+				if (strcmp(resource->name, res) == 0) {
+					g_ptr_array_remove_index(ri->resources, i);
+					break;
+				}
+			}
+
+			
+		}
+		else {
+			logf("Adding resource %s to %s\n", res, jid);
 			resource = g_new(resourceitem, 1);
 			resource->name = res;
 			resource->presence = PRESENCE_ONLINE;
-			g_ptr_array_add(ri->resources, resource);
+			g_ptr_array_add(ri->resources, resource);		
 		}
-		lm_message_unref(m);
-
 	} else
 		logf("Presence from unknown (%s), ignoring\n", from);
+	lm_message_unref(m);
 	return LM_HANDLER_RESULT_REMOVE_MESSAGE;
 }
 
@@ -161,11 +173,6 @@ static void connection_auth_cb(LmConnection *connection, gboolean success, void 
 		lm_message_unref(m);
 
 		m = lm_message_new_with_sub_type(NULL, LM_MESSAGE_TYPE_IQ, LM_MESSAGE_SUB_TYPE_GET);
-		// TODO: moar c011b4ckz!
-		lm_connection_register_message_handler(connection, lm_message_handler_new(iq_rcvd_cb, NULL, NULL ), LM_MESSAGE_TYPE_IQ, LM_HANDLER_PRIORITY_NORMAL);
-		lm_connection_register_message_handler(connection, lm_message_handler_new(presence_rcvd_cb, NULL, NULL), LM_MESSAGE_TYPE_PRESENCE, LM_HANDLER_PRIORITY_NORMAL);
-		lm_connection_register_message_handler(connection, lm_message_handler_new(message_rcvd_cb, NULL, NULL), LM_MESSAGE_TYPE_MESSAGE, LM_HANDLER_PRIORITY_NORMAL);
-		
 		lm_message_node_set_attribute(lm_message_node_add_child(m->node, "query", NULL), "xmlns", "jabber:iq:roster");
         	result = lm_connection_send(connection, m, NULL);
         	lm_message_unref (m);
@@ -187,9 +194,44 @@ static void connection_open_cb (LmConnection *connection, gboolean success, void
 		logstr("lm_connection_authenticate failed");
 }
 
+void connection_close_cb (LmConnection *connection, LmDisconnectReason reason, gpointer data)
+{
+	gchar *str;
+	switch (reason) {
+	case LM_DISCONNECT_REASON_OK:
+		str = "User requested disconnect.";
+		break;
+	case LM_DISCONNECT_REASON_PING_TIME_OUT:
+		str = "Connection to the server timed out";
+		break;
+	case LM_DISCONNECT_REASON_HUP:
+		str = "The socket emitted that the connection was hung up.";
+		break;
+	case LM_DISCONNECT_REASON_ERROR:
+		str = "A generic error somewhere in the transport layer.";
+		break;
+	case LM_DISCONNECT_REASON_RESOURCE_CONFLICT:
+		str = "Another connection was made to the server with the same resource.";
+		break;
+	case LM_DISCONNECT_REASON_INVALID_XML:
+		str = "Invalid XML was sent from the client.";
+		break;
+	case LM_DISCONNECT_REASON_UNKNOWN:
+		str = "An unknown error.";
+	}
+
+	logf("Disconnected. Reason: %s", str);
+	g_free(str);
+}
+
 extern void xmpp_connect()
 {
 	connection = lm_connection_new_with_context ((gchar *) g_hash_table_lookup(config, "server"), context);
+	// TODO: moar c011b4ckz!
+	lm_connection_register_message_handler(connection, lm_message_handler_new(iq_rcvd_cb, NULL, NULL ), LM_MESSAGE_TYPE_IQ, LM_HANDLER_PRIORITY_NORMAL);
+	lm_connection_register_message_handler(connection, lm_message_handler_new(presence_rcvd_cb, NULL, NULL), LM_MESSAGE_TYPE_PRESENCE, LM_HANDLER_PRIORITY_NORMAL);
+	lm_connection_register_message_handler(connection, lm_message_handler_new(message_rcvd_cb, NULL, NULL), LM_MESSAGE_TYPE_MESSAGE, LM_HANDLER_PRIORITY_NORMAL);
+	lm_connection_set_disconnect_function(connection, connection_close_cb, NULL, g_free);		
         if (!lm_connection_open (connection, (LmResultFunction) connection_open_cb, NULL, g_free, NULL))
 		logstr("lm_connection_open failed");
 } 
