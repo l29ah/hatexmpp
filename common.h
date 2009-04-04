@@ -22,7 +22,7 @@ typedef struct {
 #define PRESENCE_OFFLINE 0
 #define PRESENCE_ONLINE 1
 
-typedef struct recourceitem_s {
+typedef struct resourceitem_s {
 	gchar *name;
 	unsigned presence;
 } resourceitem;

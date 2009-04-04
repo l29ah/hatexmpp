@@ -15,6 +15,15 @@ int isJID(const char *path) {
 	return 0;
 }
 
+gchar *path_element(const gchar *path) {
+	if (*path == '/')
+		path ++;
+	gchar *ch = strchr(path, '/');
+	if (ch)
+		return g_strndup(path, ch - path);
+	return g_strdup(path);
+}
+
 int fileexists(const char *path) {
 	if (strcmp(path, "/log") == 0) return 1;
 	if (strncmp(path, "/roster/", 8) == 0) return 1;
@@ -78,8 +87,7 @@ static int fsgetattr(const char *path, struct stat *stbuf)
 	}
 	if ((strcmp(path, "/roster") == 0) || 
 	    (strcmp(path, "/config") == 0) ||
-	    (strcmp(path, "/") == 0) ||
-	    isMUC(path+1)) {
+	    (strcmp(path, "/") == 0)) {
 		stbuf->st_mode = S_IFDIR | 0755;
 		stbuf->st_nlink = 2;
 		return 0;
@@ -91,23 +99,23 @@ static int fsgetattr(const char *path, struct stat *stbuf)
 	}
 	if (strncmp(path, "/roster/", 8) == 0) {
 		rosteritem *ri;
-		GArray *log;
-
+		gchar *jid;
 		path += 8;
-		stbuf->st_mode = S_IFREG | 0666;
-		stbuf->st_nlink = 1;
-		ri = g_hash_table_lookup(roster, path);
-		if(ri) {
-			log = ri->log;
-			logf("jid %s log len is %u\n", path, log->len);
-			stbuf->st_size = log->len;
+		jid = path_element(path);
+		ri = g_hash_table_lookup(roster, jid);
+		if (ri) {
+			if ((ri->type == MUC) && (strlen(path) == strlen(jid))) {
+				stbuf->st_mode = S_IFDIR | 0755;
+				stbuf->st_nlink = 2;
+				return 0;
+			}
+			stbuf->st_mode = S_IFREG | 0666;
+			stbuf->st_nlink = 1;
+			logf("jid %s log len is %u\n", path, ri->log->len);
+			stbuf->st_size = ri->log->len;
+			return 0;
+		}
 
-		} else return -ENOENT;
-		return 0;
-	}
-	if (isMUC(path)) {
-		stbuf->st_mode = S_IFDIR | 0755;
-		stbuf->st_nlink = 2;
 	}
 	return -ENOENT;
 }
@@ -127,31 +135,37 @@ static int fsreaddir(const char *path, void *buf, fuse_fill_dir_t filler,
 		if (roster) filler(buf, "roster",NULL, 0);
 		return 0;
 	}
-	/* obsolete? */
-	/*
-	if (isMUC(path)) {
-		//make participiant list
-		filler(buf, "chat", NULL, 0);
-		return 0;
-	}
-	*/
 	if (strcmp(path, "/roster") == 0)
 	{
 		filler(buf, ".", NULL, 0);
 		filler(buf, "..", NULL, 0);
 		
-		// Testing new roster!!!
 		GHashTableIter iter;
 		rosteritem *ri;
 		g_hash_table_iter_init (&iter, roster);
 		while (g_hash_table_iter_next(&iter, NULL, (gpointer) &ri))
 		{
 			filler(buf, ri->jid, NULL, 0);
-		}	
-
+		}
 		return 0;
 	}
-	//return -ENOENT;
+	if (strncmp(path, "/roster/", 8) == 0) {
+		path += 8;
+		int i;
+		rosteritem *ri;
+		resourceitem *res;
+		ri = g_hash_table_lookup(roster, path);
+		if (ri && (ri->type == MUC)) {
+			filler(buf, ".", NULL, 0);
+			filler(buf, "..", NULL, 0);
+			filler(buf, "__chat", NULL, 0);
+			for (i=0; i< ri->resources->len; i++) {
+				res = g_ptr_array_index(ri->resources, i);
+				filler(buf, res->name, NULL, 0);
+			}
+		}
+	}
+
 	return 0;
 }
 
@@ -183,9 +197,10 @@ static int fsread(const char *path, char *buf, size_t size, off_t offset,
 		rosteritem *ri;
 
 		path += 8;
-		ri = g_hash_table_lookup(roster, path);
-		log = ri->log;
-		if(log) {
+		gchar *jid = path_element(path);
+		ri = g_hash_table_lookup(roster, jid);
+		if(ri) {
+			log = ri->log;
 			if(offset + size < log->len) {
 				memcpy(buf, log->data + offset, size);
 				return size;
@@ -206,11 +221,12 @@ static int fswrite(const char *path, const char *buf, size_t size, off_t offset,
 	}
 	if (strncmp(path, "/roster/", 8) == 0) {
 		char *msg;
-		// TODO: delete trailing \n, it looks awful in chat
+		size_t msg_len = size;
 		path += 8;
-		msg = malloc(size + 1);
-		memcpy(msg, buf, size);
-		msg[size] = 0;
+		if (strrchr(buf,'\n')) msg_len--;
+		msg = malloc(msg_len+1);
+		memcpy(msg, buf, msg_len);
+		msg[msg_len] = 0;
 		xmpp_send(path, msg);
 		return size;
 	}

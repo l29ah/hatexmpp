@@ -10,9 +10,9 @@ LmConnection *connection;
 gchar *get_resource(const gchar *jid)
 {
 	gchar *res;
-	res = strchr(jid,'/')+1;
+	res = strchr(jid,'/');
 	if (res)
-		return g_strdup (strchr(jid,'/')+1);
+		return g_strdup(res+1);
 	return NULL;
 }
 
@@ -45,6 +45,7 @@ int partmuc(const char *jid, const char *nick) {
 	//node = lm_message_node_add_child(m->node, "status", "bye! your hatexmpp.");
 	lm_connection_send(connection, m, NULL);
 	lm_message_unref(m);
+	return 0;
 }
 
 int joinmuc(const char *jid, const char *password, const char *nick) {
@@ -81,7 +82,7 @@ static LmHandlerResult presence_rcvd_cb(LmMessageHandler *handler, LmConnection 
 	rosteritem *ri;
 	resourceitem *resource;
 
-	from = lm_message_node_get_attribute(m->node, "from");
+	from = (gchar *) lm_message_node_get_attribute(m->node, "from");
 	jid = get_jid(from);
 	res = get_resource(from);
 	ri = g_hash_table_lookup(roster, jid);
@@ -91,7 +92,7 @@ static LmHandlerResult presence_rcvd_cb(LmMessageHandler *handler, LmConnection 
 		logf("Adding resource %s to %s\n", res, jid);
 		if (res) {
 			resource = g_new(resourceitem, 1);
-			resource->name = "desu";
+			resource->name = res;
 			resource->presence = PRESENCE_ONLINE;
 			g_ptr_array_add(ri->resources, resource);
 		}
@@ -107,7 +108,6 @@ static LmHandlerResult message_rcvd_cb(LmMessageHandler *handler, LmConnection *
 {
 	const gchar *from, *to, *body;
 	gchar *jid, *log_str;
-	gpointer log;
 	rosteritem *ri;
 
 	from = lm_message_node_get_attribute(m->node, "from");
@@ -116,13 +116,14 @@ static LmHandlerResult message_rcvd_cb(LmMessageHandler *handler, LmConnection *
 	/* TODO fix awful malloc */
 	if (from && body) {
 		logf("Message from %s to %s: %s\n", from, to, body );
-		jid = get_jid(from);
+		jid = get_jid((gchar *) from);
 		ri = g_hash_table_lookup(roster, jid);
 		if(ri) {
 			ri->lastmsgtime = time(NULL);
-			log = ri->log;
+			if (ri->type == MUC)
+				jid = get_resource(from);
 			log_str = g_strdup_printf("%s: %s\n", jid, body);
-			g_array_append_vals(log, log_str, strlen(log_str));
+			g_array_append_vals(ri->log, log_str, strlen(log_str));
 		} else {
 			logf("JID %s is not in TalkLog, ignoring message", jid);
 		}
@@ -158,7 +159,6 @@ static void connection_auth_cb(LmConnection *connection, gboolean success, void 
 	LmMessage *m;
 	gboolean result;
 
-	logstr("connection_auth_cb\n");
 	if (success)
 	{
 		m = lm_message_new_with_sub_type(NULL, LM_MESSAGE_TYPE_PRESENCE, LM_MESSAGE_SUB_TYPE_AVAILABLE);
@@ -166,9 +166,11 @@ static void connection_auth_cb(LmConnection *connection, gboolean success, void 
 		lm_message_unref(m);
 
 		m = lm_message_new_with_sub_type(NULL, LM_MESSAGE_TYPE_IQ, LM_MESSAGE_SUB_TYPE_GET);
+		// TODO: moar c011b4ckz!
 		lm_connection_register_message_handler(connection, lm_message_handler_new(iq_rcvd_cb, NULL, NULL ), LM_MESSAGE_TYPE_IQ, LM_HANDLER_PRIORITY_NORMAL);
 		lm_connection_register_message_handler(connection, lm_message_handler_new(presence_rcvd_cb, NULL, NULL), LM_MESSAGE_TYPE_PRESENCE, LM_HANDLER_PRIORITY_NORMAL);
 		lm_connection_register_message_handler(connection, lm_message_handler_new(message_rcvd_cb, NULL, NULL), LM_MESSAGE_TYPE_MESSAGE, LM_HANDLER_PRIORITY_NORMAL);
+		
 		lm_message_node_set_attribute(lm_message_node_add_child(m->node, "query", NULL), "xmlns", "jabber:iq:roster");
         	result = lm_connection_send(connection, m, NULL);
         	lm_message_unref (m);

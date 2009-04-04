@@ -23,6 +23,7 @@ char * logstr(char *msg) {
 	return msg;
 }
 
+/* OBSOLETE
 static gchar *get_nick(const gchar *jid)
 {
 	const gchar *ch;
@@ -31,6 +32,28 @@ static gchar *get_nick(const gchar *jid)
         if (!ch) 
                 return (gchar *) jid;
         return g_strndup (jid, ch-jid);
+}
+*/
+
+void free_all()		// trying to make a general cleanup
+{
+	GHashTableIter iter;
+	rosteritem *ri;
+	resourceitem *res;
+	int i;
+
+	g_hash_table_iter_init (&iter, roster);
+	while (g_hash_table_iter_next(&iter, NULL, (gpointer) &ri)) {
+		g_free(ri->jid);
+		for (i=0; i < ri->resources->len; i++) {
+			res = g_ptr_array_index(ri->resources, i);
+			g_free(res->name);
+		}
+		g_ptr_array_free(ri->resources, TRUE);
+		g_array_free(ri->log, TRUE);
+	}
+	g_hash_table_unref(roster);
+	g_array_free(LogBuf, TRUE);
 }
 
 int main (int argc, char **argv)
@@ -58,9 +81,6 @@ int main (int argc, char **argv)
 	/* TODO: fix segfaults (valgrind is your friend?) */
         g_main_loop_run (main_loop);
 	sleep(-1);	/* I don't want to die so soon */
-	/* TODO fuse shutdown */
-	g_array_free(LogBuf, TRUE);
-	/* TODO free everything */
-
+	free_all();
         return 0;
 }
