@@ -111,7 +111,7 @@ static int fsgetattr(const char *path, struct stat *stbuf)
 				stbuf->st_nlink = 2;
 				return 0;
 			}
-			stbuf->st_mode = S_IFREG | 0644;
+			stbuf->st_mode = S_IFREG | 0666;	/* TODO fixable perms */
 			stbuf->st_nlink = 1;
 			logf("jid %s log len is %u\n", path, ri->log->len);
 			stbuf->st_size = ri->log->len;

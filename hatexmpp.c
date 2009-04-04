@@ -15,7 +15,7 @@ inline void logs(const char *msg, size_t len) {
 char * logstr(char *msg) {
 	size_t len;
 	
-	g_printf("%s",msg);
+	g_printf("LOGF: %s",msg);
 	len = strlen(msg);
 	logs(msg, len);
 
@@ -82,9 +82,8 @@ int main (int argc, char **argv)
 	xmpp_connect();
 	logstr("server connected\n");
         main_loop = g_main_loop_new (context, FALSE);
-	/* TODO: fix segfaults (valgrind is your friend?) */
         g_main_loop_run (main_loop);
-	sleep(-1);	/* I don't want to die so soon */
+	//sleep(-1);	/* I don't want to die so soon */
 	free_all();
         return 0;
 }
