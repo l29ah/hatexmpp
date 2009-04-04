@@ -48,7 +48,7 @@ int destroyri(rosteritem *RI) {
 	if(RI->jid) g_free(RI->jid);
 	if(RI->resources) {
 		int i;
-		resourceitem *res;
+//		resourceitem *res;
 		for (i=0; i < RI->resources->len; i++)
 			destroyresource(g_ptr_array_index(RI->resources, i));
 		g_ptr_array_free(RI->resources, TRUE);
@@ -73,7 +73,7 @@ void free_all()		// trying to make a general cleanup
 
 gchar *conf_read(GKeyFile *cf, gchar *section, gchar *key, gchar *def)
 {
-	GError *error;
+//	GError *error;
 	gchar *val = g_key_file_get_string(cf, section, key, NULL);
 	if (!val) return g_strdup(def);
 	else return val;

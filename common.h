@@ -60,8 +60,8 @@ extern char * logstr(char *);
 #define logf(FMT,ARGS...) free(logstr(g_strdup_printf(FMT, ##ARGS)))
 extern GArray *LogBuf;
 
-extern gchar *get_resource(gchar *jid);
-extern gchar *get_jid(gchar *jid);
+extern gchar *get_resource(const gchar *jid);
+extern gchar *get_jid(const gchar *jid);
 extern void xmpp_send(const gchar *to, const gchar *body);
 extern int joinmuc(const char *jid, const char *password, const char *nick);
 extern int partmuc(const char *jid, const char *nick);
@@ -69,3 +69,6 @@ extern int partmuc(const char *jid, const char *nick);
 extern int addri(const char *jid, GPtrArray *resources, unsigned type);
 extern int destroyri(rosteritem *RI);
 
+extern gchar *conf_read(GKeyFile *cf, gchar *section, gchar *key, gchar *def);
+extern void free_all();
+extern void xmpp_connect();

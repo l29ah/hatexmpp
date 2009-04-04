@@ -7,7 +7,7 @@ void xmpp_send(const gchar *to, const gchar *body);
 
 LmConnection *connection;
 
-gchar *get_resource(gchar *jid)
+gchar *get_resource(const gchar *jid)
 {
 	gchar *res;
 	res = strchr(jid,'/');
@@ -16,7 +16,7 @@ gchar *get_resource(gchar *jid)
 	return NULL;
 }
 
-gchar *get_jid(gchar *jid)
+gchar *get_jid(const gchar *jid)
 {
 	gchar *ch;
 	ch = strchr(jid, '/');
@@ -225,8 +225,7 @@ void connection_close_cb (LmConnection *connection, LmDisconnectReason reason, g
 	g_free(str);
 }
 
-extern void xmpp_connect()
-{
+void xmpp_connect() {
 	connection = lm_connection_new_with_context ((gchar *) g_hash_table_lookup(config, "server"), context);
 	// TODO: moar c011b4ckz!
 	lm_connection_register_message_handler(connection, lm_message_handler_new(iq_rcvd_cb, NULL, NULL ), LM_MESSAGE_TYPE_IQ, LM_HANDLER_PRIORITY_NORMAL);

@@ -25,24 +25,6 @@ int fileexists(const char *path) {
 	if (strncmp(path, "/roster/", 8) == 0) return 1;
 	return 0;
 }
-/*
-void breakparse(char **linestart, const char *buf, size_t len, const char chr, void callb(const char *)) {
-	int i = 0;
-
-	while (1) {
-		while(i < len && (buf[i] != chr)) {
-			i++;
-		}
-		if(i == len) return;
-		else {
-			callb(*linestart);
-			*linestart = buf + (++i); 
-		}
-	}
-	return;
-}
-*/
-//void postparse(char **linestart, 
 
 
 /* FS calls */
@@ -165,7 +147,7 @@ static int fsreaddir(const char *path, void *buf, fuse_fill_dir_t filler,
 		GHashTableIter iter;
 		gchar *key;
 		g_hash_table_iter_init (&iter, config);
-		while (g_hash_table_iter_next(&iter, &key, NULL)) {
+		while (g_hash_table_iter_next(&iter, (gpointer *)&key, NULL)) {
 			filler(buf, key, NULL, 0);
 		}
 
@@ -299,14 +281,14 @@ static int fssetxattr(const char *path, const char *a, const char *aa, size_t si
 	return 0;
 }
 
-static int fsdestroy(void *privdata) {
+static void fsdestroy(void *privdata) {
         /* TODO */
 	free_all();
-	g_main_loop_quit(privdata);
-	return 0;
+	g_main_loop_quit(main_loop);
+	return;
 }
 
-static int fsinit(struct fuse_conn_info *conn) {
+static void * fsinit(struct fuse_conn_info *conn) {
         pthread_t *mlt;
 
         LogBuf = g_array_sized_new(FALSE, FALSE, 1, 512);
@@ -316,7 +298,7 @@ static int fsinit(struct fuse_conn_info *conn) {
         GKeyFile *cf = g_key_file_new();
         if (!g_key_file_load_from_file(cf, DEFAULT_CONFIG, G_KEY_FILE_KEEP_COMMENTS, NULL)) {
                 g_error("Couldn't read config file %s\n", DEFAULT_CONFIG);      
-                return -1;
+                return NULL;
         }
         config = g_hash_table_new(g_str_hash, g_str_equal);
         g_hash_table_insert(config, "server", conf_read(cf, "login", "server", ""));
@@ -331,7 +313,7 @@ static int fsinit(struct fuse_conn_info *conn) {
         logstr("server connected\n");
         main_loop = g_main_loop_new (context, FALSE);
         pthread_create(mlt, NULL, mainloopthread, main_loop);
-        return main_loop;
+        return NULL;
 }
 
 
