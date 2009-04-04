@@ -130,10 +130,11 @@ static LmHandlerResult message_rcvd_cb(LmMessageHandler *handler, LmConnection *
 		jid = get_jid((gchar *) from);
 		ri = g_hash_table_lookup(roster, jid);
 		if(ri) {
+			char time_buf[30];
 			ri->lastmsgtime = time(NULL);
 			if (ri->type == MUC)
 				jid = get_resource(from);
-			log_str = g_strdup_printf("%s: %s\n", jid, body);
+			log_str = g_strdup_printf("%d %s: %s\n", time(NULL), jid, body);
 			g_array_append_vals(ri->log, log_str, strlen(log_str));
 		} else {
 			logf("JID %s is not in TalkLog, ignoring message", jid);
