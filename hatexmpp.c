@@ -60,7 +60,7 @@ int main (int argc, char **argv)
 	/* TODO */
 	//g_thread_init(NULL);
 	LogBuf = g_array_sized_new(FALSE, FALSE, 1, 512);
-	logstr("hi all\n");
+	logf("hatexmpp v%s is going up\n", HateXMPP_ver);
 	roster = g_hash_table_new(g_str_hash, g_str_equal);
 	pthread_create(&fsthread, NULL, fsinit, (void *)&par); 
 	

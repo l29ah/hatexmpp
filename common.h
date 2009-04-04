@@ -41,6 +41,8 @@ typedef struct rosteritem_s {
 	unsigned type;
 } rosteritem;
 
+extern char HateXMPP_ver[];
+
 extern GMainLoop *main_loop;
 extern GMainContext *context;
 extern GHashTable *config;
