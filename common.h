@@ -13,16 +13,6 @@
 
 #define DEFAULT_CONFIG "hatexmpp.conf"
 
-/*
-typedef struct {
-        const char *server;
-        const char *username;
-        const char *password;
-        const char *resource;
-	const char *muc_default_nick;
-} ClientConfig;
-*/
-
 #define MUC 2
 #define GUY 1
 
@@ -55,6 +45,7 @@ extern GHashTable *config;
 extern GHashTable *roster;
 
 /* Logging stuff */
+extern void * fsinit(void *);
 extern void logs(const char *, size_t);
 extern char * logstr(char *);
 #define logf(FMT,ARGS...) free(logstr(g_strdup_printf(FMT, ##ARGS)))

@@ -263,7 +263,6 @@ static int fswrite(const char *path, const char *buf, size_t size, off_t offset,
 		gchar *res = get_resource(path);
 		if (res && (strncmp(res, "__chat", 6) == 0 )) {
 			path = get_jid(path);
-			//logf("Sending to groupchat: %s\n", path);
 		}
 		if (strrchr(buf,'\n'))
 			msg_len--;
@@ -282,40 +281,23 @@ static int fssetxattr(const char *path, const char *a, const char *aa, size_t si
 }
 
 static void fsdestroy(void *privdata) {
-        /* TODO */
 	free_all();
 	g_main_loop_quit(main_loop);
 	return;
 }
 
-static void * fsinit(struct fuse_conn_info *conn) {
-        pthread_t *mlt;
-
-        LogBuf = g_array_sized_new(FALSE, FALSE, 1, 512);
-        logf("hatexmpp v%s is going up\n", HateXMPP_ver);
-        roster = g_hash_table_new(g_str_hash, g_str_equal);
-
-        GKeyFile *cf = g_key_file_new();
-        if (!g_key_file_load_from_file(cf, DEFAULT_CONFIG, G_KEY_FILE_KEEP_COMMENTS, NULL)) {
-                g_error("Couldn't read config file %s\n", DEFAULT_CONFIG);      
-                return NULL;
-        }
-        config = g_hash_table_new(g_str_hash, g_str_equal);
-        g_hash_table_insert(config, "server", conf_read(cf, "login", "server", ""));
-        g_hash_table_insert(config, "username", conf_read(cf, "login", "username", ""));
-        g_hash_table_insert(config, "password", conf_read(cf, "login", "password", ""));
-        g_hash_table_insert(config, "resource", conf_read(cf, "login", "resource", ""));
-        g_hash_table_insert(config, "muc_default_nick", conf_read(cf, "login", "muc_default_nick", ""));
-        g_key_file_free(cf);
-
-        context = g_main_context_new();
-        xmpp_connect();
-        logstr("server connected\n");
-        main_loop = g_main_loop_new (context, FALSE);
-        pthread_create(mlt, NULL, mainloopthread, main_loop);
-        return NULL;
+void * fsinit(void *arg) {
+	int argc;
+	char **argv;
+     
+	logstr("fuse is going up\n");
+	argc = ((struct fuse_args *)arg)->argc;
+	argv = ((struct fuse_args *)arg)->argv;
+	fuse_main(argc, argv, &fuseoper, NULL);
+	perror("fuse_main terminated");
+	exit(1);
+	return 0;
 }
-
 
 struct fuse_operations fuseoper = {
 	.getattr	= fsgetattr,
@@ -328,6 +310,5 @@ struct fuse_operations fuseoper = {
 	.rmdir		= fsrmdir,
 	.mknod		= fsmknod,
 	.create		= fscreate,
-	.init		= fsinit,
 	.destroy	= fsdestroy,
 };

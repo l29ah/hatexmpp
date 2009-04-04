@@ -26,17 +26,6 @@ gchar *get_jid(const gchar *jid)
 		return g_strdup(jid);
 }
 
-/* obsoleted by addri */
-/*
-void roster_add(rosteritem *ri)
-{
-	logf( "Adding %s to roster\n", ri->jid);
-	ri->resources = g_ptr_array_new();
-	ri->log = g_array_new(FALSE, FALSE, 1);
-	g_hash_table_insert(roster, g_strdup(ri->jid), ri);
-}
-*/
-
 int partmuc(const char *jid, const char *nick) {
         LmMessage *m;
 	gchar *to;
@@ -46,7 +35,7 @@ int partmuc(const char *jid, const char *nick) {
 	m = lm_message_new_with_sub_type(to, LM_MESSAGE_TYPE_PRESENCE, LM_MESSAGE_SUB_TYPE_AVAILABLE);
 	lm_message_node_set_attribute(m->node, "type", "unavailable");
 	/* TODO part message */
-	//node = lm_message_node_add_child(m->node, "status", "bye! your hatexmpp.");
+	lm_message_node_add_child(m->node, "status", "bye! your hatexmpp.");
 	lm_connection_send(connection, m, NULL);
 	lm_message_unref(m);
 	return 0;
@@ -89,7 +78,7 @@ static LmHandlerResult presence_rcvd_cb(LmMessageHandler *handler, LmConnection 
 
 	if (ri && res)	{
 		// TODO: do something better with presence
-		type = lm_message_node_get_attribute(m->node, "type");
+		type = (gchar *) lm_message_node_get_attribute(m->node, "type");
 		if (type && (strcmp(type, "unavailable") == 0) && (ri->resources->len > 0)) {
 			logf("Deleting resource %s from %s\n", res, jid);
 			int i;
@@ -130,11 +119,10 @@ static LmHandlerResult message_rcvd_cb(LmMessageHandler *handler, LmConnection *
 		jid = get_jid((gchar *) from);
 		ri = g_hash_table_lookup(roster, jid);
 		if(ri) {
-			char time_buf[30];
 			ri->lastmsgtime = time(NULL);
 			if (ri->type == MUC)
 				jid = get_resource(from);
-			log_str = g_strdup_printf("%d %s: %s\n", time(NULL), jid, body);
+			log_str = g_strdup_printf("%d %s: %s\n", (unsigned) time(NULL), jid, body);
 			g_array_append_vals(ri->log, log_str, strlen(log_str));
 		} else {
 			logf("JID %s is not in TalkLog, ignoring message", jid);
