@@ -22,6 +22,14 @@ char * logstr(char *msg) {
 	return msg;
 }
 
+int destroyri(rosteritem *RI) {
+	if(RI->jid) g_free(RI->jid);
+	if(RI->resources) g_ptr_array_free(RI->resources, TRUE); /* TODO free properly */
+	if(RI->log) g_array_free(RI->log, TRUE);
+
+	return 0;
+}
+
 void free_all()		// trying to make a general cleanup
 {
 	GHashTableIter iter;

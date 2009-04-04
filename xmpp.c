@@ -37,7 +37,8 @@ void roster_add(rosteritem *ri)
 int partmuc(const char *jid, const char *nick) {
         LmMessage *m;
 	gchar *to;
-	
+
+	if (!nick) nick = (gchar *) g_hash_table_lookup(config, "muc_default_nick");
 	to = g_strdup_printf("%s/%s", jid, nick);
 	m = lm_message_new_with_sub_type(to, LM_MESSAGE_TYPE_PRESENCE, LM_MESSAGE_SUB_TYPE_AVAILABLE);
 	lm_message_node_set_attribute(m->node, "type", "unavailable");
