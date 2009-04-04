@@ -83,42 +83,8 @@ int main(int argc, char **argv) {
 	return fuse_main(argc, argv, &fuseoper, NULL);
 }
 
-int fsdestroy(void *privdata) {
-	/* TODO */
-	free_all();
-	g_main_loop_quit(privdata);
-	return 0;
-}
-
 void * mainloopthread(void *loop) {
 	g_main_loop_run(loop);
 	return NULL;
 }
 
-int fsinit(struct fuse_conn_info *conn) {
-	pthread_t *mlt;
-
-	LogBuf = g_array_sized_new(FALSE, FALSE, 1, 512);
-	logf("hatexmpp v%s is going up\n", HateXMPP_ver);
-	roster = g_hash_table_new(g_str_hash, g_str_equal);
-	
-	GKeyFile *cf = g_key_file_new();
-	if (!g_key_file_load_from_file(cf, DEFAULT_CONFIG, G_KEY_FILE_KEEP_COMMENTS, NULL)) {
-		g_error("Couldn't read config file %s\n", DEFAULT_CONFIG);		
-		return -1;
-	}
-	config = g_hash_table_new(g_str_hash, g_str_equal);
-	g_hash_table_insert(config, "server", conf_read(cf, "login", "server", ""));
-	g_hash_table_insert(config, "username", conf_read(cf, "login", "username", ""));
-	g_hash_table_insert(config, "password", conf_read(cf, "login", "password", ""));
-	g_hash_table_insert(config, "resource", conf_read(cf, "login", "resource", ""));
-	g_hash_table_insert(config, "muc_default_nick", conf_read(cf, "login", "muc_default_nick", ""));
-	g_key_file_free(cf);
-
-	context = g_main_context_new();
-	xmpp_connect();
-	logstr("server connected\n");
-        main_loop = g_main_loop_new (context, FALSE);
-	pthread_create(mlt, NULL, mainloopthread, main_loop);
-        return main_loop;
-}

@@ -47,8 +47,7 @@ typedef struct rosteritem_s {
 extern struct fuse_operations fuseoper;
 extern char HateXMPP_ver[];
 
-extern int fsinit(struct fuse_conn_info *conn);
-extern int fsdestroy(void *privdata);
+extern void * mainloopthread(void *loop);
 
 extern GMainLoop *main_loop;
 extern GMainContext *context;

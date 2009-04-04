@@ -17,7 +17,7 @@ version.c: hatexmpp.c common.h xmpp.c xmpp.h fuse.c fuse.h
 	echo "char HateXMPP_ver[] = "\"0.1.`git log --pretty=oneline | wc -l`\""; char * getversion(void) { return HateXMPP_ver; }" > version.c
 
 test: hatexmpp
-	mkdir -p test/fs
+	mkdir -p test/fs || true
 	fusermount -u test/fs/ || true
 	mv hatexmpp test
 	cd test;./hatexmpp fs -d
