@@ -53,6 +53,7 @@ extern GArray *LogBuf;
 
 extern gchar *get_resource(const gchar *jid);
 extern gchar *get_jid(const gchar *jid);
+extern void xmpp_connect();
 extern void xmpp_send(const gchar *to, const gchar *body);
 extern int joinmuc(const char *jid, const char *password, const char *nick);
 extern int partmuc(const char *jid, const char *nick);

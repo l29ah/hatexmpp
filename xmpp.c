@@ -89,8 +89,6 @@ static LmHandlerResult presence_rcvd_cb(LmMessageHandler *handler, LmConnection 
 					break;
 				}
 			}
-
-			
 		}
 		else {
 			logf("Adding resource %s to %s\n", res, jid);

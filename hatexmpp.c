@@ -1,5 +1,4 @@
 #include "common.h"
-#include "xmpp.h"
 
 GMainLoop *main_loop;
 GMainContext *context;
@@ -19,7 +18,7 @@ char * logstr(char *msg) {
 	len = strlen(msg);
 	logs(msg, len);
 
-	return sg;
+	return msg;
 }
 
 int addri(const char *jid, GPtrArray *resources, unsigned type) {

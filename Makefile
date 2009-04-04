@@ -5,15 +5,15 @@ all: hatexmpp
 
 hatexmpp: version.o hatexmpp.o fuse.o xmpp.o 
 
-hatexmpp.o: hatexmpp.c common.h xmpp.h
+hatexmpp.o: hatexmpp.c common.h
 
-fuse.o: fuse.c fuse.h common.h
+fuse.o: fuse.c common.h
 
-xmpp.o: xmpp.c xmpp.h common.h
+xmpp.o: xmpp.c common.h
 
 version.o: version.c
 
-version.c: hatexmpp.c common.h xmpp.c xmpp.h fuse.c fuse.h
+version.c: hatexmpp.c common.h xmpp.c fuse.c
 	echo "char HateXMPP_ver[] = "\"0.1.`git log --pretty=oneline | wc -l`\""; char * getversion(void) { return HateXMPP_ver; }" > version.c
 
 test: hatexmpp
