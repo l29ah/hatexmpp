@@ -50,6 +50,24 @@ void breakparse(char **linestart, const char *buf, size_t len, const char chr, v
 
 /* FS calls */
 
+static int fsrmdir(const char *path) {
+	if (strncmp(path, "/roster/", 8) == 0) {
+		rosteritem *ri;
+
+		path += 8;
+		ri = g_hash_table_lookup(roster, path);
+		if(ri) {
+			if(ri->type == MUC) {
+				partmuc(path, NULL);
+				g_hash_table_remove(roster, path); 	/* TODO fix memory leak (provide destructor for rosteritem) */
+			}
+			else logstr("Roster items removal isn't implemented\n");; /* TODO */
+			return 0;
+		} else return -ENOENT;
+	}
+	return -EPERM;
+}
+
 static int fscreate(const char *path, mode_t mode, struct fuse_file_info *fi) {
 	/* TODO add roster items */
 	return 0;
@@ -113,7 +131,7 @@ static int fsgetattr(const char *path, struct stat *stbuf)
 			}
 			stbuf->st_mode = S_IFREG | 0666;	/* TODO fixable perms */
 			stbuf->st_nlink = 1;
-			logf("jid %s log len is %u\n", path, ri->log->len);
+			//logf("jid %s log len is %u\n", path, ri->log->len);
 			stbuf->st_size = ri->log->len;
 			return 0;
 		}
@@ -241,11 +259,12 @@ static int fswrite(const char *path, const char *buf, size_t size, off_t offset,
 	if (strncmp(path, "/roster/", 8) == 0) {
 		char *msg;
 		size_t msg_len = size;
+
 		path += 8;
 		gchar *res = get_resource(path);
 		if (res && (strncmp(res, "__chat", 6) == 0 )) {
 			path = get_jid(path);
-			logf("Sending to groupchat: %s\n", path);
+			//logf("Sending to groupchat: %s\n", path);
 		}
 		if (strrchr(buf,'\n'))
 			msg_len--;
@@ -253,6 +272,7 @@ static int fswrite(const char *path, const char *buf, size_t size, off_t offset,
 		memcpy(msg, buf, msg_len);
 		msg[msg_len] = 0;
 		xmpp_send(path, msg);
+		free(msg);
 		return size;
 	}
 	return 0;
@@ -271,6 +291,7 @@ static struct fuse_operations oper = {
 	.write		= fswrite,
 	.setxattr	= fssetxattr,
 	.mkdir		= fsmkdir,
+	.rmdir		= fsrmdir,
 	.mknod		= fsmknod,
 	.create		= fscreate,
 };

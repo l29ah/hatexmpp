@@ -19,8 +19,7 @@ version.c: hatexmpp.c common.h xmpp.c xmpp.h fuse.c fuse.h
 test: hatexmpp
 	mkdir -p test/fs
 	mv hatexmpp test
-	cd test
-	./hatexmpp fs -d
+	cd test;./hatexmpp fs -d
 
 clean:
 	rm *.o

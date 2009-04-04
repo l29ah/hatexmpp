@@ -59,3 +59,4 @@ extern gchar *get_resource(gchar *jid);
 extern gchar *get_jid(gchar *jid);
 extern void xmpp_send(const gchar *to, const gchar *body);
 extern int joinmuc(const char *jid, const char *password, const char *nick);
+extern int partmuc(const char *jid, const char *nick);
