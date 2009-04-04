@@ -60,5 +60,7 @@ extern gchar *get_jid(gchar *jid);
 extern void xmpp_send(const gchar *to, const gchar *body);
 extern int joinmuc(const char *jid, const char *password, const char *nick);
 extern int partmuc(const char *jid, const char *nick);
+
+extern int addri(const char *jid, GPtrArray *resources, unsigned type);
 extern int destroyri(rosteritem *RI);
 

@@ -26,6 +26,8 @@ gchar *get_jid(gchar *jid)
 		return g_strdup(jid);
 }
 
+/* obsoleted by addri */
+/*
 void roster_add(rosteritem *ri)
 {
 	logf( "Adding %s to roster\n", ri->jid);
@@ -33,6 +35,7 @@ void roster_add(rosteritem *ri)
 	ri->log = g_array_new(FALSE, FALSE, 1);
 	g_hash_table_insert(roster, g_strdup(ri->jid), ri);
 }
+*/
 
 int partmuc(const char *jid, const char *nick) {
         LmMessage *m;
@@ -69,10 +72,7 @@ int joinmuc(const char *jid, const char *password, const char *nick) {
         lm_connection_send(connection, m, NULL);
 	lm_message_unref(m);
 
-	ri = g_new(rosteritem, 1);
-	ri->jid = g_strdup(jid);
-	ri->type = MUC;
-	roster_add(ri);
+	addri(jid, NULL, MUC);
 	g_free(to);
 	return 0;
 }
@@ -140,10 +140,7 @@ static LmHandlerResult iq_rcvd_cb(LmMessageHandler *handler, LmConnection *conne
 	if (query) {
 		item  = lm_message_node_get_child (query, "item");
 		while (item) {
-			rosteritem *ri = g_new(rosteritem,1);
-			ri->jid = g_strdup(lm_message_node_get_attribute(item, "jid"));
-			ri->type = GUY;
-			roster_add(ri);
+			addri(lm_message_node_get_attribute(item, "jid"), NULL, GUY);
 			item = item->next;
 		}
 		lm_message_node_unref(query);

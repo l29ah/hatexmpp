@@ -22,6 +22,19 @@ char * logstr(char *msg) {
 	return msg;
 }
 
+int addri(const char *jid, GPtrArray *resources, unsigned type) {
+	rosteritem *ri;
+
+	logf("Adding %s to roster\n", jid);
+	ri = g_new(rosteritem, 1);
+	ri->jid = g_strdup(jid);
+	ri->resources = resources;	/* TODO */
+	ri->log = g_array_new(FALSE, FALSE, 1);
+	g_hash_table_insert(roster, g_strdup(ri->jid), ri);
+
+	return 0;
+}
+
 int destroyri(rosteritem *RI) {
 	if(RI->jid) g_free(RI->jid);
 	if(RI->resources) g_ptr_array_free(RI->resources, TRUE); /* TODO free properly */
