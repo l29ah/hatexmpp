@@ -18,6 +18,7 @@ version.c: hatexmpp.c common.h xmpp.c xmpp.h fuse.c fuse.h
 
 test: hatexmpp
 	mkdir -p test/fs
+	fusermount -u test/fs/
 	mv hatexmpp test
 	cd test;./hatexmpp fs -d
 

@@ -103,7 +103,6 @@ int main (int argc, char **argv)
 	g_hash_table_insert(config, "muc_default_nick", conf_read(cf, "login", "muc_default_nick", ""));
 	g_key_file_free(cf);
 
-	logstr("fuse is going up\n");
 	context = g_main_context_new();
 	xmpp_connect();
 	logstr("server connected\n");

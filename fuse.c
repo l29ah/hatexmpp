@@ -110,12 +110,19 @@ static int fsgetattr(const char *path, struct stat *stbuf)
 		return 0;
 	}
 	if (strncmp(path, "/config/", 8) == 0) {
+		char *conf;
+
 		path += 8;
 		stbuf->st_mode = S_IFREG | 0644;
 		stbuf->st_nlink = 2;
-		return 0;
+		conf = g_hash_table_lookup(config, path);
+		if(conf) {
+			stbuf->st_mode = S_IFREG | 0644;
+			stbuf->st_nlink = 1;
+			stbuf->st_size = strlen(conf);
+			return 0;
+		} else return -ENOENT;
 		
-		/* TODO */
 	}
 	if (strncmp(path, "/roster/", 8) == 0) {
 		rosteritem *ri;
@@ -223,11 +230,24 @@ static int fsread(const char *path, char *buf, size_t size, off_t offset,
 		return size;
 	}
 	if (strncmp(path, "/config/", 8) == 0) {
+		size_t len;
+
 		path += 8;
 		gchar *val = g_hash_table_lookup(config, path);
-		logf("Getting config option %s = %s\n", path, val);
-		memcpy(buf, val, strlen(val));
-		return strlen(val);
+		if(val) {
+			len = strlen(val);
+			//logf("Getting config option %s = %s\n", path, val);
+			if(offset + size < len) {
+				memcpy(buf, val + offset, size);
+				return size;
+			} else {
+				memcpy(buf, val + offset, len - offset);
+				//return len - offset;
+				/* Dunno if it is a true way */
+				memset(buf + len, 255, size - len);
+				return size;
+			}
+		} else return -ENOENT;
 	}
 	if (strncmp(path, "/roster/", 8) == 0) {
 		GArray *log;
@@ -300,6 +320,7 @@ void * fsinit(void *arg) {
 	int argc;
 	char **argv;
 
+	logstr("fuse is going up\n");
 	argc = ((struct fuse_args *)arg)->argc;
 	argv = ((struct fuse_args *)arg)->argv;
 	fuse_main(argc, argv, &oper, NULL);
