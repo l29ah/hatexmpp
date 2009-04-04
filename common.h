@@ -1,6 +1,8 @@
 
 #define FUSE_USE_VERSION 26
 
+#include <stdio.h>
+#include <errno.h>
 #include <glib.h>
 #include <glib/gprintf.h>
 #include <pthread.h>
@@ -41,7 +43,12 @@ typedef struct rosteritem_s {
 	unsigned type;
 } rosteritem;
 
+
+extern struct fuse_operations fuseoper;
 extern char HateXMPP_ver[];
+
+extern int fsinit(struct fuse_conn_info *conn);
+extern int fsdestroy(void *privdata);
 
 extern GMainLoop *main_loop;
 extern GMainContext *context;
@@ -49,7 +56,6 @@ extern GHashTable *config;
 extern GHashTable *roster;
 
 /* Logging stuff */
-extern void * fsinit(void *);
 extern void logs(const char *, size_t);
 extern char * logstr(char *);
 #define logf(FMT,ARGS...) free(logstr(g_strdup_printf(FMT, ##ARGS)))

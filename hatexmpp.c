@@ -68,27 +68,39 @@ void free_all()		// trying to make a general cleanup
 	g_hash_table_unref(roster);
 	g_array_free(LogBuf, TRUE);
 	g_hash_table_unref(config);
+	return;
 }
 
 gchar *conf_read(GKeyFile *cf, gchar *section, gchar *key, gchar *def)
 {
 	GError *error;
 	gchar *val = g_key_file_get_string(cf, section, key, NULL);
-	if (!val)
-		return g_strdup(def);
-	return val;
+	if (!val) return g_strdup(def);
+	else return val;
 }
 
-int main (int argc, char **argv)
-{
-	pthread_t fsthread;
-	struct fuse_args par = FUSE_ARGS_INIT(argc, argv);
+int main(int argc, char **argv) {
+	return fuse_main(argc, argv, &fuseoper, NULL);
+}
+
+int fsdestroy(void *privdata) {
 	/* TODO */
-	//g_thread_init(NULL);
+	free_all();
+	g_main_loop_quit(privdata);
+	return 0;
+}
+
+void * mainloopthread(void *loop) {
+	g_main_loop_run(loop);
+	return NULL;
+}
+
+int fsinit(struct fuse_conn_info *conn) {
+	pthread_t *mlt;
+
 	LogBuf = g_array_sized_new(FALSE, FALSE, 1, 512);
 	logf("hatexmpp v%s is going up\n", HateXMPP_ver);
 	roster = g_hash_table_new(g_str_hash, g_str_equal);
-	pthread_create(&fsthread, NULL, fsinit, (void *)&par); 
 	
 	GKeyFile *cf = g_key_file_new();
 	if (!g_key_file_load_from_file(cf, DEFAULT_CONFIG, G_KEY_FILE_KEEP_COMMENTS, NULL)) {
@@ -107,8 +119,6 @@ int main (int argc, char **argv)
 	xmpp_connect();
 	logstr("server connected\n");
         main_loop = g_main_loop_new (context, FALSE);
-        g_main_loop_run (main_loop);
-	//sleep(-1);	/* I don't want to die so soon */
-	free_all();
-        return 0;
+	pthread_create(mlt, NULL, mainloopthread, main_loop);
+        return main_loop;
 }

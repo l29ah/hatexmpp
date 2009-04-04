@@ -1,6 +1,3 @@
-#include <stdio.h>
-#include <string.h>
-#include <errno.h>
 #include "common.h"
 
 int isMUC(const char *path) {
@@ -303,7 +300,7 @@ static int fssetxattr(const char *path, const char *a, const char *aa, size_t si
 }
 
 
-static struct fuse_operations oper = {
+struct fuse_operations fuseoper = {
 	.getattr	= fsgetattr,
 	.readdir	= fsreaddir,
 	.open		= fsopen,
@@ -314,17 +311,6 @@ static struct fuse_operations oper = {
 	.rmdir		= fsrmdir,
 	.mknod		= fsmknod,
 	.create		= fscreate,
+	.init		= fsinit,
+	.destroy	= fsdestroy,
 };
-
-void * fsinit(void *arg) {
-	int argc;
-	char **argv;
-
-	logstr("fuse is going up\n");
-	argc = ((struct fuse_args *)arg)->argc;
-	argv = ((struct fuse_args *)arg)->argv;
-	fuse_main(argc, argv, &oper, NULL);
-	perror("fuse_main terminated");
-	exit(1);
-	return 0;
-}
