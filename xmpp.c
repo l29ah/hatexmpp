@@ -146,11 +146,10 @@ static LmHandlerResult iq_rcvd_cb(LmMessageHandler *handler, LmConnection *conne
 		return LM_HANDLER_RESULT_REMOVE_MESSAGE;
 	}
 	if (strcmp(lm_message_node_get_attribute(m->node, "type"), "get") == 0) {
-		LmMessage *msg = lm_message_new(lm_message_node_get_attribute(m->node, "from"), LM_MESSAGE_TYPE_IQ);
+		LmMessage *msg = lm_message_new_with_sub_type(lm_message_node_get_attribute(m->node, "from"), LM_MESSAGE_TYPE_IQ, LM_MESSAGE_SUB_TYPE_RESULT);
 		gchar *xmlns;
 		xmlns = (gchar *) lm_message_node_get_attribute(query, "xmlns");
 		lm_message_node_set_attribute(msg->node, "id", (gchar *) lm_message_node_get_attribute(m->node, "id"));
-		lm_message_node_set_attribute(msg->node, "type", "result");
 		query = lm_message_node_add_child(msg->node, "query", "");
 		lm_message_node_set_attribute(query, "xmlns", xmlns);
 		
