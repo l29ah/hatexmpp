@@ -175,7 +175,7 @@ static LmHandlerResult iq_rcvd_cb(LmMessageHandler *handler, LmConnection *conne
 			struct tm *t = localtime(&now);
 			lm_message_node_add_child(query, "utc", buf);
 			lm_message_node_add_child(query, "tz", t->tm_zone);
-			strftime(buf, 50, "%c", (struct tm *) gmtime(&now));
+			strftime(buf, 50, "%c", (struct tm *) localtime(&now));
 			lm_message_node_add_child(query, "display", buf);
 			lm_connection_send(connection, msg, NULL);
 		}
