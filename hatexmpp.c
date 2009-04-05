@@ -63,65 +63,11 @@ gchar *conf_read(GKeyFile *cf, gchar *section, gchar *key, gchar *def)
 	return val;
 }
 
-/*
-void * mainloopthread(void *loop) {
-//	 main_loop = g_main_loop_new (context, FALSE);
-//	 g_main_loop_run (main_loop);
-	 return NULL;
-}
-*/
-
 int main(int argc, char **argv) {
 	LogBuf = g_array_sized_new(FALSE, FALSE, 1, 512);
 	logf("hatexmpp v%s is going up\n", HateXMPP_ver);
 	roster = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify) destroy_ri);
         config = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-/*
-	GKeyFile *cf = g_key_file_new();
-        if (!g_key_file_load_from_file(cf, DEFAULT_CONFIG, G_KEY_FILE_KEEP_COMMENTS, NULL)) {
-                g_error("Couldn't read config file %s\n", DEFAULT_CONFIG);
-                return -1;
-        }
-        g_key_file_free(cf);
-*/
-        g_hash_table_insert(config, "server", NULL);
-        g_hash_table_insert(config, "username", NULL);
-        g_hash_table_insert(config, "password", NULL);
-        g_hash_table_insert(config, "resource", NULL);
-        g_hash_table_insert(config, "muc_default_nick", NULL);
 	return fuseinit(argc, argv);
 }
 
-/*
-int main (int argc, char **argv)
-{
-	pthread_t fsthread;
-	struct fuse_args par = FUSE_ARGS_INIT(argc, argv);
-	
-	LogBuf = g_array_sized_new(FALSE, FALSE, 1, 512);
-	logf("hatexmpp v%s is going up\n", HateXMPP_ver);
-	roster = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify) destroy_ri);
-	pthread_create(&fsthread, NULL, fuseinit, (void *)&par); 
-	
-	GKeyFile *cf = g_key_file_new();
-	if (!g_key_file_load_from_file(cf, DEFAULT_CONFIG, G_KEY_FILE_KEEP_COMMENTS, NULL)) {
-		g_error("Couldn't read config file %s\n", DEFAULT_CONFIG);		
-		return -1;
-	}
-	config = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-	g_hash_table_insert(config, "server", conf_read(cf, "login", "server", ""));
-	g_hash_table_insert(config, "username", conf_read(cf, "login", "username", ""));
-	g_hash_table_insert(config, "password", conf_read(cf, "login", "password", ""));
-	g_hash_table_insert(config, "resource", conf_read(cf, "login", "resource", ""));
-	g_hash_table_insert(config, "muc_default_nick", conf_read(cf, "login", "muc_default_nick", ""));
-	g_key_file_free(cf);
-
-	context = g_main_context_new();
-	xmpp_connect();
-	logstr("server connected\n");
-        main_loop = g_main_loop_new (context, FALSE);
-        g_main_loop_run (main_loop);
-	free_all();
-        return 0;
-}
-*/
