@@ -26,16 +26,14 @@ gchar *get_jid(const gchar *jid)
 		return g_strdup(jid);
 }
 
-int partmuc(const char *jid, const char *nick) {
+int partmuc(const char *jid, const char *nick, const char *leave) {
         LmMessage *m;
 	gchar *to;
 
 	if (!nick) nick = (gchar *) g_hash_table_lookup(config, "muc_default_nick");
 	to = g_strdup_printf("%s/%s", jid, nick);
-	m = lm_message_new_with_sub_type(to, LM_MESSAGE_TYPE_PRESENCE, LM_MESSAGE_SUB_TYPE_AVAILABLE);
-	lm_message_node_set_attribute(m->node, "type", "unavailable");
-	/* TODO part message */
-	lm_message_node_add_child(m->node, "status", "bye! your hatexmpp.");
+	m = lm_message_new_with_sub_type(to, LM_MESSAGE_TYPE_PRESENCE, LM_MESSAGE_SUB_TYPE_UNAVAILABLE);
+	if (leave) lm_message_node_add_child(m->node, "status", leave);
 	lm_connection_send(connection, m, NULL);
 	lm_message_unref(m);
 	return 0;
@@ -150,7 +148,7 @@ static LmHandlerResult iq_rcvd_cb(LmMessageHandler *handler, LmConnection *conne
 		gchar *xmlns;
 		xmlns = (gchar *) lm_message_node_get_attribute(query, "xmlns");
 		lm_message_node_set_attribute(msg->node, "id", (gchar *) lm_message_node_get_attribute(m->node, "id"));
-		query = lm_message_node_add_child(msg->node, "query", "");
+		query = lm_message_node_add_child(msg->node, "query", NULL);
 		lm_message_node_set_attribute(query, "xmlns", xmlns);
 		
 		// Saying our version
@@ -181,18 +179,18 @@ static LmHandlerResult iq_rcvd_cb(LmMessageHandler *handler, LmConnection *conne
 
 		// Saying our discovery info
 		else if (strcmp(xmlns, "http://jabber.org/protocol/disco#info") == 0) {		
-			lm_message_node_set_attribute(lm_message_node_add_child(query, "feature", ""), "var", "http://jabber.org/protocol/disco#info");		
-			lm_message_node_set_attribute(lm_message_node_add_child(query, "feature", ""), "var", "jabber:iq:version");
-			lm_message_node_set_attribute(lm_message_node_add_child(query, "feature", ""), "var", "jabber:iq:time");
+			lm_message_node_set_attribute(lm_message_node_add_child(query, "feature", NULL), "var", "http://jabber.org/protocol/disco#info");		
+			lm_message_node_set_attribute(lm_message_node_add_child(query, "feature", NULL), "var", "jabber:iq:version");
+			lm_message_node_set_attribute(lm_message_node_add_child(query, "feature", NULL), "var", "jabber:iq:time");
 			lm_connection_send(connection, msg, NULL);
 		}
 		
 		// Otherwise, feature not supported
 		else {	
-			LmMessageNode *error = lm_message_node_add_child(msg->node, "error", "");
+			LmMessageNode *error = lm_message_node_add_child(msg->node, "error", NULL);
 			lm_message_node_set_attribute(error, "type", "cancel");
 			lm_message_node_set_attribute(error, "code", "501");
-			lm_message_node_set_attribute(lm_message_node_add_child(error, "feature-not-implemented", ""), "xmlns", "urn:ietf:params:xml:ns:xmpp-stanzas");
+			lm_message_node_set_attribute(lm_message_node_add_child(error, "feature-not-implemented", NULL), "xmlns", "urn:ietf:params:xml:ns:xmpp-stanzas");
 			lm_connection_send(connection, msg, NULL);
 			lm_message_node_unref(error);
 		}
@@ -299,9 +297,29 @@ void xmpp_send(const gchar *to, const gchar *body)
 	m = lm_message_new(to, LM_MESSAGE_TYPE_MESSAGE);
 	ri = g_hash_table_lookup(roster, to);
 	if(ri) {
-		if(ri->type == MUC) lm_message_node_set_attribute(m->node, "type", "groupchat");
+		if(ri->type == MUC) {
+			lm_message_node_set_attribute(m->node, "type", "groupchat");
+			if (strncmp(body, "/leave", 6) == 0) {
+				partmuc(to, NULL, body+7);
+				g_hash_table_remove(roster, to);
+				lm_message_unref(m);
+				return;
+			}
+		}
 	}
 	lm_message_node_add_child(m->node, "body", body);
 	lm_connection_send(connection, m, NULL);
 	lm_message_unref(m);
 }
+
+void xmpp_add_to_roster(const gchar *jid) {
+	if(!g_hash_table_lookup(roster, jid)) {
+/*		LmMessage *msg = lm_message_new_with_sub_type(NULL, LM_MESSAGE_TYPE_IQ, LM_MESSAGE_SUB_TYPE_SET);
+		LmMessageNode *query = lm_message_node_add_child(msg->node, "query", NULL);
+		lm_message_node_set_attribute(query, "xmlns", "jabber:iq:roster");
+*/
+	}
+
+	return;
+}
+

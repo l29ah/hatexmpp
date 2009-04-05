@@ -37,8 +37,8 @@ static int fsrmdir(const char *path) {
 		ri = g_hash_table_lookup(roster, path);
 		if(ri) {
 			if(ri->type == MUC) {
-				partmuc(path, NULL);
-				g_hash_table_remove(roster, path); 	/* TODO fix memory leak (provide destructor for rosteritem) */
+				partmuc(path, NULL, NULL);
+				g_hash_table_remove(roster, path);
 			}
 			else logstr("Roster items removal isn't implemented\n");; /* TODO */
 			return 0;
@@ -49,6 +49,10 @@ static int fsrmdir(const char *path) {
 
 static int fscreate(const char *path, mode_t mode, struct fuse_file_info *fi) {
 	/* TODO add roster items */
+	if (strncmp(path, "/roster/", 8) == 0) {
+		path += 8;
+		xmpp_add_to_roster(path);
+	}
 	return 0;
 }
 
