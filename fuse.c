@@ -37,8 +37,8 @@ static int fsrmdir(const char *path) {
 		ri = g_hash_table_lookup(roster, path);
 		if(ri) {
 			if(ri->type == MUC) {
-				partmuc(path, NULL, NULL);
-				g_hash_table_remove(roster, path);
+			  partmuc(path, NULL, "TODO here must be default leave message :-)");
+			  g_hash_table_remove(roster, path);
 			}
 			else logstr("Roster items removal isn't implemented\n");; /* TODO */
 			return 0;

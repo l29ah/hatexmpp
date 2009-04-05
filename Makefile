@@ -16,6 +16,9 @@ version.o: version.c
 version.c: hatexmpp.c common.h xmpp.c fuse.c
 	echo "char HateXMPP_ver[] = "\"0.1.`git log --pretty=oneline | wc -l`\""; char * getversion(void) { return HateXMPP_ver; }" > version.c
 
+test:	hatexmpp
+	./autotest.sh
+
 clean:
 	rm *.o
 	rm version.c

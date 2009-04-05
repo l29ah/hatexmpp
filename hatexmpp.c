@@ -17,7 +17,7 @@ char * logstr(char *msg) {
 	g_printf("LOGF: %s",msg);
 	len = strlen(msg);
 	logs(msg, len);
-
+	
 	return msg;
 }
 
@@ -38,7 +38,6 @@ int addri(const char *jid, GHashTable *resources, unsigned type) {
 	ri->log = g_array_new(FALSE, FALSE, 1);
 	ri->type = type;
 	g_hash_table_insert(roster, g_strdup(ri->jid), ri);
-
 	return 0;
 }
 
