@@ -43,6 +43,8 @@ extern char HateXMPP_ver[];
 
 //extern void * mainloopthread(void *loop);
 
+extern pthread_t thr;
+
 extern GMainLoop *main_loop;
 extern GMainContext *context;
 extern GHashTable *config;

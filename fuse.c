@@ -23,9 +23,18 @@ int fileexists(const char *path) {	/* TODO !? */
 }
 
 
+static void * mainloopthread(void *loop);
+pthread_t thr;
+
 /* FS calls */
 
 static int fsrmdir(const char *path) {
+	if (strcmp(path, "/roster") == 0) {
+		if (connection && lm_connection_is_open(connection)) {
+			xmpp_disconnect();
+			g_main_loop_quit(main_loop);
+		}
+	}
 	if (strncmp(path, "/roster/", 8) == 0) {
 		rosteritem *ri;
 
@@ -63,8 +72,7 @@ static int fsmkdir(const char *path, mode_t mode) {
 		if(connection && lm_connection_is_open(connection)) {
 			return -EPERM;
 		} else {
-			xmpp_connect();
-			logstr("server connected\n");
+			pthread_create(&thr, NULL, mainloopthread, NULL);
 			return 0;
 		}
 	}
@@ -294,16 +302,15 @@ static void fsdestroy(void *privdata) {
 
 static void * mainloopthread(void *loop) {
 	main_loop = g_main_loop_new(context, FALSE);
+	xmpp_connect();
 	g_main_loop_run(main_loop);
 	return NULL;
 }
 
 static void * fsinit(struct fuse_conn_info *conn) {
-	pthread_t  thr;
 
 	context = g_main_context_new();
 	/* TODO: glib threads for portability */
-	pthread_create(&thr, NULL, mainloopthread, NULL);
 	return NULL;
 }
 
