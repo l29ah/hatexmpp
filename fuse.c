@@ -28,6 +28,10 @@ pthread_t thr;
 
 /* FS calls */
 
+static int fstruncate(const char *path, off_t size) {
+	return 0;
+}
+
 static int fsrmdir(const char *path) {
 	if (strcmp(path, "/roster") == 0) {
 		if (connection && lm_connection_is_open(connection)) {
@@ -338,5 +342,6 @@ struct fuse_operations fuseoper = {
 	.create		= fscreate,
 	.init		= fsinit,
 	.destroy	= fsdestroy,
+	.truncate	= fstruncate,
 };
 
