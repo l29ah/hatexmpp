@@ -7,10 +7,6 @@ int isMUC(const char *path) {
 	return 0;
 }
 
-int isJID(const char *path) {
-	return 0;
-}
-
 gchar *path_element(const gchar *path) {
 	if (*path == '/')
 		path ++;
@@ -205,21 +201,13 @@ static int fsreaddir(const char *path, void *buf, fuse_fill_dir_t filler,
 
 static int fsopen(const char *path, struct fuse_file_info *fi)
 {
-	if (fileexists(path))
-		return 0;
 	/* TODO */
-	//return -ENOENT;
 	return 0;
 }
 
 static int fsread(const char *path, char *buf, size_t size, off_t offset,
 		      struct fuse_file_info *fi)
 {
-//	size_t i;
-	if (isJID(path)) {
-		/* TODO: read some messages */
-		return 0;
-	}
 	if (strcmp(path, "/log") == 0) {
 		memcpy(buf, LogBuf->data + offset, size);
 		/* TODO: checks, lock */
@@ -270,6 +258,7 @@ static int fswrite(const char *path, const char *buf, size_t size, off_t offset,
 {
 	if (strcmp(path, "/ctl") == 0) {
 		/* TODO: call mum */
+		/* NOTE: /ctl should be avoided in favor of fs calls */
 		return 0;
 	}
 	if (strncmp(path, "/roster/", 8) == 0) {
@@ -304,17 +293,16 @@ static void fsdestroy(void *privdata) {
 }
 
 static void * mainloopthread(void *loop) {
-  main_loop = g_main_loop_new (context, FALSE);
-  g_main_loop_run (main_loop);
-  return NULL;
+	main_loop = g_main_loop_new(context, FALSE);
+	g_main_loop_run(main_loop);
+	return NULL;
 }
 
 static void * fsinit(struct fuse_conn_info *conn) {
-	//GError *err = NULL;
 	pthread_t  thr;
 
 	context = g_main_context_new();
-
+	/* TODO: glib threads for portability */
 	pthread_create(&thr, NULL, mainloopthread, NULL);
 	return NULL;
 }
@@ -342,3 +330,4 @@ struct fuse_operations fuseoper = {
 	.init		= fsinit,
 	.destroy	= fsdestroy,
 };
+

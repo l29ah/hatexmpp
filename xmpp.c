@@ -132,10 +132,10 @@ static LmHandlerResult message_rcvd_cb(LmMessageHandler *handler, LmConnection *
 			ri->lastmsgtime = time(NULL);
 			if (ri->type == MUC)
 				jid = get_resource(from);
-			log_str = g_strdup_printf("%d %s: %s\n", (unsigned) time(NULL), jid, body);
+			log_str = g_strdup_printf("%d %s: %s\n", (unsigned)ri->lastmsgtime, jid, body);
 			g_array_append_vals(ri->log, log_str, strlen(log_str));
 		} else {
-			logf("JID %s is not in TalkLog, ignoring message", jid);
+			logf("%s isn't in roster, ignoring message", jid);
 		}
 	} else logf("Message from noone or empty one!\n");
 	lm_message_unref(m);
@@ -241,20 +241,20 @@ static void connection_auth_cb(LmConnection *connection, gboolean success, void 
         	lm_message_unref (m);
 	} else
 	{
-		logstr("Authentication failed");
+		logstr("Authentication failed!\n");
 	}
 }
 
 static void connection_open_cb (LmConnection *connection, gboolean success, void *data)
 {
 	if (!success)
-		logstr("Cannot open connection");
+		logstr("Cannot open connection\n");
 	if (!lm_connection_authenticate (connection, 
 					 (gchar *) g_hash_table_lookup(config, "username"),
 					 (gchar *) g_hash_table_lookup(config, "password"),
 					 (gchar *) g_hash_table_lookup(config, "resource"),
 					 (LmResultFunction) connection_auth_cb, NULL, g_free, NULL))
-		logstr("lm_connection_authenticate failed");
+		logstr("lm_connection_authenticate failed\n");
 }
 
 void connection_close_cb (LmConnection *connection, LmDisconnectReason reason, gpointer data)
@@ -283,7 +283,7 @@ void connection_close_cb (LmConnection *connection, LmDisconnectReason reason, g
 		str = "An unknown error.";
 	}
 
-	logf("Disconnected. Reason: %s", str);
+	logf("Disconnected. Reason: %s\n", str);
 	g_free(str);
 }
 
@@ -295,7 +295,7 @@ void xmpp_connect() {
 	lm_connection_register_message_handler(connection, lm_message_handler_new(message_rcvd_cb, NULL, NULL), LM_MESSAGE_TYPE_MESSAGE, LM_HANDLER_PRIORITY_NORMAL);
 	lm_connection_set_disconnect_function(connection, connection_close_cb, NULL, g_free);		
         if (!lm_connection_open (connection, (LmResultFunction) connection_open_cb, NULL, g_free, NULL))
-		logstr("lm_connection_open failed");
+		logstr("lm_connection_open failed\n");
 } 
 
 void xmpp_send(const gchar *to, const gchar *body)
