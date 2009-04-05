@@ -26,6 +26,16 @@ gchar *get_jid(const gchar *jid)
 		return g_strdup(jid);
 }
 
+static gchar *get_nick(const gchar *jid)
+{
+        const gchar *ch;
+	g_return_val_if_fail(jid != NULL, NULL);
+	ch = strchr(jid, '@');
+	if (!ch) 
+		return (gchar *) jid;
+	return g_strndup (jid, ch-jid);
+}
+
 int partmuc(const char *jid, const char *nick, const char *leave) {
         LmMessage *m;
 	gchar *to;
@@ -199,7 +209,8 @@ static LmHandlerResult iq_rcvd_cb(LmMessageHandler *handler, LmConnection *conne
 		lm_message_unref(m);
 		return LM_HANDLER_RESULT_REMOVE_MESSAGE;
 	}
-	if (strcmp(lm_message_node_get_attribute(m->node, "type"), "result") == 0) {
+	if ((strcmp(lm_message_node_get_attribute(m->node, "type"), "result") == 0) ||
+	    (strcmp(lm_message_node_get_attribute(m->node, "type"), "set") == 0)) {
 		if (strcmp(lm_message_node_get_attribute(query, "xmlns"), "jabber:iq:roster") == 0) {
 			item  = lm_message_node_get_child (query, "item");
 			while (item) {
@@ -207,7 +218,6 @@ static LmHandlerResult iq_rcvd_cb(LmMessageHandler *handler, LmConnection *conne
 				item = item->next;
 			}
 		}
-		// TODO: MOAR!!!
 		lm_message_node_unref(query);
 		lm_message_unref(m);
 		return LM_HANDLER_RESULT_REMOVE_MESSAGE;
@@ -313,11 +323,22 @@ void xmpp_send(const gchar *to, const gchar *body)
 }
 
 void xmpp_add_to_roster(const gchar *jid) {
+// TODO: this may work, but better to follow protocol. XMPP is so XMPP!
 	if(!g_hash_table_lookup(roster, jid)) {
-/*		LmMessage *msg = lm_message_new_with_sub_type(NULL, LM_MESSAGE_TYPE_IQ, LM_MESSAGE_SUB_TYPE_SET);
+		logf("Adding contact %s to roster\n", jid);
+		LmMessage *msg = lm_message_new_with_sub_type(NULL, LM_MESSAGE_TYPE_IQ, LM_MESSAGE_SUB_TYPE_SET);
 		LmMessageNode *query = lm_message_node_add_child(msg->node, "query", NULL);
 		lm_message_node_set_attribute(query, "xmlns", "jabber:iq:roster");
-*/
+		LmMessageNode *item = lm_message_node_add_child(query, "item", NULL);
+		lm_message_node_set_attribute(item, "jid", jid);
+		lm_message_node_set_attribute(item, "name", get_nick(jid));
+		lm_connection_send(connection, msg, NULL);
+		lm_message_node_unref(item);
+		lm_message_node_unref(query);
+		lm_message_unref(msg);
+		// ask subcription
+		msg = lm_message_new_with_sub_type(NULL, LM_MESSAGE_TYPE_PRESENCE, LM_MESSAGE_SUB_TYPE_SUBSCRIBE);
+		lm_connection_send(connection, msg, NULL);
 	}
 
 	return;
