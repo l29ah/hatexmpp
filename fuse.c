@@ -116,15 +116,13 @@ static int fsgetattr(const char *path, struct stat *stbuf)
 		char *conf;
 
 		path += 8;
-		stbuf->st_mode = S_IFREG | 0644;
-		stbuf->st_nlink = 2;
-		conf = g_hash_table_lookup(config, path);
-		if(conf) {
+		
+//		if(g_hash_table_lookup(config, path)) {
 			stbuf->st_mode = S_IFREG | 0644;
 			stbuf->st_nlink = 1;
 			stbuf->st_size = strlen(conf);
 			return 0;
-		} else return -ENOENT;
+//		} else return -ENOENT;
 		
 	}
 	if (strncmp(path, "/roster/", 8) == 0) {
@@ -234,10 +232,7 @@ static int fsread(const char *path, char *buf, size_t size, off_t offset,
 				return size;
 			} else {
 				memcpy(buf, val + offset, len - offset);
-				//return len - offset;
-				/* Dunno if it is a true way */
-				memset(buf + len, 255, size - len);
-				return size;
+				return len - offset;
 			}
 		} else return -ENOENT;
 	}
@@ -285,6 +280,16 @@ static int fswrite(const char *path, const char *buf, size_t size, off_t offset,
 		msg[msg_len] = 0;
 		xmpp_send(path, msg);
 		free(msg);
+		return size;
+	}
+	if (strncmp(path, "/config/", 8) == 0) {
+		path += 8;
+		gchar *option = g_strdup(path);
+		if (option)  {
+			gchar *val = g_strndup(buf, size);
+			logf("Setting %s = %s\n", option, val);
+			g_hash_table_insert(config, option, val);
+		}			
 		return size;
 	}
 	return 0;
