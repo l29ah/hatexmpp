@@ -12,6 +12,7 @@
 #include <unistd.h>
 #include <fuse.h>
 #include <time.h>
+#include <loudmouth/loudmouth.h>
 
 #define PROGRAM_NAME "HateXMPP"
 #define DEFAULT_CONFIG "hatexmpp.conf"
@@ -46,6 +47,7 @@ extern GMainLoop *main_loop;
 extern GMainContext *context;
 extern GHashTable *config;
 extern GHashTable *roster;
+extern LmConnection *connection;
 
 /* Logging stuff */
 extern int fuseinit(int argc, char **argv);

@@ -20,7 +20,7 @@ gchar *path_element(const gchar *path) {
 	return g_strdup(path);
 }
 
-int fileexists(const char *path) {
+int fileexists(const char *path) {	/* TODO !? */
 	if (strcmp(path, "/log") == 0) return 1;
 	if (strncmp(path, "/roster/", 8) == 0) return 1;
 	return 0;
@@ -62,6 +62,16 @@ static int fsmknod(const char *path, mode_t mode, dev_t type) {
 }
 
 static int fsmkdir(const char *path, mode_t mode) {
+	if (strcmp(path, "/roster") == 0) {
+		logf("Make roster!\n");
+		if(connection && lm_connection_is_open(connection)) {
+			return -EPERM;
+		} else {
+			xmpp_connect();
+			logstr("server connected\n");
+			return 0;
+		}
+	}
 	if (strncmp(path, "/roster/", 8) == 0) {
 		path += 8;
 		logf("join conference %s!\n", path);
@@ -85,8 +95,14 @@ static int fsgetattr(const char *path, struct stat *stbuf)
  	        stbuf->st_size = LogBuf->len;
                 return 0;
 	}
-	if ((strcmp(path, "/roster") == 0) || 
-	    (strcmp(path, "/config") == 0) ||
+	if (strcmp(path, "/roster") == 0) {
+		if (connection && lm_connection_is_open(connection)) {
+			stbuf->st_mode = S_IFDIR | 0755;
+			stbuf->st_nlink = 2;
+			return 0;
+		} else return -ENOENT;
+	}
+	if ((strcmp(path, "/config") == 0) ||
 	    (strcmp(path, "/") == 0)) {
 		stbuf->st_mode = S_IFDIR | 0755;
 		stbuf->st_nlink = 2;
@@ -142,7 +158,7 @@ static int fsreaddir(const char *path, void *buf, fuse_fill_dir_t filler,
 		filler(buf, "ctl", NULL, 0);
 		filler(buf, "log", NULL, 0);
 		filler(buf, "config", NULL, 0);
-		if (roster) filler(buf, "roster",NULL, 0);
+		if (roster && lm_connection_is_open(connection)) filler(buf, "roster",NULL, 0);
 		return 0;
 	}
 	if (strcmp(path, "/config") == 0) {
@@ -298,18 +314,7 @@ static void * fsinit(struct fuse_conn_info *conn) {
 	pthread_t  thr;
 
 	context = g_main_context_new();
-	xmpp_connect();
-	logstr("server connected\n");
 
-	//	g_thread_init(NULL);
-	/*
-	g_thread_create(mainloopthread, NULL, FALSE, &err);
-	if(err) {
-		fprintf (stderr, "Error during getting threads up: %s\n", err->message);
-		g_error_free(err);
-		exit(1);
-	}
-	*/
 	pthread_create(&thr, NULL, mainloopthread, NULL);
 	return NULL;
 }

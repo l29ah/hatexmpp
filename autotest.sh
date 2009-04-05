@@ -1,11 +1,13 @@
 #!/bin/bash
+rm -rf test/fs
 mkdir -p test/fs
-fusermount -u test/fs/
-cp hatexmpp test
+fusermount -u test/fs
 cd test
-valgrind ./hatexmpp fs
-sleep 6;
+valgrind ../hatexmpp fs
+sleep 3;
 cd fs
+mkdir roster
+sleep 6;
 mkdir 'roster/hatexmpp@conference.jabber.ru'
 sleep 3;
 echo -n autotest >> roster/hatexmpp@conference.jabber.ru/__chat

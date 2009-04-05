@@ -1,5 +1,4 @@
 #include "common.h"
-#include <loudmouth/loudmouth.h>
 
 #define XMPP_MUC_XMLNS "http://jabber.org/protocol/muc"
 
