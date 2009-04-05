@@ -283,17 +283,40 @@ static void fsdestroy(void *privdata) {
 	return;
 }
 
-void * fsinit(void *arg) {
-	int argc;
-	char **argv;
-     
+static void * mainloopthread(void *loop) {
+  main_loop = g_main_loop_new (context, FALSE);
+  g_main_loop_run (main_loop);
+  return NULL;
+}
+
+static void * fsinit(struct fuse_conn_info *conn) {
+	//GError *err = NULL;
+	pthread_t  thr;
+
+	context = g_main_context_new();
+	xmpp_connect();
+	logstr("server connected\n");
+
+	//	g_thread_init(NULL);
+	/*
+	g_thread_create(mainloopthread, NULL, FALSE, &err);
+	if(err) {
+		fprintf (stderr, "Error during getting threads up: %s\n", err->message);
+		g_error_free(err);
+		exit(1);
+	}
+	*/
+	pthread_create(&thr, NULL, mainloopthread, NULL);
+	return NULL;
+}
+
+int fuseinit(int argc, char **argv) {
+	int ret;
+
 	logstr("fuse is going up\n");
-	argc = ((struct fuse_args *)arg)->argc;
-	argv = ((struct fuse_args *)arg)->argv;
-	fuse_main(argc, argv, &fuseoper, NULL);
+	ret = fuse_main(argc, argv, &fuseoper, NULL);
 	perror("fuse_main terminated");
-	exit(1);
-	return 0;
+	return ret;
 }
 
 struct fuse_operations fuseoper = {
@@ -307,5 +330,6 @@ struct fuse_operations fuseoper = {
 	.rmdir		= fsrmdir,
 	.mknod		= fsmknod,
 	.create		= fscreate,
+	.init		= fsinit,
 	.destroy	= fsdestroy,
 };

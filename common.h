@@ -5,6 +5,7 @@
 #include <errno.h>
 #include <glib.h>
 #include <glib/gprintf.h>
+#include <glib/gthread.h>
 #include <pthread.h>
 #include <stdlib.h>
 #include <string.h>
@@ -38,7 +39,7 @@ typedef struct rosteritem_s {
 extern struct fuse_operations fuseoper;
 extern char HateXMPP_ver[];
 
-extern void * mainloopthread(void *loop);
+//extern void * mainloopthread(void *loop);
 
 extern GMainLoop *main_loop;
 extern GMainContext *context;
@@ -46,7 +47,7 @@ extern GHashTable *config;
 extern GHashTable *roster;
 
 /* Logging stuff */
-extern void * fsinit(void *);
+extern int fuseinit(int argc, char **argv);
 extern void logs(const char *, size_t);
 extern char * logstr(char *);
 #define logf(FMT,ARGS...) free(logstr(g_strdup_printf(FMT, ##ARGS)))

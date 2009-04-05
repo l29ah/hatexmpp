@@ -1,5 +1,5 @@
-CFLAGS = -Wall `pkg-config fuse loudmouth-1.0 --cflags` -ggdb -DDEBUG -O0
-LDFLAGS = `pkg-config fuse loudmouth-1.0 --libs`
+CFLAGS = -Wall `pkg-config fuse loudmouth-1.0 gthread --cflags` -ggdb -DDEBUG -O0
+LDFLAGS = `pkg-config fuse loudmouth-1.0 gthread --libs`
 
 all: hatexmpp 
 
@@ -20,7 +20,7 @@ test: hatexmpp
 	mkdir -p test/fs || true
 	fusermount -u test/fs/ || true
 	mv hatexmpp test
-	cd test;./hatexmpp fs -d
+	cd test;valgrind ./hatexmpp fs -d
 
 clean:
 	rm *.o
