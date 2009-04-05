@@ -162,12 +162,22 @@ static LmHandlerResult iq_rcvd_cb(LmMessageHandler *handler, LmConnection *conne
 		
 		// Saying our version
 		if (strcmp(xmlns, "jabber:iq:version") == 0) {
-			lm_message_node_add_child(query, "name", PROGRAM_NAME);
-			lm_message_node_add_child(query, "version", HateXMPP_ver);
+			char *str;
+
+			str = g_hash_table_lookup(config, "jiv_name");
+			if (!str) str = PROGRAM_NAME;
+			lm_message_node_add_child(query, "name", str);
+
+			str = g_hash_table_lookup(config, "jiv_version");
+			if (!str) str = HateXMPP_ver;
+			lm_message_node_add_child(query, "version", str);
 			// TODO: Make uname work 
 			//struct utsname *buf = g_malloc(sizeof utsname);
 			//uname(buf);
-			lm_message_node_add_child(query, "os", "My Awesome OS v2.0");
+
+			str = g_hash_table_lookup(config, "jiv_os");
+			if (!str) str = "My Awesome OS v2.0";
+			lm_message_node_add_child(query, "os", str);
 			//g_free(buf);
 			lm_connection_send(connection, msg, NULL);
 		}

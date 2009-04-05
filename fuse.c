@@ -116,14 +116,10 @@ static int fsgetattr(const char *path, struct stat *stbuf)
 		char *conf;
 
 		path += 8;
-		
-//		if(g_hash_table_lookup(config, path)) {
-			stbuf->st_mode = S_IFREG | 0644;
-			stbuf->st_nlink = 1;
-			stbuf->st_size = strlen(conf);
-			return 0;
-//		} else return -ENOENT;
-		
+		stbuf->st_mode = S_IFREG | 0644;
+		stbuf->st_nlink = 1;
+		if(g_hash_table_lookup(config, path)) stbuf->st_size = strlen(conf);
+		return 0;
 	}
 	if (strncmp(path, "/roster/", 8) == 0) {
 		rosteritem *ri;
