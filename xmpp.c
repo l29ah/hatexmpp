@@ -282,9 +282,10 @@ void connection_close_cb (LmConnection *connection, LmDisconnectReason reason, g
 	case LM_DISCONNECT_REASON_UNKNOWN:
 		str = "An unknown error.";
 	}
-
 	logf("Disconnected. Reason: %s\n", str);
-	g_free(str);
+//	g_free(str);
+	g_main_loop_quit(main_loop);
+	g_hash_table_remove_all(roster);
 }
 
 void xmpp_connect() {
@@ -346,6 +347,5 @@ void xmpp_add_to_roster(const gchar *jid) {
 void xmpp_disconnect() {
 	if (lm_connection_is_open(connection)) {
 		lm_connection_close(connection, NULL);
-		g_hash_table_remove_all(roster);
 	}
 }

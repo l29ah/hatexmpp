@@ -32,7 +32,7 @@ static int fsrmdir(const char *path) {
 	if (strcmp(path, "/roster") == 0) {
 		if (connection && lm_connection_is_open(connection)) {
 			xmpp_disconnect();
-			g_main_loop_quit(main_loop);
+			return 0;
 		}
 	}
 	if (strncmp(path, "/roster/", 8) == 0) {
