@@ -146,19 +146,40 @@ static LmHandlerResult iq_rcvd_cb(LmMessageHandler *handler, LmConnection *conne
 		return LM_HANDLER_RESULT_REMOVE_MESSAGE;
 	}
 	if (strcmp(lm_message_node_get_attribute(m->node, "type"), "get") == 0) {
-		if (strcmp(lm_message_node_get_attribute(query, "xmlns"), "jabber:iq:version") == 0) {
-			LmMessage *msg = lm_message_new(lm_message_node_get_attribute(m->node, "from"), LM_MESSAGE_TYPE_IQ);
-			lm_message_node_set_attribute(msg->node, "type", "result");
-			lm_message_node_set_attribute(msg->node, "from", lm_message_node_get_attribute(m->node, "to"));
-			query = lm_message_node_add_child(msg->node, "query", "");
-			lm_message_node_set_attribute(query, "xmlns", "jabber:iq:version");
+		LmMessage *msg = lm_message_new(lm_message_node_get_attribute(m->node, "from"), LM_MESSAGE_TYPE_IQ);
+		gchar *xmlns = (gchar *) lm_message_node_get_attribute(query, "xmlns");
+		lm_message_node_set_attribute(msg->node, "id", (gchar *) lm_message_node_get_attribute(m->node, "id"));
+		lm_message_node_set_attribute(msg->node, "type", "result");
+		query = lm_message_node_add_child(msg->node, "query", "");
+		lm_message_node_set_attribute(query, "xmlns", xmlns);
+
+		if (strcmp(xmlns, "jabber:iq:version") == 0) {
 			lm_message_node_add_child(query, "name", PROGRAM_NAME);
-			lm_message_node_add_child(query, "version", getversion());
-			lm_message_node_add_child(query, "os", "MyOwnAwesomeOS v4.0");
+			lm_message_node_add_child(query, "version", HateXMPP_ver);
+// TODO: Make uname work 
+//			struct utsname *buf = g_malloc(sizeof utsname);
+//			uname(buf);
+			lm_message_node_add_child(query, "os", "My Awesome OS v2.0");
+//			g_free(buf);
 			lm_connection_send(connection, msg, NULL);
-			lm_message_node_unref(query);
-			lm_message_unref(msg);
 		}
+		else if (strcmp(xmlns, "http://jabber.org/protocol/disco#info") == 0) {
+			lm_message_node_set_attribute(lm_message_node_add_child(query, "feature", ""), "var", "jabber:iq:version");
+			lm_connection_send(connection, msg, NULL);
+		}
+		else {
+			// Otherwise, feature not supported
+			LmMessageNode *error = lm_message_node_add_child(msg->node, "error", "");
+			lm_message_node_set_attribute(error, "type", "cancel");
+			lm_message_node_set_attribute(error, "code", "501");
+			lm_message_node_set_attribute(lm_message_node_add_child(error, "feature-not-implemented", ""), "xmlns", "urn:ietf:params:xml:ns:xmpp-stanzas");
+			lm_connection_send(connection, msg, NULL);
+			lm_message_node_unref(error);
+		}
+		lm_message_node_unref(query);
+		lm_message_unref(msg);
+		lm_message_unref(m);
+		return LM_HANDLER_RESULT_REMOVE_MESSAGE;
 	}
 	if (strcmp(lm_message_node_get_attribute(m->node, "type"), "result") == 0) {
 		if (strcmp(lm_message_node_get_attribute(query, "xmlns"), "jabber:iq:roster") == 0) {
@@ -170,8 +191,9 @@ static LmHandlerResult iq_rcvd_cb(LmMessageHandler *handler, LmConnection *conne
 		}
 		// TODO: MOAR!!!
 		lm_message_node_unref(query);
+		lm_message_unref(m);
+		return LM_HANDLER_RESULT_REMOVE_MESSAGE;
 	}
-	lm_message_unref(m);
 	return LM_HANDLER_RESULT_REMOVE_MESSAGE;
 }
 

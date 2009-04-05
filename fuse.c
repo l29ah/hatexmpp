@@ -166,9 +166,7 @@ static int fsreaddir(const char *path, void *buf, fuse_fill_dir_t filler,
 	}
 	if (strncmp(path, "/roster/", 8) == 0) {
 		path += 8;
-		int i;
 		rosteritem *ri;
-		resourceitem *res;
 		ri = g_hash_table_lookup(roster, path);
 		if (ri && (ri->type == MUC)) {
 			filler(buf, ".", NULL, 0);
@@ -177,7 +175,7 @@ static int fsreaddir(const char *path, void *buf, fuse_fill_dir_t filler,
 			GHashTableIter iter;
 			gchar *res;
 			g_hash_table_iter_init (&iter, ri->resources);
-			while (g_hash_table_iter_next(&iter, (gchar *) &res, NULL)) 
+			while (g_hash_table_iter_next(&iter, (gpointer) &res, NULL)) 
 				filler(buf, res, NULL, 0);
 		}
 	}

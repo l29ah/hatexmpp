@@ -65,5 +65,3 @@ extern int destroyri(rosteritem *RI);
 extern gchar *conf_read(GKeyFile *cf, gchar *section, gchar *key, gchar *def);
 extern void free_all();
 extern void xmpp_connect();
-
-extern gchar *getversion(void);
