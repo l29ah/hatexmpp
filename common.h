@@ -67,4 +67,5 @@ extern int destroyri(rosteritem *RI);
 extern gchar *conf_read(GKeyFile *cf, gchar *section, gchar *key, gchar *def);
 extern void free_all();
 extern void xmpp_connect();
+extern void xmpp_disconnect();
 extern void xmpp_add_to_roster(const gchar *jid);

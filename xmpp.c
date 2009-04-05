@@ -344,3 +344,9 @@ void xmpp_add_to_roster(const gchar *jid) {
 	return;
 }
 
+void xmpp_disconnect() {
+	if (lm_connection_is_open(connection)) {
+		lm_connection_close(connection, NULL);
+		g_hash_table_remove_all(roster);
+	}
+}
