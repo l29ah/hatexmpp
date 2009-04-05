@@ -10,6 +10,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <fuse.h>
+#include <time.h>
 
 #define PROGRAM_NAME "HateXMPP"
 #define DEFAULT_CONFIG "hatexmpp.conf"

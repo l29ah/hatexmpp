@@ -147,28 +147,49 @@ static LmHandlerResult iq_rcvd_cb(LmMessageHandler *handler, LmConnection *conne
 	}
 	if (strcmp(lm_message_node_get_attribute(m->node, "type"), "get") == 0) {
 		LmMessage *msg = lm_message_new(lm_message_node_get_attribute(m->node, "from"), LM_MESSAGE_TYPE_IQ);
-		gchar *xmlns = (gchar *) lm_message_node_get_attribute(query, "xmlns");
+		gchar *xmlns;
+		xmlns = (gchar *) lm_message_node_get_attribute(query, "xmlns");
 		lm_message_node_set_attribute(msg->node, "id", (gchar *) lm_message_node_get_attribute(m->node, "id"));
 		lm_message_node_set_attribute(msg->node, "type", "result");
 		query = lm_message_node_add_child(msg->node, "query", "");
 		lm_message_node_set_attribute(query, "xmlns", xmlns);
-
+		
+		// Saying our version
 		if (strcmp(xmlns, "jabber:iq:version") == 0) {
 			lm_message_node_add_child(query, "name", PROGRAM_NAME);
 			lm_message_node_add_child(query, "version", HateXMPP_ver);
-// TODO: Make uname work 
-//			struct utsname *buf = g_malloc(sizeof utsname);
-//			uname(buf);
+			// TODO: Make uname work 
+			//struct utsname *buf = g_malloc(sizeof utsname);
+			//uname(buf);
 			lm_message_node_add_child(query, "os", "My Awesome OS v2.0");
-//			g_free(buf);
+			//g_free(buf);
 			lm_connection_send(connection, msg, NULL);
 		}
-		else if (strcmp(xmlns, "http://jabber.org/protocol/disco#info") == 0) {
+
+		// Saying our time
+		else if (strcmp(xmlns, "jabber:iq:time") == 0) {
+			time_t now;
+			char buf[50];
+			time(&now);
+			strftime(buf, 50, "%Y-%m-%dT%H:%M:%S", (struct tm *) gmtime(&now));
+			struct tm *t = localtime(&now);
+			lm_message_node_add_child(query, "utc", buf);
+			lm_message_node_add_child(query, "tz", t->tm_zone);
+			strftime(buf, 50, "%c", (struct tm *) gmtime(&now));
+			lm_message_node_add_child(query, "display", buf);
+			lm_connection_send(connection, msg, NULL);
+		}
+
+		// Saying our discovery info
+		else if (strcmp(xmlns, "http://jabber.org/protocol/disco#info") == 0) {		
+			lm_message_node_set_attribute(lm_message_node_add_child(query, "feature", ""), "var", "http://jabber.org/protocol/disco#info");		
 			lm_message_node_set_attribute(lm_message_node_add_child(query, "feature", ""), "var", "jabber:iq:version");
+			lm_message_node_set_attribute(lm_message_node_add_child(query, "feature", ""), "var", "jabber:iq:time");
 			lm_connection_send(connection, msg, NULL);
 		}
-		else {
-			// Otherwise, feature not supported
+		
+		// Otherwise, feature not supported
+		else {	
 			LmMessageNode *error = lm_message_node_add_child(msg->node, "error", "");
 			lm_message_node_set_attribute(error, "type", "cancel");
 			lm_message_node_set_attribute(error, "code", "501");
