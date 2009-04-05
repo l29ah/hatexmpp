@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <fuse.h>
 
+#define PROGRAM_NAME "HateXMPP"
 #define DEFAULT_CONFIG "hatexmpp.conf"
 
 #define MUC 2
@@ -26,7 +27,7 @@ typedef struct resourceitem_s {
 
 typedef struct rosteritem_s {
 	gchar *jid;
-	GPtrArray *resources;
+	GHashTable *resources;
 	GArray *log;
 	unsigned presence;
 	time_t lastmsgtime;
@@ -58,9 +59,11 @@ extern void xmpp_send(const gchar *to, const gchar *body);
 extern int joinmuc(const char *jid, const char *password, const char *nick);
 extern int partmuc(const char *jid, const char *nick);
 
-extern int addri(const char *jid, GPtrArray *resources, unsigned type);
+extern int addri(const char *jid, GHashTable *resources, unsigned type);
 extern int destroyri(rosteritem *RI);
 
 extern gchar *conf_read(GKeyFile *cf, gchar *section, gchar *key, gchar *def);
 extern void free_all();
 extern void xmpp_connect();
+
+extern gchar *getversion(void);

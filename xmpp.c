@@ -65,11 +65,26 @@ int joinmuc(const char *jid, const char *password, const char *nick) {
 	return 0;
 }
 
+void add_resource(rosteritem *ri, gchar *res, unsigned presence) {
+	resourceitem *r;
+	r = g_hash_table_lookup(ri->resources, res);
+	if (r) {
+		if (r->name) g_free(r->name);
+		r->name = g_strdup(res);
+		r->presence = presence;
+	}
+	else {
+		r = g_malloc(sizeof(resourceitem));
+		r->name = g_strdup(res);
+		r->presence = presence;
+		g_hash_table_insert(ri->resources, res, r);
+	}
+}
+
 static LmHandlerResult presence_rcvd_cb(LmMessageHandler *handler, LmConnection *connection, LmMessage *m, gpointer data)
 {
 	gchar *from, *jid, *res, *type;
 	rosteritem *ri;
-	resourceitem *resource;
 
 	from = (gchar *) lm_message_node_get_attribute(m->node, "from");
 	jid = get_jid(from);
@@ -79,23 +94,13 @@ static LmHandlerResult presence_rcvd_cb(LmMessageHandler *handler, LmConnection 
 	if (ri && res)	{
 		// TODO: do something better with presence
 		type = (gchar *) lm_message_node_get_attribute(m->node, "type");
-		if (type && (strcmp(type, "unavailable") == 0) && (ri->resources->len > 0)) {
+		if (type && (strcmp(type, "unavailable") == 0)) {
 			logf("Deleting resource %s from %s\n", res, jid);
-			int i;
-			for (i = 0; i < ri->resources->len; i++) {
-				resource = g_ptr_array_index(ri->resources, i);
-				if (strcmp(resource->name, res) == 0) {
-					g_ptr_array_remove_index(ri->resources, i);
-					break;
-				}
-			}
+			g_hash_table_remove(ri->resources, res);	
 		}
 		else {
 			logf("Adding resource %s to %s\n", res, jid);
-			resource = g_new(resourceitem, 1);
-			resource->name = res;
-			resource->presence = PRESENCE_ONLINE;
-			g_ptr_array_add(ri->resources, resource);		
+			add_resource(ri, res, PRESENCE_ONLINE);
 		}
 	} else
 		logf("Presence from unknown (%s), ignoring\n", from);
@@ -133,15 +138,37 @@ static LmHandlerResult message_rcvd_cb(LmMessageHandler *handler, LmConnection *
 static LmHandlerResult iq_rcvd_cb(LmMessageHandler *handler, LmConnection *connection, LmMessage *m, gpointer data)
 {
 	LmMessageNode *query, *item;
-	
+
 	// TODO: parse other IQs too
 	query = lm_message_node_get_child(m->node, "query");
-	if (query) {
-		item  = lm_message_node_get_child (query, "item");
-		while (item) {
-			addri(lm_message_node_get_attribute(item, "jid"), NULL, GUY);
-			item = item->next;
+	if (!query) {
+		lm_message_unref(m);
+		return LM_HANDLER_RESULT_REMOVE_MESSAGE;
+	}
+	if (strcmp(lm_message_node_get_attribute(m->node, "type"), "get") == 0) {
+		if (strcmp(lm_message_node_get_attribute(query, "xmlns"), "jabber:iq:version") == 0) {
+			LmMessage *msg = lm_message_new(lm_message_node_get_attribute(m->node, "from"), LM_MESSAGE_TYPE_IQ);
+			lm_message_node_set_attribute(msg->node, "type", "result");
+			lm_message_node_set_attribute(msg->node, "from", lm_message_node_get_attribute(m->node, "to"));
+			query = lm_message_node_add_child(msg->node, "query", "");
+			lm_message_node_set_attribute(query, "xmlns", "jabber:iq:version");
+			lm_message_node_add_child(query, "name", PROGRAM_NAME);
+			lm_message_node_add_child(query, "version", getversion());
+			lm_message_node_add_child(query, "os", "MyOwnAwesomeOS v4.0");
+			lm_connection_send(connection, msg, NULL);
+			lm_message_node_unref(query);
+			lm_message_unref(msg);
 		}
+	}
+	if (strcmp(lm_message_node_get_attribute(m->node, "type"), "result") == 0) {
+		if (strcmp(lm_message_node_get_attribute(query, "xmlns"), "jabber:iq:roster") == 0) {
+			item  = lm_message_node_get_child (query, "item");
+			while (item) {
+				addri(lm_message_node_get_attribute(item, "jid"), NULL, GUY);
+				item = item->next;
+			}
+		}
+		// TODO: MOAR!!!
 		lm_message_node_unref(query);
 	}
 	lm_message_unref(m);

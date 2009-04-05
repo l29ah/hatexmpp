@@ -161,9 +161,7 @@ static int fsreaddir(const char *path, void *buf, fuse_fill_dir_t filler,
 		rosteritem *ri;
 		g_hash_table_iter_init (&iter, roster);
 		while (g_hash_table_iter_next(&iter, NULL, (gpointer) &ri))
-		{
 			filler(buf, ri->jid, NULL, 0);
-		}
 		return 0;
 	}
 	if (strncmp(path, "/roster/", 8) == 0) {
@@ -176,10 +174,11 @@ static int fsreaddir(const char *path, void *buf, fuse_fill_dir_t filler,
 			filler(buf, ".", NULL, 0);
 			filler(buf, "..", NULL, 0);
 			filler(buf, "__chat", NULL, 0);
-			for (i=0; i< ri->resources->len; i++) {
-				res = g_ptr_array_index(ri->resources, i);
-				filler(buf, res->name, NULL, 0);
-			}
+			GHashTableIter iter;
+			gchar *res;
+			g_hash_table_iter_init (&iter, ri->resources);
+			while (g_hash_table_iter_next(&iter, (gchar *) &res, NULL)) 
+				filler(buf, res, NULL, 0);
 		}
 	}
 
