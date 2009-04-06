@@ -296,6 +296,12 @@ void connection_close_cb (LmConnection *connection, LmDisconnectReason reason, g
 //	g_free(str);
 	g_main_loop_quit(main_loop);
 	g_hash_table_remove_all(roster);
+
+	// very stupid auto reconnect
+	if (g_hash_table_lookup(config,"auto_reconnect") && (reason != LM_DISCONNECT_REASON_OK)) {
+		logstr("Auto reconnecting");
+		xmpp_connect();
+	}
 }
 
 void xmpp_connect() {
@@ -314,22 +320,26 @@ void xmpp_send(const gchar *to, const gchar *body)
 	LmMessage *m;
 	rosteritem *ri;
 
-	m = lm_message_new(to, LM_MESSAGE_TYPE_MESSAGE);
 	ri = g_hash_table_lookup(roster, to);
 	if(ri) {
 		if(ri->type == MUC) {
-			lm_message_node_set_attribute(m->node, "type", "groupchat");
 			if (strncmp(body, "/leave", 6) == 0) {
 				partmuc(to, NULL, body+7);
 				g_hash_table_remove(roster, to);
-				lm_message_unref(m);
-				return;
+			}
+			if (strncmp(body, "/nick", 5) == 0) {
+				m = lm_message_new(g_strdup_printf("%s/%s", to, g_strdup(body+6)), LM_MESSAGE_TYPE_PRESENCE);
 			}
 		}
+		else {
+			m = lm_message_new(to, LM_MESSAGE_TYPE_MESSAGE);
+			lm_message_node_add_child(m->node, "body", body);
+		}
+		if (m) {
+			lm_connection_send(connection, m, NULL);
+			lm_message_unref(m);
+		}
 	}
-	lm_message_node_add_child(m->node, "body", body);
-	lm_connection_send(connection, m, NULL);
-	lm_message_unref(m);
 }
 
 void xmpp_add_to_roster(const gchar *jid) {
