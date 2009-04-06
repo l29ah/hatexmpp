@@ -104,10 +104,18 @@ static LmHandlerResult presence_rcvd_cb(LmMessageHandler *handler, LmConnection 
 		if (type && (strcmp(type, "unavailable") == 0)) {
 			logf("Deleting resource %s from %s\n", res, jid);
 			g_hash_table_remove(ri->resources, res);	
+			if (ri->type == MUC) {
+				gchar *log_str = g_strdup_printf("%d * %s has leaved the room\n", (unsigned) time(NULL), res);
+				g_array_append_vals(ri->log, log_str, strlen(log_str));
+			}
 		}
 		else {
 			logf("Adding resource %s to %s\n", res, jid);
 			add_resource(ri, res, PRESENCE_ONLINE);
+			if (ri->type == MUC) {
+				gchar *log_str = g_strdup_printf("%d * %s has entered the room\n", (unsigned) time(NULL), res);
+				g_array_append_vals(ri->log, log_str, strlen(log_str));
+			}
 		}
 	} else
 		logf("Presence from unknown (%s), ignoring\n", from);
