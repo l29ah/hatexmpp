@@ -286,11 +286,9 @@ static int fswrite(const char *path, const char *buf, size_t size, off_t offset,
 	if (strncmp(path, "/config/", 8) == 0) {
 		path += 8;
 		gchar *option = g_strdup(path);
-		if (option)  {
-			gchar *val = g_strndup(buf, size);
-			logf("Setting %s = %s\n", option, val);
-			g_hash_table_insert(config, option, val);
-		}			
+		gchar *val = g_strndup(buf, size);
+		logf("Setting %s = %s\n", option, val);
+		g_hash_table_insert(config, option, val);	
 		return size;
 	}
 	return 0;
@@ -302,7 +300,10 @@ static int fssetxattr(const char *path, const char *a, const char *aa, size_t si
 
 static void fsdestroy(void *privdata) {
 	free_all();
-	g_main_loop_quit(main_loop);
+	if(main_loop) {
+		g_main_loop_quit(main_loop);
+		g_main_destroy(main_loop);
+	}
 	return;
 }
 
@@ -316,7 +317,6 @@ static void * mainloopthread(void *loop) {
 static void * fsinit(struct fuse_conn_info *conn) {
 
 	context = g_main_context_new();
-	/* TODO: glib threads for portability */
 	return NULL;
 }
 
@@ -325,7 +325,6 @@ int fuseinit(int argc, char **argv) {
 
 	logstr("fuse is going up\n");
 	ret = fuse_main(argc, argv, &fuseoper, NULL);
-	perror("fuse_main terminated");
 	return ret;
 }
 

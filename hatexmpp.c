@@ -51,8 +51,7 @@ void free_all()		// trying to make a general cleanup
 {
 	g_hash_table_destroy(roster);
 	g_array_free(LogBuf, TRUE);
-// It's wrong not to destroy this hash, but otherwise it segfaults
-//	g_hash_table_destroy(config);
+	g_hash_table_destroy(config);
 }
 
 gchar *conf_read(GKeyFile *cf, gchar *section, gchar *key, gchar *def)
