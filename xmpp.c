@@ -265,14 +265,18 @@ static void connection_auth_cb(LmConnection *connection, gboolean success, void 
 
 static void connection_open_cb (LmConnection *connection, gboolean success, void *data)
 {
-	if (!success)
+	if (!success) {
 		logstr("Cannot open connection\n");
+		g_main_loop_quit(main_loop);
+	}
 	if (!lm_connection_authenticate (connection, 
 					 (gchar *) g_hash_table_lookup(config, "username"),
 					 (gchar *) g_hash_table_lookup(config, "password"),
 					 (gchar *) g_hash_table_lookup(config, "resource"),
-					 (LmResultFunction) connection_auth_cb, NULL, g_free, NULL))
+					 (LmResultFunction) connection_auth_cb, NULL, g_free, NULL)) {
 		logstr("lm_connection_authenticate failed\n");
+		g_main_loop_quit(main_loop);
+	}
 }
 
 void connection_close_cb (LmConnection *connection, LmDisconnectReason reason, gpointer data)
@@ -319,8 +323,10 @@ void xmpp_connect() {
 	lm_connection_register_message_handler(connection, lm_message_handler_new(presence_rcvd_cb, NULL, NULL), LM_MESSAGE_TYPE_PRESENCE, LM_HANDLER_PRIORITY_NORMAL);
 	lm_connection_register_message_handler(connection, lm_message_handler_new(message_rcvd_cb, NULL, NULL), LM_MESSAGE_TYPE_MESSAGE, LM_HANDLER_PRIORITY_NORMAL);
 	lm_connection_set_disconnect_function(connection, connection_close_cb, NULL, g_free);		
-        if (!lm_connection_open (connection, (LmResultFunction) connection_open_cb, NULL, g_free, NULL))
+	if (!lm_connection_open (connection, (LmResultFunction) connection_open_cb, NULL, g_free, NULL)) {
 		logstr("lm_connection_open failed\n");
+		g_main_loop_quit(main_loop);
+	}
 } 
 
 void xmpp_send(const gchar *to, const gchar *body)
