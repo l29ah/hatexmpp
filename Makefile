@@ -1,5 +1,5 @@
-CFLAGS = -Wall `pkg-config fuse loudmouth-1.0 gthread --cflags` -ggdb -DDEBUG -O0
-LDFLAGS = `pkg-config fuse loudmouth-1.0 gthread --libs`
+CFLAGS = -Wall `pkg-config fuse loudmouth-1.0 --cflags` -ggdb -DDEBUG -O0
+LDFLAGS = `pkg-config fuse loudmouth-1.0 --libs`
 
 all: hatexmpp 
 
