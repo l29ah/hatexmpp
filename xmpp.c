@@ -344,6 +344,7 @@ void xmpp_send(const gchar *to, const gchar *body)
 				m = lm_message_new(g_strdup_printf("%s/%s", to, g_strdup(body+6)), LM_MESSAGE_TYPE_PRESENCE);
 			} else {
 				m = lm_message_new(to, LM_MESSAGE_TYPE_MESSAGE);
+				lm_message_node_set_attribute(m->node, "type", "groupchat");
 				lm_message_node_add_child(m->node, "body", body);
 			}
 		}
