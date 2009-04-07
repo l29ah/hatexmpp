@@ -32,7 +32,7 @@ typedef struct rosteritem_s {
 	gchar *jid;
 	GHashTable *resources;
 	GArray *log;
-	unsigned presence;
+	resourceitem *self_resource;
 	time_t lastmsgtime;
 	unsigned type;
 } rosteritem;

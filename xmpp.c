@@ -98,12 +98,12 @@ static LmHandlerResult presence_rcvd_cb(LmMessageHandler *handler, LmConnection 
 	jid = get_jid(from);
 	res = get_resource(from);
 	ri = g_hash_table_lookup(roster, jid);
-
+	// TODO: do something with this awful if's logic
 	if (ri)	{
 		// TODO: do something better with presence
-		if (res) {
-			type = (gchar *) lm_message_node_get_attribute(m->node, "type");
-			if (type && (strcmp(type, "unavailable") == 0)) {
+		type = (gchar *) lm_message_node_get_attribute(m->node, "type");
+		if (type && (strcmp(type, "unavailable") == 0)) {
+			if (res) {
 				logf("Deleting resource %s from %s\n", res, jid);
 				g_hash_table_remove(ri->resources, res);	
 				if (ri->type == MUC) {
@@ -111,22 +111,26 @@ static LmHandlerResult presence_rcvd_cb(LmMessageHandler *handler, LmConnection 
 					g_array_append_vals(ri->log, log_str, strlen(log_str));
 				}
 			}
+		}
+		else {
+			resourceitem *rr;
+			if (!res) 
+				rr = ri->self_resource;
+			else
+				rr = g_hash_table_lookup(ri->resources, res);
+			if (rr) {
+				logf("Changing status of %s/%s\n", jid, res);
+				// maybe this will do smth in future
+			}
 			else {
-				resourceitem *rr = g_hash_table_lookup(ri->resources, res);
-				if (rr) {
-					logf("Changing status of %s/%s\n", jid, res);
-					// maybe this will do smth in future
-				}
-				else {
-					logf("Adding resource %s to %s\n", res, jid);
-					add_resource(ri, res, PRESENCE_ONLINE);
-					if (ri->type == MUC) {
-						gchar *log_str = g_strdup_printf("%d * %s has entered the room\n", (unsigned) time(NULL), res);
-						g_array_append_vals(ri->log, log_str, strlen(log_str));
-					}
+				logf("Adding resource %s to %s\n", res, jid);
+				add_resource(ri, res, PRESENCE_ONLINE);
+				if (ri->type == MUC) {
+					gchar *log_str = g_strdup_printf("%d * %s has entered the room\n", (unsigned) time(NULL), res);
+					g_array_append_vals(ri->log, log_str, strlen(log_str));
 				}
 			}
-		} else logf("Strange presence without resource from %s\n", from);
+		}
 	} else
 		logf("Presence from unknown (%s), ignoring\n", jid);
 	lm_message_unref(m);

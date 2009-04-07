@@ -38,6 +38,7 @@ int addri(const char *jid, GHashTable *resources, unsigned type) {
 	ri->log = g_array_new(FALSE, FALSE, 1);
 	ri->type = type;
 	g_hash_table_insert(roster, g_strdup(jid), ri);
+	ri->self_resource = g_new(resourceitem, 1);
 	return 0;
 }
 
@@ -45,6 +46,7 @@ void destroy_ri(rosteritem *RI) {
 	if(RI->jid) g_free(RI->jid);
 	if(RI->resources) g_hash_table_destroy(RI->resources);
 	if(RI->log) g_array_free(RI->log, TRUE);
+	if(RI->self_resource) g_free(RI->self_resource);
 }
 
 void free_all()		// trying to make a general cleanup
