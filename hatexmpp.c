@@ -37,7 +37,7 @@ int addri(const char *jid, GHashTable *resources, unsigned type) {
 		ri->resources = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify) destroy_resource);
 	ri->log = g_array_new(FALSE, FALSE, 1);
 	ri->type = type;
-	g_hash_table_insert(roster, g_strdup(ri->jid), ri);
+	g_hash_table_insert(roster, g_strdup(jid), ri);
 	return 0;
 }
 

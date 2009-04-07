@@ -19,6 +19,9 @@ version.c: hatexmpp.c common.h xmpp.c fuse.c
 test:	hatexmpp
 	./autotest.sh
 
+mtest:
+	cd test;../hatexmpp fs;cp config/* fs/config/;mkdir fs/roster
+
 clean:
 	rm *.o
 	rm version.c

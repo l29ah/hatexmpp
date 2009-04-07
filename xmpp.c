@@ -1,6 +1,7 @@
 #include "common.h"
 
 #define XMPP_MUC_XMLNS "http://jabber.org/protocol/muc"
+#define XMPP_DISCO_XMLNS "http://jabber.org/protocol/disco#info"
 
 void xmpp_send(const gchar *to, const gchar *body);
 
@@ -93,32 +94,34 @@ static LmHandlerResult presence_rcvd_cb(LmMessageHandler *handler, LmConnection 
 	gchar *from, *jid, *res, *type;
 	rosteritem *ri;
 
-	from = (gchar *) lm_message_node_get_attribute(m->node, "from");
+	from = (gchar *)lm_message_node_get_attribute(m->node, "from");
 	jid = get_jid(from);
 	res = get_resource(from);
 	ri = g_hash_table_lookup(roster, jid);
 
-	if (ri && res)	{
+	if (ri)	{
 		// TODO: do something better with presence
-		type = (gchar *) lm_message_node_get_attribute(m->node, "type");
-		if (type && (strcmp(type, "unavailable") == 0)) {
-			logf("Deleting resource %s from %s\n", res, jid);
-			g_hash_table_remove(ri->resources, res);	
-			if (ri->type == MUC) {
-				gchar *log_str = g_strdup_printf("%d * %s has leaved the room\n", (unsigned) time(NULL), res);
-				g_array_append_vals(ri->log, log_str, strlen(log_str));
+		if (res) {
+			type = (gchar *) lm_message_node_get_attribute(m->node, "type");
+			if (type && (strcmp(type, "unavailable") == 0)) {
+				logf("Deleting resource %s from %s\n", res, jid);
+				g_hash_table_remove(ri->resources, res);	
+				if (ri->type == MUC) {
+					gchar *log_str = g_strdup_printf("%d * %s has leaved the room\n", (unsigned) time(NULL), res);
+					g_array_append_vals(ri->log, log_str, strlen(log_str));
+				}
 			}
-		}
-		else {
-			logf("Adding resource %s to %s\n", res, jid);
-			add_resource(ri, res, PRESENCE_ONLINE);
-			if (ri->type == MUC) {
-				gchar *log_str = g_strdup_printf("%d * %s has entered the room\n", (unsigned) time(NULL), res);
-				g_array_append_vals(ri->log, log_str, strlen(log_str));
+			else {
+				logf("Adding resource %s to %s\n", res, jid);
+				add_resource(ri, res, PRESENCE_ONLINE);
+				if (ri->type == MUC) {
+					gchar *log_str = g_strdup_printf("%d * %s has entered the room\n", (unsigned) time(NULL), res);
+					g_array_append_vals(ri->log, log_str, strlen(log_str));
+				}
 			}
-		}
+		} else logf("Strange presence without resource from %s\n", from);
 	} else
-		logf("Presence from unknown (%s), ignoring\n", from);
+		logf("Presence from unknown (%s), ignoring\n", jid);
 	lm_message_unref(m);
 	return LM_HANDLER_RESULT_REMOVE_MESSAGE;
 }
@@ -205,8 +208,8 @@ static LmHandlerResult iq_rcvd_cb(LmMessageHandler *handler, LmConnection *conne
 		}
 
 		// Saying our discovery info
-		else if (strcmp(xmlns, "http://jabber.org/protocol/disco#info") == 0) {		
-			lm_message_node_set_attribute(lm_message_node_add_child(query, "feature", NULL), "var", "http://jabber.org/protocol/disco#info");		
+		else if (strcmp(xmlns, XMPP_DISCO_XMLNS) == 0) {		
+			lm_message_node_set_attribute(lm_message_node_add_child(query, "feature", NULL), "var", XMPP_DISCO_XMLNS);		
 			lm_message_node_set_attribute(lm_message_node_add_child(query, "feature", NULL), "var", "jabber:iq:version");
 			lm_message_node_set_attribute(lm_message_node_add_child(query, "feature", NULL), "var", "jabber:iq:time");
 			lm_connection_send(connection, msg, NULL);
@@ -305,7 +308,6 @@ void connection_close_cb (LmConnection *connection, LmDisconnectReason reason, g
 		str = "An unknown error.";
 	}
 	logf("Disconnected. Reason: %s\n", str);
-//	g_free(str);
 	g_main_loop_quit(main_loop);
 	g_hash_table_remove_all(roster);
 
