@@ -1,4 +1,4 @@
-CFLAGS = -Wall `pkg-config fuse loudmouth-1.0 --cflags` -ggdb -DDEBUG -O0
+CFLAGS = `pkg-config fuse loudmouth-1.0 --cflags`
 LDFLAGS = `pkg-config fuse loudmouth-1.0 --libs`
 
 all: hatexmpp 
@@ -23,3 +23,6 @@ clean:
 	rm *.o
 	rm version.c
 	rm hatexmpp
+
+debug:
+	make all CFLAGS='${CFLAGS} -ggdb -DDEBUG -O0 -Wall'
