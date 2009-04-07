@@ -327,16 +327,18 @@ void xmpp_send(const gchar *to, const gchar *body)
 {
 	LmMessage *m;
 	rosteritem *ri;
-
-	ri = g_hash_table_lookup(roster, to);
+	ri = g_hash_table_lookup(roster, get_jid(to));
 	if(ri) {
 		if(ri->type == MUC) {
 			if (strncmp(body, "/leave", 6) == 0) {
 				partmuc(to, NULL, body+7);
 				g_hash_table_remove(roster, to);
-			}
+			} else
 			if (strncmp(body, "/nick", 5) == 0) {
 				m = lm_message_new(g_strdup_printf("%s/%s", to, g_strdup(body+6)), LM_MESSAGE_TYPE_PRESENCE);
+			} else {
+				m = lm_message_new(to, LM_MESSAGE_TYPE_MESSAGE);
+				lm_message_node_add_child(m->node, "body", body);
 			}
 		}
 		else {
