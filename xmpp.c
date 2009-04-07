@@ -112,11 +112,18 @@ static LmHandlerResult presence_rcvd_cb(LmMessageHandler *handler, LmConnection 
 				}
 			}
 			else {
-				logf("Adding resource %s to %s\n", res, jid);
-				add_resource(ri, res, PRESENCE_ONLINE);
-				if (ri->type == MUC) {
-					gchar *log_str = g_strdup_printf("%d * %s has entered the room\n", (unsigned) time(NULL), res);
-					g_array_append_vals(ri->log, log_str, strlen(log_str));
+				resourceitem *rr = g_hash_table_lookup(ri->resources, res);
+				if (rr) {
+					logf("Changing status of %s/%s\n", jid, res);
+					// maybe this will do smth in future
+				}
+				else {
+					logf("Adding resource %s to %s\n", res, jid);
+					add_resource(ri, res, PRESENCE_ONLINE);
+					if (ri->type == MUC) {
+						gchar *log_str = g_strdup_printf("%d * %s has entered the room\n", (unsigned) time(NULL), res);
+						g_array_append_vals(ri->log, log_str, strlen(log_str));
+					}
 				}
 			}
 		} else logf("Strange presence without resource from %s\n", from);
