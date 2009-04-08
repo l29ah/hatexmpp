@@ -1,12 +1,16 @@
 #include "common.h"
 
+/*
 int isMUC(const char *path) {
 	rosteritem *ri;
 	ri = g_hash_table_lookup(roster, path+1);
 	if (ri && ri->type == MUC) return 1;
 	return 0;
 }
+*/
 
+/* WHAT'S THIS!? */
+/*
 gchar *path_element(const gchar *path) {
 	if (*path == '/')
 		path ++;
@@ -15,14 +19,25 @@ gchar *path_element(const gchar *path) {
 		return g_strndup(path, ch - path);
 	return g_strdup(path);
 }
+*/
 
-int fileexists(const char *path) {	/* TODO !? */
+int fileexists(const char *path) {	/* TODO remove/rewrite */
 	if (strcmp(path, "/log") == 0) return 1;
 	if (strncmp(path, "/roster/", 8) == 0) return 1;
 	return 0;
 }
 
+rosteritem * getri(const char *path) {
+	char *p;
 
+	if (*path == '/')
+                path ++;
+        gchar *ch = strchr(path, '/');
+        if (ch) {
+        	p = g_strndup(path, ch - path);
+	} else p = g_strdup(path);
+	return g_hash_table_lookup(roster, p);
+}
 static void * mainloopthread(void *loop);
 pthread_t thr;
 
@@ -43,7 +58,7 @@ static int fsrmdir(const char *path) {
 		rosteritem *ri;
 
 		path += 8;
-		ri = g_hash_table_lookup(roster, path);
+		ri = getri(path);
 		if(ri) {
 			if(ri->type == MUC) {
 			  partmuc(path, NULL, "TODO here must be default leave message :-)");
@@ -130,8 +145,7 @@ static int fsgetattr(const char *path, struct stat *stbuf)
 		rosteritem *ri;
 		gchar *jid;
 		path += 8;
-		jid = path_element(path);
-		ri = g_hash_table_lookup(roster, jid);
+		ri = getri(path);
 		if (ri) {
 			if ((ri->type == MUC) && (strlen(path) == strlen(jid))) {
 				stbuf->st_mode = S_IFDIR | 0755;
@@ -190,7 +204,8 @@ static int fsreaddir(const char *path, void *buf, fuse_fill_dir_t filler,
 	if (strncmp(path, "/roster/", 8) == 0) {
 		path += 8;
 		rosteritem *ri;
-		ri = g_hash_table_lookup(roster, path);
+		
+		ri = getri(path);
 		if (ri && (ri->type == MUC)) {
 			filler(buf, ".", NULL, 0);
 			filler(buf, "..", NULL, 0);
@@ -208,6 +223,18 @@ static int fsreaddir(const char *path, void *buf, fuse_fill_dir_t filler,
 
 static int fsopen(const char *path, struct fuse_file_info *fi)
 {
+	/* FDs are introduced only for writing ops */
+	if ((fi->flags & O_WRONLY) || (fi->flags & O_RDWR)) {
+	        if (strncmp(path, "/roster/", 8) == 0) {
+			rosteritem *ri;
+
+	                path += 8;
+                	ri = getri(path);
+			if (ri) {
+				/* TODO */
+                	} 
+		}
+	}
 	/* TODO */
 	return 0;
 }
@@ -242,8 +269,7 @@ static int fsread(const char *path, char *buf, size_t size, off_t offset,
 		rosteritem *ri;
 
 		path += 8;
-		gchar *jid = path_element(path);
-		ri = g_hash_table_lookup(roster, jid);
+		ri = getri(path);
 		if(ri) {
 			log = ri->log;
 			if(offset + size < log->len) {

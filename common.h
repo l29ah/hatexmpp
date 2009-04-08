@@ -31,12 +31,21 @@ typedef struct resourceitem_s {
 typedef struct rosteritem_s {
 	gchar *jid;
 	GHashTable *resources;
+	GHashTable *fdt;
+	unsigned fds;
 	GArray *log;
 	unsigned presence;
 	time_t lastmsgtime;
 	unsigned type;
 } rosteritem;
 
+#define FD_NONBLOCK 1
+
+typedef struct FD_s {
+	int id;	//unused
+	unsigned type;	//unused
+	GArray *writebuf;
+} FD;
 
 extern struct fuse_operations fuseoper;
 extern char HateXMPP_ver[];
