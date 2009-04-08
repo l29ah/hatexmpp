@@ -355,25 +355,29 @@ void xmpp_send(const gchar *to, const gchar *body) {
 	rosteritem *ri;
 	ri = g_hash_table_lookup(roster, get_jid(to));
 	if(ri) {
+		if (strncmp(body, "/clear", 6) == 0) {
+			logf("Clearing log of %s", ri->jid);
+			g_array_remove_range(ri->log, 0, ri->log->len-1);
+			return;
+		}
 		if(ri->type == MUC) {
 			if (strncmp(body, "/leave", 6) == 0) {
 				partmuc(to, NULL, body+7);
 				g_hash_table_remove(roster, to);
-			} else
+				return;
+			}
 			if (strncmp(body, "/nick", 5) == 0) {
 				m = lm_message_new(g_strdup_printf("%s/%s", to, g_strdup(body+6)), LM_MESSAGE_TYPE_PRESENCE);
 				ri->self_resource->name = g_strdup(body+6);
-			} else {
-				m = lm_message_new(to, LM_MESSAGE_TYPE_MESSAGE);
-				lm_message_node_set_attribute(m->node, "type", "groupchat");
-				lm_message_node_add_child(m->node, "body", body);
+				return;
 			}
+			m = lm_message_new_with_sub_type(to, LM_MESSAGE_TYPE_MESSAGE, LM_MESSAGE_SUB_TYPE_GROUPCHAT);
 		}
-		else {
+		else
 			m = lm_message_new(to, LM_MESSAGE_TYPE_MESSAGE);
-			lm_message_node_add_child(m->node, "body", body);
-		}
+		
 		if (m) {
+			lm_message_node_add_child(m->node, "body", body);
 			lm_connection_send(connection, m, NULL);
 			lm_message_unref(m);
 		}
