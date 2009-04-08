@@ -34,7 +34,7 @@ typedef struct rosteritem_s {
 	GHashTable *fdt;
 	unsigned fds;
 	GArray *log;
-	unsigned presence;
+	resourceitem *self_resource;
 	time_t lastmsgtime;
 	unsigned type;
 } rosteritem;
