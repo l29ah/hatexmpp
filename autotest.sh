@@ -3,7 +3,7 @@ rm -rf test/fs
 mkdir -p test/fs
 fusermount -u test/fs
 cd test
-valgrind ../hatexmpp fs
+../hatexmpp fs
 sleep 3;
 cd fs
 mkdir roster

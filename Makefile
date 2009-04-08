@@ -18,11 +18,11 @@ version.c: hatexmpp.c common.h xmpp.c fuse.c
 
 .PHONY:	test mtest clean debug
 
-test:	hatexmpp
+test:	mtest
 	./autotest.sh
 
-mtest:
-	cd test;../hatexmpp fs;cp config/* fs/config/;mkdir fs/roster
+mtest:	hatexmpp
+	cd test;../hatexmpp fs;cp config/* fs/config/;mkdir fs/roster || true
 
 clean:
 	rm *.o

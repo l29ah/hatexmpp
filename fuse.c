@@ -1,25 +1,10 @@
 #include "common.h"
 
-/*
-int isMUC(const char *path) {
-	rosteritem *ri;
-	ri = g_hash_table_lookup(roster, path+1);
-	if (ri && ri->type == MUC) return 1;
-	return 0;
-}
-*/
+GHashTable *FDt;
+unsigned FDn;
+static void * mainloopthread(void *loop);
+pthread_t thr;
 
-/* WHAT'S THIS!? */
-/*
-gchar *path_element(const gchar *path) {
-	if (*path == '/')
-		path ++;
-	gchar *ch = strchr(path, '/');
-	if (ch)
-		return g_strndup(path, ch - path);
-	return g_strdup(path);
-}
-*/
 
 int fileexists(const char *path) {	/* TODO remove/rewrite */
 	if (strcmp(path, "/log") == 0) return 1;
@@ -38,8 +23,26 @@ rosteritem * getri(const char *path) {
 	} else p = g_strdup(path);
 	return g_hash_table_lookup(roster, p);
 }
-static void * mainloopthread(void *loop);
-pthread_t thr;
+
+FD * addfd(rosteritem *ri) {
+	FD *fd;
+	int *id;
+
+	fd = calloc(sizeof(fd), 1);
+	fd->id = ++FDn;
+	fd->ri = ri;
+	fd->writebuf = g_array_new(TRUE, FALSE, 1);
+	id = malloc(sizeof(int));
+	*id = fd->id;
+	g_hash_table_insert(FDt, id, fd);
+	return fd;
+}
+
+void destroyfd(FD *fd) {
+//	g_array_free(fd->readbuf, TRUE);	/* TODO? */
+	g_array_free(fd->writebuf, TRUE);
+	free(fd);
+}
 
 /* FS calls */
 
@@ -342,6 +345,7 @@ static void * mainloopthread(void *loop) {
 static void * fsinit(struct fuse_conn_info *conn) {
 
 	context = g_main_context_new();
+	FDt = g_hash_table_new_full(g_int_hash, g_int_equal, free, (GDestroyNotify)destroyfd);
 	return NULL;
 }
 
