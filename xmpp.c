@@ -398,6 +398,11 @@ void xmpp_add_to_roster(const gchar *jid) {
 
 void xmpp_disconnect() {
 	if (lm_connection_is_open(connection)) {
+		// disconect gracefully
+		LmMessage *msg = lm_message_new_with_sub_type(NULL, LM_MESSAGE_TYPE_PRESENCE, LM_MESSAGE_SUB_TYPE_UNAVAILABLE);
+		lm_connection_send(connection, msg, NULL);
+		lm_message_unref(msg);
+
 		lm_connection_close(connection, NULL);
 	}
 }
