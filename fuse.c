@@ -143,11 +143,10 @@ static int fsgetattr(const char *path, struct stat *stbuf)
 	}
 	if (strncmp(path, "/roster/", 8) == 0) {
 		rosteritem *ri;
-		gchar *jid;
 		path += 8;
 		ri = getri(path);
 		if (ri) {
-			if ((ri->type == MUC) && (strlen(path) == strlen(jid))) {
+			if ((ri->type == MUC) && (strlen(path) == strlen(get_jid(path)))) {
 				stbuf->st_mode = S_IFDIR | 0755;
 				stbuf->st_nlink = 2;
 				return 0;
