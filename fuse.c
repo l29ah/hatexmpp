@@ -331,6 +331,8 @@ static int fsunlink(const char *path) {
 }
 
 static void fsdestroy(void *privdata) {
+	if (connection) 
+		xmpp_disconnect();
 	free_all();
 	if(main_loop) {
 		g_main_loop_quit(main_loop);
