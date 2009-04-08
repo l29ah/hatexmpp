@@ -322,6 +322,14 @@ static int fssetxattr(const char *path, const char *a, const char *aa, size_t si
 	return 0;
 }
 
+static int fsunlink(const char *path) {
+	if (strncmp(path, "/roster/", 8) == 0) {
+		path += 8;
+		xmpp_del_from_roster(path);
+	}
+	return 0;
+}
+
 static void fsdestroy(void *privdata) {
 	free_all();
 	if(main_loop) {
@@ -363,6 +371,7 @@ struct fuse_operations fuseoper = {
 	.rmdir		= fsrmdir,
 	.mknod		= fsmknod,
 	.create		= fscreate,
+	.unlink		= fsunlink,
 	.init		= fsinit,
 	.destroy	= fsdestroy,
 	.truncate	= fstruncate,

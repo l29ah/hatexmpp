@@ -25,21 +25,23 @@ void destroy_resource(resourceitem *res) {
 	if (res->name) g_free (res->name);
 }
 
-int addri(const char *jid, GHashTable *resources, unsigned type) {
+rosteritem *addri(const gchar *jid, GHashTable *resources, unsigned type) {
 	rosteritem *ri;
 
 	logf("Adding %s to roster\n", jid);
 	ri = g_new(rosteritem, 1);
-	ri->jid = g_strdup(jid);
-	if (resources)
-		ri->resources = resources;	/* TODO */
-	else
-		ri->resources = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify) destroy_resource);
-	ri->log = g_array_new(FALSE, FALSE, 1);
-	ri->type = type;
-	g_hash_table_insert(roster, g_strdup(jid), ri);
-	ri->self_resource = g_new(resourceitem, 1);
-	return 0;
+	if (ri) {
+		ri->jid = g_strdup(jid);
+		if (resources)
+			ri->resources = resources;	/* TODO */
+		else
+			ri->resources = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify) destroy_resource);
+		ri->log = g_array_new(FALSE, FALSE, 1);
+		ri->type = type;
+		g_hash_table_insert(roster, g_strdup(jid), ri);
+		ri->self_resource = g_new(resourceitem, 1);
+	}
+	return ri;
 }
 
 void destroy_ri(rosteritem *RI) {
