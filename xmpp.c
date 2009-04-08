@@ -65,7 +65,7 @@ int joinmuc(const char *jid, const char *password, const char *nick) {
 	        lm_message_node_add_child (node, "password", password);
 	}
 
-        lm_connection_send(connection, m, NULL);
+	lm_connection_send(connection, m, NULL);
 	lm_message_unref(m);
 
 	addri(jid, NULL, MUC);
@@ -251,6 +251,11 @@ static LmHandlerResult iq_rcvd_cb(LmMessageHandler *handler, LmConnection *conne
 		}
 		lm_message_node_unref(query);
 		lm_message_unref(m);
+		
+		m = lm_message_new_with_sub_type(NULL, LM_MESSAGE_TYPE_PRESENCE, LM_MESSAGE_SUB_TYPE_AVAILABLE);
+		lm_connection_send(connection, m, NULL);
+		lm_message_unref(m);
+
 		return LM_HANDLER_RESULT_REMOVE_MESSAGE;
 	}
 	return LM_HANDLER_RESULT_REMOVE_MESSAGE;
@@ -263,10 +268,6 @@ static void connection_auth_cb(LmConnection *connection, gboolean success, void 
 
 	if (success)
 	{
-		m = lm_message_new_with_sub_type(NULL, LM_MESSAGE_TYPE_PRESENCE, LM_MESSAGE_SUB_TYPE_AVAILABLE);
-		lm_connection_send(connection, m, NULL);
-		lm_message_unref(m);
-
 		m = lm_message_new_with_sub_type(NULL, LM_MESSAGE_TYPE_IQ, LM_MESSAGE_SUB_TYPE_GET);
 		lm_message_node_set_attribute(lm_message_node_add_child(m->node, "query", NULL), "xmlns", "jabber:iq:roster");
         	result = lm_connection_send(connection, m, NULL);
@@ -355,6 +356,7 @@ void xmpp_send(const gchar *to, const gchar *body)
 			} else
 			if (strncmp(body, "/nick", 5) == 0) {
 				m = lm_message_new(g_strdup_printf("%s/%s", to, g_strdup(body+6)), LM_MESSAGE_TYPE_PRESENCE);
+				ri->self_resource->name = g_strdup(body+6);
 			} else {
 				m = lm_message_new(to, LM_MESSAGE_TYPE_MESSAGE);
 				lm_message_node_set_attribute(m->node, "type", "groupchat");
