@@ -9,17 +9,13 @@ int isMUC(const char *path) {
 }
 */
 
-/* WHAT'S THIS!? */
-/*
-gchar *path_element(const gchar *path) {
-	if (*path == '/')
-		path ++;
-	gchar *ch = strchr(path, '/');
-	if (ch)
-		return g_strndup(path, ch - path);
-	return g_strdup(path);
+gchar *filter_str(gchar *str) {
+	gchar *ch = strchr(str, '\n');
+	if (ch) 
+		str[ch-str] = 0;
+	g_strstrip(str);
+	return str;
 }
-*/
 
 int fileexists(const char *path) {	/* TODO remove/rewrite */
 	if (strcmp(path, "/log") == 0) return 1;
@@ -310,7 +306,7 @@ static int fswrite(const char *path, const char *buf, size_t size, off_t offset,
 	if (strncmp(path, "/config/", 8) == 0) {
 		path += 8;
 		gchar *option = g_strdup(path);
-		gchar *val = g_strndup(buf, size);
+		gchar *val = filter_str(g_strndup(buf, size));
 		logf("Setting %s = %s\n", option, val);
 		g_hash_table_insert(config, option, val);	
 		return size;
