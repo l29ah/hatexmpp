@@ -6,6 +6,22 @@ GHashTable *config;
 GHashTable *roster;
 
 GArray *LogBuf;
+int fd_events;
+gchar *events_file;
+
+int event(gchar *str) {
+	if (fd_events <= 0)
+		fd_events = open(events_file, O_WRONLY | O_NONBLOCK);
+	#ifdef DEBUG
+	logf("Event: fd_events = %d, str = %s", fd_events, str);
+	#endif
+	if (fd_events >= 0) {
+		write(fd_events, str, strlen(str)+1);
+//		write(fd_events, 0, 1);
+	}
+	g_free(str);
+	return 0;
+}
 
 inline void logs(const char *msg, size_t len) {
 	g_array_append_vals(LogBuf, msg, len);
@@ -17,7 +33,7 @@ char * logstr(char *msg) {
 	g_printf("LOGF: %s",msg);
 	len = strlen(msg);
 	logs(msg, len);
-	
+
 	return msg;
 }
 
@@ -29,6 +45,7 @@ rosteritem *addri(const gchar *jid, GHashTable *resources, unsigned type) {
 	rosteritem *ri;
 
 	logf("Adding %s to roster\n", jid);
+	event(g_strdup_printf("add_ri %s %s", jid, (type == MUC) ? "MUC" : "BUDDY" ));
 	ri = g_new(rosteritem, 1);
 	if (ri) {
 		ri->jid = g_strdup(jid);
@@ -45,6 +62,7 @@ rosteritem *addri(const gchar *jid, GHashTable *resources, unsigned type) {
 }
 
 void destroy_ri(rosteritem *RI) {
+	event(g_strdup_printf("del_ri %s", RI->jid));
 	if(RI->jid) g_free(RI->jid);
 	if(RI->resources) g_hash_table_destroy(RI->resources);
 	if(RI->log) g_array_free(RI->log, TRUE);
@@ -61,6 +79,7 @@ void free_all()		// trying to make a general cleanup
 gchar *conf_read(GKeyFile *cf, gchar *section, gchar *key, gchar *def)
 {
 	gchar *val = g_key_file_get_string(cf, section, key, NULL);
+
 	if (!val)
 		return g_strdup(def);
 	return val;
@@ -70,7 +89,12 @@ int main(int argc, char **argv) {
 	LogBuf = g_array_sized_new(FALSE, FALSE, 1, 512);
 	logf("hatexmpp v%s is going up\n", HateXMPP_ver);
 	roster = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify) destroy_ri);
-        config = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+	config = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+
+	if (argc) {
+		events_file = g_strdup_printf("%sevents", argv[1]);
+	}
+
+	logf("Events FIFO: %s\n", events_file);
 	return fuseinit(argc, argv);
 }
-

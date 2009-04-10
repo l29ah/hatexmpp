@@ -103,16 +103,16 @@ static int fsmkdir(const char *path, mode_t mode) {
 static int fsgetattr(const char *path, struct stat *stbuf)
 {
 	memset(stbuf, 0, sizeof(struct stat));
-	if (strcmp(path, "/ctl") == 0) {
-		stbuf->st_mode = S_IFREG | 0200;
+	if (strcmp(path, "/events") == 0) {
+		stbuf->st_mode = S_IFIFO | 0444;
 		stbuf->st_nlink = 1;
 		return 0;
 	}
-        if (strcmp(path, "/log") == 0) {
-                stbuf->st_mode = S_IFREG | 0444;
-                stbuf->st_nlink = 1;
- 	        stbuf->st_size = LogBuf->len;
-                return 0;
+	if (strcmp(path, "/log") == 0) {
+    	stbuf->st_mode = S_IFREG | 0666;
+		stbuf->st_nlink = 1;
+		stbuf->st_size = LogBuf->len;
+		return 0;
 	}
 	if (strcmp(path, "/roster") == 0) {
 		if (connection && lm_connection_is_open(connection)) {
@@ -167,7 +167,7 @@ static int fsreaddir(const char *path, void *buf, fuse_fill_dir_t filler,
 	if (strcmp(path, "/") == 0) {
 		filler(buf, ".", NULL, 0);
 		filler(buf, "..", NULL, 0);
-		filler(buf, "ctl", NULL, 0);
+		filler(buf, "events", NULL, 0);
 		filler(buf, "log", NULL, 0);
 		filler(buf, "config", NULL, 0);
 		if (roster && lm_connection_is_open(connection)) filler(buf, "roster",NULL, 0);
@@ -238,6 +238,7 @@ static int fsread(const char *path, char *buf, size_t size, off_t offset,
 		      struct fuse_file_info *fi)
 {
 	if (strcmp(path, "/log") == 0) {
+//		write(fi->fh, LogBuf->data+offset, size);
 		memcpy(buf, LogBuf->data + offset, size);
 		/* TODO: checks, lock */
 		return size;
@@ -344,15 +345,15 @@ static void * mainloopthread(void *loop) {
 	return NULL;
 }
 
-static void * fsinit(struct fuse_conn_info *conn) {
 
+static void * fsinit(struct fuse_conn_info *conn) {
 	context = g_main_context_new();
 	return NULL;
 }
 
 int fuseinit(int argc, char **argv) {
 	int ret;
-
+//	fifo = open("fs/log", O_WRONLY | O_NONBLOCK);
 	logstr("fuse is going up\n");
 	ret = fuse_main(argc, argv, &fuseoper, NULL);
 	return ret;

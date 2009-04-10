@@ -3,13 +3,16 @@
 
 #include <stdio.h>
 #include <errno.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
 #include <glib.h>
 #include <glib/gprintf.h>
 #include <glib/gthread.h>
 #include <pthread.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 #include <fuse.h>
 #include <time.h>
 #include <loudmouth/loudmouth.h>
@@ -83,3 +86,6 @@ extern void xmpp_connect();
 extern void xmpp_disconnect();
 extern void xmpp_add_to_roster(const gchar *jid);
 extern void xmpp_del_from_roster(const gchar *jid);
+	
+extern int fd_events;
+extern int event(gchar *str);
