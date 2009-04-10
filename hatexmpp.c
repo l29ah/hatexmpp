@@ -38,7 +38,10 @@ char * logstr(char *msg) {
 }
 
 void destroy_resource(resourceitem *res) {
+	if (!res) return;
+	event(g_strdup_printf("del_resource %s", res->name));
 	if (res->name) g_free (res->name);
+	g_free(res);
 }
 
 rosteritem *addri(const gchar *jid, GHashTable *resources, unsigned type) {
@@ -62,11 +65,13 @@ rosteritem *addri(const gchar *jid, GHashTable *resources, unsigned type) {
 }
 
 void destroy_ri(rosteritem *RI) {
+	if (!RI) return;
 	event(g_strdup_printf("del_ri %s", RI->jid));
 	if(RI->jid) g_free(RI->jid);
 	if(RI->resources) g_hash_table_destroy(RI->resources);
 	if(RI->log) g_array_free(RI->log, TRUE);
 	if(RI->self_resource) g_free(RI->self_resource);
+	g_free(RI);
 }
 
 void free_all()		// trying to make a general cleanup

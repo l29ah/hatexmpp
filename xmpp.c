@@ -111,7 +111,7 @@ static LmHandlerResult presence_rcvd_cb(LmMessageHandler *handler, LmConnection 
 			if (res) {
 				logf("Deleting resource %s from %s\n", res, jid);
 				event(g_strdup_printf("del_resource %s/%s", jid, res));
-				g_hash_table_remove(ri->resources, res);	
+				destroy_resource(g_hash_table_lookup(ri->resources, res))
 				if (ri->type == MUC) {
 					gchar *log_str = g_strdup_printf("%d * %s has leaved the room\n", (unsigned) time(NULL), res);
 					g_array_append_vals(ri->log, log_str, strlen(log_str));
@@ -194,7 +194,7 @@ static LmHandlerResult iq_rcvd_cb(LmMessageHandler *handler, LmConnection *conne
 		while (item) {
 			jid = (gchar *) lm_message_node_get_attribute(item, "jid");
 			if (strcmp(lm_message_node_get_attribute(item, "subscription"), "remove") == 0) {
-				g_hash_table_remove(roster, jid);
+				destroy_ri(g_hash_table_lookup(roster, jid));
 			}
 			else {
 				ri = g_hash_table_lookup(roster, jid);
@@ -284,18 +284,21 @@ static void connection_auth_cb(LmConnection *connection, gboolean success, void 
 		lm_message_node_set_attribute(lm_message_node_add_child(m->node, "query", NULL), "xmlns", "jabber:iq:roster");
         	result = lm_connection_send(connection, m, NULL);
         	lm_message_unref (m);
+		event(g_strdup("auth_ok"));
 	} else
 	{
 		logstr("Authentication failed!\n");
+		event(g_strdup("auth_fail"));
 	}
-	event(g_strdup("authenticated"));
 }
 
 static void connection_open_cb (LmConnection *connection, gboolean success, void *data)
 {
 	if (!success) {
 		logstr("Cannot open connection\n");
+		event(g_strdup("connect_fail"));
 		g_main_loop_quit(main_loop);
+		return;
 	}
 	if (!lm_connection_authenticate (connection, 
 					 (gchar *) g_hash_table_lookup(config, "username"),
@@ -304,8 +307,9 @@ static void connection_open_cb (LmConnection *connection, gboolean success, void
 					 (LmResultFunction) connection_auth_cb, NULL, g_free, NULL)) {
 		logstr("lm_connection_authenticate failed\n");
 		g_main_loop_quit(main_loop);
+		return;
 	}
-	event(g_strdup("connected"));
+	event(g_strdup("connect_ok"));
 }
 
 void connection_close_cb (LmConnection *connection, LmDisconnectReason reason, gpointer data)
