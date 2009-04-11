@@ -31,8 +31,6 @@ typedef struct resourceitem_s {
 typedef struct rosteritem_s {
 	gchar *jid;
 	GHashTable *resources;
-	GHashTable *fdt;
-	unsigned fds;
 	GArray *log;
 	resourceitem *self_resource;
 	time_t lastmsgtime;
@@ -42,8 +40,10 @@ typedef struct rosteritem_s {
 #define FD_NONBLOCK 1
 
 typedef struct FD_s {
-	int id;	//unused
+	int id;
+	rosteritem *ri;
 	unsigned type;	//unused
+	GArray *readbuf;	//unused
 	GArray *writebuf;
 } FD;
 
