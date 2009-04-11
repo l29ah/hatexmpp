@@ -111,7 +111,7 @@ static LmHandlerResult presence_rcvd_cb(LmMessageHandler *handler, LmConnection 
 			if (res) {
 				logf("Deleting resource %s from %s\n", res, jid);
 				event(g_strdup_printf("del_resource %s/%s", jid, res));
-				destroy_resource(g_hash_table_lookup(ri->resources, res))
+				destroy_resource(g_hash_table_lookup(ri->resources, res));
 				if (ri->type == MUC) {
 					gchar *log_str = g_strdup_printf("%d * %s has leaved the room\n", (unsigned) time(NULL), res);
 					g_array_append_vals(ri->log, log_str, strlen(log_str));
