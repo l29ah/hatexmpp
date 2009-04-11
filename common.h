@@ -3,13 +3,16 @@
 
 #include <stdio.h>
 #include <errno.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
 #include <glib.h>
 #include <glib/gprintf.h>
 #include <glib/gthread.h>
 #include <pthread.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 #include <fuse.h>
 #include <time.h>
 #include <loudmouth/loudmouth.h>
@@ -71,10 +74,10 @@ extern gchar *get_resource(const gchar *jid);
 extern gchar *get_jid(const gchar *jid);
 extern void xmpp_connect();
 extern void xmpp_send(const gchar *to, const gchar *body);
-extern int joinmuc(const char *jid, const char *password, const char *nick);
-extern int partmuc(const char *jid, const char *nick, const char *leave);
+extern int joinmuc(const gchar *jid, const gchar *password, const gchar *nick);
+extern int partmuc(const gchar *jid, const gchar *nick, const gchar *leave);
 
-extern int addri(const char *jid, GHashTable *resources, unsigned type);
+extern rosteritem *addri(const gchar *jid, GHashTable *resources, unsigned type);
 extern int destroyri(rosteritem *RI);
 
 extern gchar *conf_read(GKeyFile *cf, gchar *section, gchar *key, gchar *def);
@@ -82,3 +85,7 @@ extern void free_all();
 extern void xmpp_connect();
 extern void xmpp_disconnect();
 extern void xmpp_add_to_roster(const gchar *jid);
+extern void xmpp_del_from_roster(const gchar *jid);
+	
+extern int fd_events;
+extern int event(gchar *str);

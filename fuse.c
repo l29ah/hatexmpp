@@ -5,6 +5,13 @@ unsigned FDn;
 static void * mainloopthread(void *loop);
 pthread_t thr;
 
+gchar *filter_str(gchar *str) {
+	gchar *ch = strchr(str, '\n');
+	if (ch) 
+		str[ch-str] = 0;
+	g_strstrip(str);
+	return str;
+}
 
 int fileexists(const char *path) {	/* TODO remove/rewrite */
 	if (strcmp(path, "/log") == 0) return 1;
@@ -110,16 +117,16 @@ static int fsmkdir(const char *path, mode_t mode) {
 static int fsgetattr(const char *path, struct stat *stbuf)
 {
 	memset(stbuf, 0, sizeof(struct stat));
-	if (strcmp(path, "/ctl") == 0) {
-		stbuf->st_mode = S_IFREG | 0200;
+	if (strcmp(path, "/events") == 0) {
+		stbuf->st_mode = S_IFIFO | 0444;
 		stbuf->st_nlink = 1;
 		return 0;
 	}
-        if (strcmp(path, "/log") == 0) {
-                stbuf->st_mode = S_IFREG | 0444;
-                stbuf->st_nlink = 1;
- 	        stbuf->st_size = LogBuf->len;
-                return 0;
+	if (strcmp(path, "/log") == 0) {
+    	stbuf->st_mode = S_IFREG | 0666;
+		stbuf->st_nlink = 1;
+		stbuf->st_size = LogBuf->len;
+		return 0;
 	}
 	if (strcmp(path, "/roster") == 0) {
 		if (connection && lm_connection_is_open(connection)) {
@@ -146,11 +153,10 @@ static int fsgetattr(const char *path, struct stat *stbuf)
 	}
 	if (strncmp(path, "/roster/", 8) == 0) {
 		rosteritem *ri;
-		gchar *jid;
 		path += 8;
 		ri = getri(path);
 		if (ri) {
-			if ((ri->type == MUC) && (strlen(path) == strlen(jid))) {
+			if ((ri->type == MUC) && (strlen(path) == strlen(get_jid(path)))) {
 				stbuf->st_mode = S_IFDIR | 0755;
 				stbuf->st_nlink = 2;
 				return 0;
@@ -175,7 +181,7 @@ static int fsreaddir(const char *path, void *buf, fuse_fill_dir_t filler,
 	if (strcmp(path, "/") == 0) {
 		filler(buf, ".", NULL, 0);
 		filler(buf, "..", NULL, 0);
-		filler(buf, "ctl", NULL, 0);
+		filler(buf, "events", NULL, 0);
 		filler(buf, "log", NULL, 0);
 		filler(buf, "config", NULL, 0);
 		if (roster && lm_connection_is_open(connection)) filler(buf, "roster",NULL, 0);
@@ -246,6 +252,7 @@ static int fsread(const char *path, char *buf, size_t size, off_t offset,
 		      struct fuse_file_info *fi)
 {
 	if (strcmp(path, "/log") == 0) {
+//		write(fi->fh, LogBuf->data+offset, size);
 		memcpy(buf, LogBuf->data + offset, size);
 		/* TODO: checks, lock */
 		return size;
@@ -314,7 +321,7 @@ static int fswrite(const char *path, const char *buf, size_t size, off_t offset,
 	if (strncmp(path, "/config/", 8) == 0) {
 		path += 8;
 		gchar *option = g_strdup(path);
-		gchar *val = g_strndup(buf, size);
+		gchar *val = filter_str(g_strndup(buf, size));
 		logf("Setting %s = %s\n", option, val);
 		g_hash_table_insert(config, option, val);	
 		return size;
@@ -326,7 +333,17 @@ static int fssetxattr(const char *path, const char *a, const char *aa, size_t si
 	return 0;
 }
 
+static int fsunlink(const char *path) {
+	if (strncmp(path, "/roster/", 8) == 0) {
+		path += 8;
+		xmpp_del_from_roster(path);
+	}
+	return 0;
+}
+
 static void fsdestroy(void *privdata) {
+	if (connection) 
+		xmpp_disconnect();
 	free_all();
 	if(main_loop) {
 		g_main_loop_quit(main_loop);
@@ -343,7 +360,6 @@ static void * mainloopthread(void *loop) {
 }
 
 static void * fsinit(struct fuse_conn_info *conn) {
-
 	context = g_main_context_new();
 	FDt = g_hash_table_new_full(g_int_hash, g_int_equal, free, (GDestroyNotify)destroyfd);
 	return NULL;
@@ -351,7 +367,7 @@ static void * fsinit(struct fuse_conn_info *conn) {
 
 int fuseinit(int argc, char **argv) {
 	int ret;
-
+//	fifo = open("fs/log", O_WRONLY | O_NONBLOCK);
 	logstr("fuse is going up\n");
 	ret = fuse_main(argc, argv, &fuseoper, NULL);
 	return ret;
@@ -368,6 +384,7 @@ struct fuse_operations fuseoper = {
 	.rmdir		= fsrmdir,
 	.mknod		= fsmknod,
 	.create		= fscreate,
+	.unlink		= fsunlink,
 	.init		= fsinit,
 	.destroy	= fsdestroy,
 	.truncate	= fstruncate,

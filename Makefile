@@ -22,7 +22,7 @@ test:	mtest
 	./autotest.sh
 
 mtest:	hatexmpp
-	cd test;../hatexmpp fs;cp config/* fs/config/;mkdir fs/roster || true
+	cd test;../hatexmpp fs;cp config/* fs/config/;mkdir fs/roster || true;sleep 5;mkdir 'fs/roster/hatexmpp@conference.jabber.ru'
 
 clean:
 	rm *.o
