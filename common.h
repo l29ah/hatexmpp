@@ -88,4 +88,5 @@ extern void xmpp_add_to_roster(const gchar *jid);
 extern void xmpp_del_from_roster(const gchar *jid);
 	
 extern int fd_events;
-extern int event(gchar *str);
+extern gchar * eventstr(gchar *str);
+#define eventf(FMT,ARGS...) g_free(eventstr(g_strdup_printf(FMT, ##ARGS)))

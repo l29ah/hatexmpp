@@ -9,7 +9,7 @@ GArray *LogBuf;
 int fd_events;
 gchar *events_file;
 
-int event(gchar *str) {
+gchar *eventstr(gchar *str) {
 	if (fd_events <= 0) {
 		fd_events = open(events_file, O_WRONLY | O_NONBLOCK);
 		#ifdef DEBUG
@@ -25,8 +25,7 @@ int event(gchar *str) {
 		logf("write to fd_events = %d errno = %d", fd_events, errno);
 		#endif
 	}
-	g_free(str);
-	return 0;
+	return str;
 }
 
 inline void logs(const char *msg, size_t len) {
@@ -46,7 +45,7 @@ char * logstr(char *msg) {
 void destroy_resource(resourceitem *res) {
 	if (!res) return;
 	if (res->name) {
-		event(g_strdup_printf("del_resource %s", res->name));
+		eventf("del_resource %s", res->name);
 		g_free (res->name);
 	}
 	g_free(res);
@@ -56,7 +55,7 @@ rosteritem *addri(const gchar *jid, GHashTable *resources, unsigned type) {
 	rosteritem *ri;
 
 	logf("Adding %s to roster\n", jid);
-	event(g_strdup_printf("add_ri %s %s", jid, (type == MUC) ? "MUC" : "BUDDY" ));
+	eventf("add_ri %s %s", jid, (type == MUC) ? "MUC" : "BUDDY" );
 	ri = g_new(rosteritem, 1);
 	if (ri) {
 		ri->jid = g_strdup(jid);
@@ -74,7 +73,7 @@ rosteritem *addri(const gchar *jid, GHashTable *resources, unsigned type) {
 
 void destroy_ri(rosteritem *RI) {
 	if (!RI) return;
-	event(g_strdup_printf("del_ri %s", RI->jid));
+	eventf("del_ri %s", RI->jid);
 	if(RI->jid) g_free(RI->jid);
 	if(RI->resources) g_hash_table_destroy(RI->resources);
 	if(RI->log) g_array_free(RI->log, TRUE);

@@ -104,12 +104,12 @@ static LmHandlerResult presence_rcvd_cb(LmMessageHandler *handler, LmConnection 
 		type = (gchar *) lm_message_node_get_attribute(m->node, "type");
 		if (type && (strcmp(type, "subscribe") == 0)) {
 			// always agree with subscription requests, myabe do something better in future
-				event(g_strdup_printf("subscr_request %s", from));
+				eventf("subscr_request %s", from);
 			lm_connection_send(connection, lm_message_new_with_sub_type(from, LM_MESSAGE_TYPE_PRESENCE, LM_MESSAGE_SUB_TYPE_SUBSCRIBED), NULL);
 		}
 		if (type && (strcmp(type, "unavailable") == 0) && res) {
 			logf("Deleting resource %s from %s\n", res, jid);
-			event(g_strdup_printf("del_resource %s/%s", jid, res));
+			eventf("del_resource %s/%s", jid, res);
 			destroy_resource(g_hash_table_lookup(ri->resources, res));
 			if (ri->type == MUC) {
 				gchar *log_str = g_strdup_printf("%d * %s has left the room\n", (unsigned) time(NULL), res);
@@ -124,12 +124,12 @@ static LmHandlerResult presence_rcvd_cb(LmMessageHandler *handler, LmConnection 
 				rr = g_hash_table_lookup(ri->resources, res);
 			if (rr) {
 				logf("Changing status of %s/%s\n", jid, res);
-				event(g_strdup_printf("ch_presence %s", from));
+				eventf("ch_presence %s", from);
 				// maybe this will do smth in future
 			}
 			else {
 				logf("Adding resource %s to %s\n", res, jid);
-				event(g_strdup_printf("add_resource %s/%s", jid, res));
+				eventf("add_resource %s/%s", jid, res);
 				add_resource(ri, res, PRESENCE_ONLINE);
 				if (ri->type == MUC) {
 					gchar *log_str = g_strdup_printf("%d * %s has entered the room\n", (unsigned) time(NULL), res);
@@ -154,7 +154,7 @@ static LmHandlerResult message_rcvd_cb(LmMessageHandler *handler, LmConnection *
 	body = lm_message_node_get_value(lm_message_node_get_child(m->node, "body"));
 	if (from && body) {
 		logf("Message from %s to %s: %s\n", from, to, body );
-		event(g_strdup_printf("msg %s %s %s", from, to, body));
+		eventf("msg %s %s %s", from, to, body);
 		jid = get_jid((gchar *) from);
 		ri = g_hash_table_lookup(roster, jid);
 		if(ri) {
@@ -282,11 +282,11 @@ static void connection_auth_cb(LmConnection *connection, gboolean success, void 
 		lm_message_node_set_attribute(lm_message_node_add_child(m->node, "query", NULL), "xmlns", "jabber:iq:roster");
         	result = lm_connection_send(connection, m, NULL);
         	lm_message_unref (m);
-		event(g_strdup("auth_ok"));
+		eventstr("auth_ok");
 	} else
 	{
 		logstr("Authentication failed!\n");
-		event(g_strdup("auth_fail"));
+		eventstr("auth_fail");
 	}
 }
 
@@ -294,7 +294,7 @@ static void connection_open_cb (LmConnection *connection, gboolean success, void
 {
 	if (!success) {
 		logstr("Cannot open connection\n");
-		event(g_strdup("connect_fail"));
+		eventstr("connect_fail");
 		g_main_loop_quit(main_loop);
 		return;
 	}
@@ -307,7 +307,7 @@ static void connection_open_cb (LmConnection *connection, gboolean success, void
 		g_main_loop_quit(main_loop);
 		return;
 	}
-	event(g_strdup("connect_ok"));
+	eventstr("connect_ok");
 }
 
 void connection_close_cb (LmConnection *connection, LmDisconnectReason reason, gpointer data)
@@ -336,7 +336,7 @@ void connection_close_cb (LmConnection *connection, LmDisconnectReason reason, g
 		str = "An unknown error.";
 	}
 	logf("Disconnected. Reason: %s\n", str);
-	event(g_strdup_printf("disconnected %s", str));
+	eventf("disconnected %s", str);
 	g_main_loop_quit(main_loop);
 	g_hash_table_remove_all(roster);
 
