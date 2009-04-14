@@ -39,8 +39,10 @@ char * logstr(char *msg) {
 
 void destroy_resource(resourceitem *res) {
 	if (!res) return;
-	event(g_strdup_printf("del_resource %s", res->name));
-	if (res->name) g_free (res->name);
+	if (res->name) {
+		event(g_strdup_printf("del_resource %s", res->name));
+		g_free (res->name);
+	}
 	g_free(res);
 }
 
