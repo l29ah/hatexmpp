@@ -10,12 +10,12 @@ int fd_events;
 gchar *events_file;
 
 int event(gchar *str) {
-	if (fd_events <= 0)
+	if (fd_events == 0)
 		fd_events = open(events_file, O_WRONLY | O_NONBLOCK);
 	#ifdef DEBUG
 	logf("Event: fd_events = %d, str = %s", fd_events, str);
 	#endif
-	if (fd_events >= 0) {
+	if (fd_events != -1) {
 		write(fd_events, str, strlen(str)+1);
 //		write(fd_events, 0, 1);
 	}

@@ -107,15 +107,13 @@ static LmHandlerResult presence_rcvd_cb(LmMessageHandler *handler, LmConnection 
 				event(g_strdup_printf("subscr_request %s", from));
 			lm_connection_send(connection, lm_message_new_with_sub_type(from, LM_MESSAGE_TYPE_PRESENCE, LM_MESSAGE_SUB_TYPE_SUBSCRIBED), NULL);
 		}
-		if (type && (strcmp(type, "unavailable") == 0)) {
-			if (res) {
-				logf("Deleting resource %s from %s\n", res, jid);
-				event(g_strdup_printf("del_resource %s/%s", jid, res));
-				destroy_resource(g_hash_table_lookup(ri->resources, res));
-				if (ri->type == MUC) {
-					gchar *log_str = g_strdup_printf("%d * %s has leaved the room\n", (unsigned) time(NULL), res);
-					g_array_append_vals(ri->log, log_str, strlen(log_str));
-				}
+		if (type && (strcmp(type, "unavailable") == 0) && res) {
+			logf("Deleting resource %s from %s\n", res, jid);
+			event(g_strdup_printf("del_resource %s/%s", jid, res));
+			destroy_resource(g_hash_table_lookup(ri->resources, res));
+			if (ri->type == MUC) {
+				gchar *log_str = g_strdup_printf("%d * %s has left the room\n", (unsigned) time(NULL), res);
+				g_array_append_vals(ri->log, log_str, strlen(log_str));
 			}
 		}
 		else {
