@@ -9,7 +9,7 @@ GArray *LogBuf;
 int fd_events;
 gchar *events_file;
 
-int event(gchar *str) {
+int event(gchar *str) {	/* TODO convert to 'int event(const gchar *str)' */
 	if (fd_events == 0)
 		fd_events = open(events_file, O_WRONLY | O_NONBLOCK);
 	#ifdef DEBUG
@@ -27,7 +27,7 @@ inline void logs(const char *msg, size_t len) {
 	g_array_append_vals(LogBuf, msg, len);
 }
 
-char * logstr(char *msg) {
+gchar * logstr(gchar *msg) {	/* TODO */
 	size_t len;
 	
 	g_printf("LOGF: %s",msg);
@@ -37,13 +37,15 @@ char * logstr(char *msg) {
 	return msg;
 }
 
-void destroy_resource(resourceitem *res) {
-	if (!res) return;
-	if (res->name) {
-		event(g_strdup_printf("del_resource %s", res->name));
-		g_free (res->name);
+void destroy_resource(resourceitem *resi, GHashTable *table) {
+	if (resi) {
+		/* TODO fix
+		if (resi->name) {
+			event(g_strdup_printf("del_resource %s", resi->name));
+		}
+		*/
+		g_hash_table_remove(table, resi);
 	}
-	g_free(res);
 }
 
 rosteritem *addri(const gchar *jid, GHashTable *resources, unsigned type) {
@@ -105,3 +107,4 @@ int main(int argc, char **argv) {
 	logf("Events FIFO: %s\n", events_file);
 	return fuseinit(argc, argv);
 }
+

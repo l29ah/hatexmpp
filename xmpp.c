@@ -73,7 +73,7 @@ int joinmuc(const gchar *jid, const gchar *password, const gchar *nick) {
 	return 0;
 }
 
-void add_resource(rosteritem *ri, gchar *res, unsigned presence) {
+void add_resource(rosteritem *ri, const gchar *res, const unsigned presence) {
 	resourceitem *r;
 	r = g_hash_table_lookup(ri->resources, res);
 	if (r) {
@@ -85,7 +85,7 @@ void add_resource(rosteritem *ri, gchar *res, unsigned presence) {
 		r = g_malloc(sizeof(resourceitem));
 		r->name = g_strdup(res);
 		r->presence = presence;
-		g_hash_table_insert(ri->resources, res, r);
+		g_hash_table_insert(ri->resources, g_strdup(res), r);
 	}
 }
 
@@ -110,10 +110,10 @@ static LmHandlerResult presence_rcvd_cb(LmMessageHandler *handler, LmConnection 
 		if (type && (strcmp(type, "unavailable") == 0) && res) {
 			logf("Deleting resource %s from %s\n", res, jid);
 			event(g_strdup_printf("del_resource %s/%s", jid, res));
-			destroy_resource(g_hash_table_lookup(ri->resources, res));
 			if (ri->type == MUC) {
 				gchar *log_str = g_strdup_printf("%d * %s has left the room\n", (unsigned) time(NULL), res);
 				g_array_append_vals(ri->log, log_str, strlen(log_str));
+				destroy_resource(g_hash_table_lookup(ri->resources, res), ri->resources);
 			}
 		}
 		else {
