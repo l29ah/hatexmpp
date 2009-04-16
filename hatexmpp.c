@@ -42,14 +42,10 @@ gchar * logstr(gchar *msg) {	/* TODO const */
 	return msg;
 }
 
-void destroy_resource(resourceitem *resi, GHashTable *table) {
+void destroy_resource(resourceitem *resi) {
 	if (resi) {
-		/* TODO fix
-		if (resi->name) {
-			event(g_strdup_printf("del_resource %s", resi->name));
-		}
-		*/
-		g_hash_table_remove(table, resi);
+		if (resi->name) g_free(resi->name);
+		g_free(resi);
 	}
 }
 

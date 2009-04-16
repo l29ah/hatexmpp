@@ -113,7 +113,7 @@ static LmHandlerResult presence_rcvd_cb(LmMessageHandler *handler, LmConnection 
 			if (ri->type == MUC) {
 				gchar *log_str = g_strdup_printf("%d * %s has left the room\n", (unsigned) time(NULL), res);
 				g_array_append_vals(ri->log, log_str, strlen(log_str));
-				destroy_resource(g_hash_table_lookup(ri->resources, res), ri->resources);
+				g_hash_table_remove(ri->resources, res);
 			}
 		}
 		else {
