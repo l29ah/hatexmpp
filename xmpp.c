@@ -192,7 +192,7 @@ static LmHandlerResult iq_rcvd_cb(LmMessageHandler *handler, LmConnection *conne
 		while (item) {
 			jid = (gchar *) lm_message_node_get_attribute(item, "jid");
 			if (strcmp(lm_message_node_get_attribute(item, "subscription"), "remove") == 0) {
-				destroy_ri(g_hash_table_lookup(roster, jid));
+				g_hash_table_remove(roster, jid);
 			}
 			else {
 				ri = g_hash_table_lookup(roster, jid);
@@ -381,7 +381,10 @@ void xmpp_send(const gchar *to, const gchar *body) {
 				ri->self_resource->name = g_strdup(body+6);
 				return;
 			}
-			m = lm_message_new_with_sub_type(to, LM_MESSAGE_TYPE_MESSAGE, LM_MESSAGE_SUB_TYPE_GROUPCHAT);
+			if (strchr(to, '/')) 
+				m = lm_message_new_with_sub_type(to, LM_MESSAGE_TYPE_MESSAGE, LM_MESSAGE_SUB_TYPE_CHAT);
+			else
+				m = lm_message_new_with_sub_type(to, LM_MESSAGE_TYPE_MESSAGE, LM_MESSAGE_SUB_TYPE_GROUPCHAT);
 		}
 		else
 			m = lm_message_new(to, LM_MESSAGE_TYPE_MESSAGE);
