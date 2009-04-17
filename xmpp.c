@@ -46,6 +46,7 @@ int partmuc(const char *jid, const char *nick, const char *leave) {
 	if (leave) lm_message_node_add_child(m->node, "status", leave);
 	lm_connection_send(connection, m, NULL);
 	lm_message_unref(m);
+	g_free(to);
 	return 0;
 }
 
@@ -104,7 +105,7 @@ static LmHandlerResult presence_rcvd_cb(LmMessageHandler *handler, LmConnection 
 		type = (gchar *) lm_message_node_get_attribute(m->node, "type");
 		if (type && (strcmp(type, "subscribe") == 0)) {
 			// always agree with subscription requests, myabe do something better in future
-				eventf("subscr_request %s", from);
+			eventf("subscr_request %s", from);
 			lm_connection_send(connection, lm_message_new_with_sub_type(from, LM_MESSAGE_TYPE_PRESENCE, LM_MESSAGE_SUB_TYPE_SUBSCRIBED), NULL);
 		}
 		if (type && (strcmp(type, "unavailable") == 0) && res) {
@@ -115,8 +116,7 @@ static LmHandlerResult presence_rcvd_cb(LmMessageHandler *handler, LmConnection 
 				g_array_append_vals(ri->log, log_str, strlen(log_str));
 				g_hash_table_remove(ri->resources, res);
 			}
-		}
-		else {
+		} else {
 			resourceitem *rr;
 			if (!res) 
 				rr = ri->self_resource;
@@ -134,6 +134,7 @@ static LmHandlerResult presence_rcvd_cb(LmMessageHandler *handler, LmConnection 
 				if (ri->type == MUC) {
 					gchar *log_str = g_strdup_printf("%d * %s has entered the room\n", (unsigned) time(NULL), res);
 					g_array_append_vals(ri->log, log_str, strlen(log_str));
+					g_free(log_str);
 				}
 			}
 		}
@@ -163,10 +164,11 @@ static LmHandlerResult message_rcvd_cb(LmMessageHandler *handler, LmConnection *
 				jid = get_resource(from);
 			log_str = g_strdup_printf("%d %s: %s\n", (unsigned)ri->lastmsgtime, jid, body);
 			g_array_append_vals(ri->log, log_str, strlen(log_str));
+			g_free(log_str);
 		} else {
 			logf("%s isn't in roster, ignoring message", jid);
 		}
-	} else logf("Message from noone or empty one!\n");
+	} else logf("Message from nobody or empty one!\n");
 	lm_message_unref(m);
 	return LM_HANDLER_RESULT_REMOVE_MESSAGE;
 }
@@ -211,7 +213,7 @@ static LmHandlerResult iq_rcvd_cb(LmMessageHandler *handler, LmConnection *conne
 	}
 	else if (strcmp(type, "get") == 0) {
 		LmMessage *msg = lm_message_new_with_sub_type(lm_message_node_get_attribute(m->node, "from"), LM_MESSAGE_TYPE_IQ, LM_MESSAGE_SUB_TYPE_RESULT);
-		lm_message_node_set_attribute(msg->node, "id", (gchar *) lm_message_node_get_attribute(m->node, "id"));
+		lm_message_node_set_attribute(msg->node, "id", (gchar *)lm_message_node_get_attribute(m->node, "id"));
 		query = lm_message_node_add_child(msg->node, "query", NULL);
 		lm_message_node_set_attribute(query, "xmlns", xmlns);
 		
