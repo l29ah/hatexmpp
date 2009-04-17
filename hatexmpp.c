@@ -1,4 +1,5 @@
 #include "common.h"
+//#define EVENTS
 
 GMainLoop *main_loop;
 GMainContext *context;
@@ -10,6 +11,7 @@ int fd_events;
 gchar *events_file;
 
 gchar *eventstr(gchar *str) {	/* TODO const */
+#ifdef EVENTS
 	if (fd_events <= 0) {
 		fd_events = open(events_file, O_WRONLY | O_NONBLOCK);
 		#ifdef DEBUG
@@ -25,6 +27,7 @@ gchar *eventstr(gchar *str) {	/* TODO const */
 		logf("write to fd_events = %d errno = %d", fd_events, errno);
 		#endif
 	}
+#endif
 	return str;
 }
 
