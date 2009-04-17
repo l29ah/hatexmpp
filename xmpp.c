@@ -147,7 +147,8 @@ static LmHandlerResult presence_rcvd_cb(LmMessageHandler *handler, LmConnection 
 
 static LmHandlerResult message_rcvd_cb(LmMessageHandler *handler, LmConnection *connection, LmMessage *m, gpointer data)
 {
-	const gchar *from, *to, *body, *jid, *log_str;
+	const gchar *from, *to, *body, *jid;
+	gchar *log_str;
 	rosteritem *ri;
 
 	from = lm_message_node_get_attribute(m->node, "from");

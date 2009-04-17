@@ -72,6 +72,7 @@ extern GArray *LogBuf;
 
 extern gchar *get_resource(const gchar *jid);
 extern gchar *get_jid(const gchar *jid);
+
 extern void xmpp_connect();
 extern void xmpp_send(const gchar *to, const gchar *body);
 extern int joinmuc(const gchar *jid, const gchar *password, const gchar *nick);
@@ -80,7 +81,6 @@ extern int partmuc(const gchar *jid, const gchar *nick, const gchar *leave);
 extern rosteritem *addri(const gchar *jid, GHashTable *resources, unsigned type);
 extern int destroyri(rosteritem *RI);
 
-extern gchar *conf_read(GKeyFile *cf, gchar *section, gchar *key, gchar *def);
 extern void free_all();
 extern void xmpp_connect();
 extern void xmpp_disconnect();

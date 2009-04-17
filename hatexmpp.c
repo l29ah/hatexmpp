@@ -86,7 +86,7 @@ void free_all()		// trying to make a general cleanup
 	g_hash_table_destroy(config);
 }
 
-gchar *conf_read(GKeyFile *cf, gchar *section, gchar *key, gchar *def)
+gchar *conf_read(GKeyFile *cf, const gchar *section, const gchar *key, const gchar *def)
 {
 	gchar *val = g_key_file_get_string(cf, section, key, NULL);
 

@@ -21,6 +21,7 @@ int fileexists(const char *path) {	/* TODO remove/rewrite */
 
 rosteritem * getri(const char *path) {
 	char *p;
+	rosteritem *ri;
 
 	if (*path == '/')
                 path ++;
@@ -28,7 +29,9 @@ rosteritem * getri(const char *path) {
         if (ch) {
         	p = g_strndup(path, ch - path);
 	} else p = g_strdup(path);
-	return g_hash_table_lookup(roster, p);
+	ri = g_hash_table_lookup(roster, p);
+	g_free(p);
+	return ri;
 }
 
 FD * addfd(rosteritem *ri) {
