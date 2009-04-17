@@ -373,16 +373,6 @@ void xmpp_send(const gchar *to, const gchar *body) {
 			return;
 		}
 		if(ri->type == MUC) {
-			if (strncmp(body, "/leave", 6) == 0) {
-				partmuc(to, NULL, body+7);
-				g_hash_table_remove(roster, to);
-				return;
-			}
-			if (strncmp(body, "/nick", 5) == 0) {
-				m = lm_message_new(g_strdup_printf("%s/%s", to, g_strdup(body+6)), LM_MESSAGE_TYPE_PRESENCE);
-				ri->self_resource->name = g_strdup(body+6);
-				return;
-			}
 			if (strchr(to, '/')) 
 				m = lm_message_new_with_sub_type(to, LM_MESSAGE_TYPE_MESSAGE, LM_MESSAGE_SUB_TYPE_CHAT);
 			else
