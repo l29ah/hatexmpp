@@ -111,7 +111,7 @@ static LmHandlerResult presence_rcvd_cb(LmMessageHandler *handler, LmConnection 
 		if (type && (strcmp(type, "unavailable") == 0) && res) {
 			logf("Deleting resource %s from %s\n", res, jid);
 			eventf("del_resource %s/%s", jid, res);
-			if (ri->type == MUC) {
+			if (ri->type == MUC && !g_hash_table_lookup(config, "raw_logs")) {
 				gchar *log_str = g_strdup_printf("%d * %s has left the room\n", (unsigned) time(NULL), res);
 				g_array_append_vals(ri->log, log_str, strlen(log_str));
 				g_hash_table_remove(ri->resources, res);
@@ -131,7 +131,7 @@ static LmHandlerResult presence_rcvd_cb(LmMessageHandler *handler, LmConnection 
 				logf("Adding resource %s to %s\n", res, jid);
 				eventf("add_resource %s/%s", jid, res);
 				add_resource(ri, res, PRESENCE_ONLINE);
-				if (ri->type == MUC) {
+				if (ri->type == MUC && !g_hash_table_lookup(config, "raw_logs")) {
 					gchar *log_str = g_strdup_printf("%d * %s has entered the room\n", (unsigned) time(NULL), res);
 					g_array_append_vals(ri->log, log_str, strlen(log_str));
 					g_free(log_str);
@@ -163,9 +163,13 @@ static LmHandlerResult message_rcvd_cb(LmMessageHandler *handler, LmConnection *
 			ri->lastmsgtime = time(NULL);
 			if (ri->type == MUC)
 				jid = get_resource(from);
-			log_str = g_strdup_printf("%d %s: %s\n", (unsigned)ri->lastmsgtime, jid, body);
-			g_array_append_vals(ri->log, log_str, strlen(log_str));
-			g_free(log_str);
+			if (g_hash_table_lookup(config, "raw_logs"))
+				g_array_append_vals(ri->log, body, strlen(body));
+			else {
+				log_str = g_strdup_printf("%d %s: %s\n", (unsigned)ri->lastmsgtime, jid, body);
+				g_array_append_vals(ri->log, log_str, strlen(log_str));
+				g_free(log_str);
+			}
 		} else {
 			logf("%s isn't in roster, ignoring message", jid);
 		}
