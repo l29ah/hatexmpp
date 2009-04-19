@@ -341,11 +341,13 @@ static int fsunlink(const char *path) {
 		path += 8;
 		char *sl = strchr(path, '/');
 		if (sl) { /* We're in the conference and wanna ban! */
-			char *who = sl + 1;
+			char *who = g_strdup(sl + 1);
 			char *where = g_strndup(path, who - path);
 			where[who - path] = 0;
 			// TODO!
 			banmuc(where, who);
+			g_free(where);
+			g_free(who);
 		} else {
 			xmpp_del_from_roster(path);
 		}

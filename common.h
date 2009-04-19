@@ -63,7 +63,8 @@ extern GHashTable *config;
 extern GHashTable *roster;
 extern LmConnection *connection;
 
-/* Logging stuff */
+/* Logging'n'debug stuff */
+#define OMGBUG g_on_error_query(PROGRAM_NAME);
 extern int fuseinit(int argc, char **argv);
 extern void logs(const char *, size_t);
 extern char * logstr(char *);
