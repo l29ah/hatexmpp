@@ -311,10 +311,6 @@ static int fsread(const char *path, char *buf, size_t size, off_t offset,
 
 static int fswrite(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi)
 {
-	if (strcmp(path, "/ctl") == 0) {
-		/* NOTE: /ctl should be avoided in favor of fs calls */
-		return 0;
-	}
 	if (strncmp(path, "/roster/", 8) == 0) {
 		char *msg;
 		size_t msg_len = size;
