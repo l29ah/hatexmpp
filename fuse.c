@@ -339,7 +339,16 @@ static int fssetxattr(const char *path, const char *a, const char *aa, size_t si
 static int fsunlink(const char *path) {
 	if (strncmp(path, "/roster/", 8) == 0) {
 		path += 8;
-		xmpp_del_from_roster(path);
+		char *sl = strchr(path, '/');
+		if (sl) { /* We're in the conference and wanna ban! */
+			char *who = sl + 1;
+			char *where = g_strndup(path, who - path);
+			where[who - path] = 0;
+			// TODO!
+			banmuc(where, who);
+		} else {
+			xmpp_del_from_roster(path);
+		}
 	}
 	return 0;
 }

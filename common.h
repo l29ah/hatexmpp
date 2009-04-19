@@ -92,3 +92,5 @@ extern gchar * eventstr(gchar *str);
 #define eventf(FMT,ARGS...) g_free(eventstr(g_strdup_printf(FMT, ##ARGS)))
 
 extern time_t last_activity_time;
+
+extern int banmuc(const char *mucjid, const char *who);
