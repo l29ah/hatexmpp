@@ -96,3 +96,9 @@ extern gchar * eventstr(gchar *str);
 extern time_t last_activity_time;
 
 extern int banmuc(const char *mucjid, const char *who);
+
+enum connection_state_e {
+	OFFLINE,
+	CONNECTING,
+	ONLINE
+} connection_state;

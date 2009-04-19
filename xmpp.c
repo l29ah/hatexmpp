@@ -322,10 +322,12 @@ static void connection_auth_cb(LmConnection *connection, gboolean success, void 
         	lm_message_unref (m);
 		time(&last_activity_time);
 		eventstr("auth_ok");
+		connection_state = ONLINE;
 	} else
 	{
 		logstr("Authentication failed!\n");
 		eventstr("auth_fail");
+		connection_state = OFFLINE;
 	}
 }
 
@@ -376,6 +378,7 @@ void connection_close_cb (LmConnection *connection, LmDisconnectReason reason, g
 	}
 	logf("Disconnected. Reason: %s\n", str);
 	eventf("disconnected %s", str);
+	connection_state = OFFLINE;
 	g_main_loop_quit(main_loop);
 	g_hash_table_remove_all(roster);
 
@@ -387,6 +390,7 @@ void connection_close_cb (LmConnection *connection, LmDisconnectReason reason, g
 }
 
 void xmpp_connect() {
+	connection_state = CONNECTING;
 	connection = lm_connection_new_with_context ((gchar *) g_hash_table_lookup(config, "server"), context);
 	// TODO: moar c011b4ckz!
 	lm_connection_register_message_handler(connection, lm_message_handler_new(iq_rcvd_cb, NULL, NULL ), LM_MESSAGE_TYPE_IQ, LM_HANDLER_PRIORITY_NORMAL);
@@ -396,6 +400,7 @@ void xmpp_connect() {
 	if (!lm_connection_open (connection, (LmResultFunction) connection_open_cb, NULL, g_free, NULL)) {
 		logstr("lm_connection_open failed\n");
 		g_main_loop_quit(main_loop);
+		connection_state = OFFLINE;
 	}
 } 
 

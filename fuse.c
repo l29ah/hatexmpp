@@ -132,7 +132,7 @@ static int fsgetattr(const char *path, struct stat *stbuf)
 		return 0;
 	}
 	if (strcmp(path, "/roster") == 0) {
-		if (connection && lm_connection_is_open(connection)) {
+		if (connection_state != OFFLINE) {
 			stbuf->st_mode = S_IFDIR | 0755;
 			stbuf->st_nlink = 2;
 			return 0;

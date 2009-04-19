@@ -10,6 +10,7 @@ GArray *LogBuf;
 int fd_events;
 gchar *events_file;
 time_t last_activity_time;
+enum connection_state_e connection_state;
 
 gchar *eventstr(gchar *str) {	/* TODO const */
 #ifdef EVENTS
