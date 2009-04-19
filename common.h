@@ -90,3 +90,5 @@ extern void xmpp_del_from_roster(const gchar *jid);
 extern int fd_events;
 extern gchar * eventstr(gchar *str);
 #define eventf(FMT,ARGS...) g_free(eventstr(g_strdup_printf(FMT, ##ARGS)))
+
+extern time_t last_activity_time;

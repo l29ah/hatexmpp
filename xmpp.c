@@ -254,11 +254,18 @@ static LmHandlerResult iq_rcvd_cb(LmMessageHandler *handler, LmConnection *conne
 			lm_connection_send(connection, msg, NULL);
 		}
 		
+		// Saying last activity time
+		else if (strcmp(xmlns, "jabber:iq:last") == 0) {
+			lm_message_node_set_attribute(query, "seconds", g_strdup_printf("%d", time(NULL) - last_activity_time));
+			lm_connection_send(connection, msg, NULL);
+		}
+
 		// Saying our discovery info
 		else if (strcmp(xmlns, XMPP_DISCO_XMLNS) == 0) {		
 			lm_message_node_set_attribute(lm_message_node_add_child(query, "feature", NULL), "var", XMPP_DISCO_XMLNS);		
 			lm_message_node_set_attribute(lm_message_node_add_child(query, "feature", NULL), "var", "jabber:iq:version");
 			lm_message_node_set_attribute(lm_message_node_add_child(query, "feature", NULL), "var", "jabber:iq:time");
+			lm_message_node_set_attribute(lm_message_node_add_child(query, "feature", NULL), "var", "jabber:iq:last");
 			lm_connection_send(connection, msg, NULL);
 		}
 		
@@ -289,6 +296,7 @@ static void connection_auth_cb(LmConnection *connection, gboolean success, void 
 		lm_message_node_set_attribute(lm_message_node_add_child(m->node, "query", NULL), "xmlns", "jabber:iq:roster");
         	result = lm_connection_send(connection, m, NULL);
         	lm_message_unref (m);
+		time(&last_activity_time);
 		eventstr("auth_ok");
 	} else
 	{
@@ -387,6 +395,7 @@ void xmpp_send(const gchar *to, const gchar *body) {
 			m = lm_message_new(to, LM_MESSAGE_TYPE_MESSAGE);
 		
 		if (m) {
+			time(&last_activity_time);
 			lm_message_node_add_child(m->node, "body", body);
 			lm_connection_send(connection, m, NULL);
 			lm_message_unref(m);

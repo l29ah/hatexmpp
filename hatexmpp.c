@@ -1,5 +1,5 @@
 #include "common.h"
-//#define EVENTS
+#define EVENTS
 
 GMainLoop *main_loop;
 GMainContext *context;
@@ -9,6 +9,7 @@ GHashTable *roster;
 GArray *LogBuf;
 int fd_events;
 gchar *events_file;
+time_t last_activity_time;
 
 gchar *eventstr(gchar *str) {	/* TODO const */
 #ifdef EVENTS
