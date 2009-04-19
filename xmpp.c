@@ -280,7 +280,7 @@ static LmHandlerResult iq_rcvd_cb(LmMessageHandler *handler, LmConnection *conne
 		
 		// Saying last activity time
 		else if (strcmp(xmlns, "jabber:iq:last") == 0) {
-			lm_message_node_set_attribute(query, "seconds", g_strdup_printf("%d", time(NULL) - last_activity_time));
+			lm_message_node_set_attribute(query, "seconds", g_strdup_printf("%d", (int)(time(NULL) - last_activity_time)));
 			lm_connection_send(connection, msg, NULL);
 		}
 
@@ -482,11 +482,12 @@ void xmpp_disconnect() {
 	}
 }
 
-void xmpp_muc_change_nick(gchar *mucjid, gchar *nick) {
+void xmpp_muc_change_nick(const gchar *mucjid, const gchar *nick) {
 	logf("Change nick in %s to %s\n", mucjid, nick);
 	rosteritem *ri = g_hash_table_lookup(roster, mucjid);
 	if (ri && nick && (ri->type == MUC)) {
 		logf("Change nick in %s to %s\n", mucjid, nick);
+		g_free(ri->self_resource->name);
 		ri->self_resource->name = g_strdup(nick);
 		LmMessage *m = lm_message_new(g_strdup_printf("%s/%s", mucjid, nick), LM_MESSAGE_TYPE_PRESENCE);
 //		lm_message_node_set_attr(m->node, "from", g_strdup_printf("%s/%s"));
