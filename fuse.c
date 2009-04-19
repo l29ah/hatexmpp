@@ -222,6 +222,7 @@ static int fsreaddir(const char *path, void *buf, fuse_fill_dir_t filler,
 			filler(buf, ".", NULL, 0);
 			filler(buf, "..", NULL, 0);
 			filler(buf, "__chat", NULL, 0);
+			filler(buf, "__nick", NULL, 0);
 			GHashTableIter iter;
 			gchar *res;
 			g_hash_table_iter_init (&iter, ri->resources);
@@ -267,7 +268,6 @@ static int fsread(const char *path, char *buf, size_t size, off_t offset,
 		gchar *val = g_hash_table_lookup(config, path);
 		if(val) {
 			len = strlen(val);
-			//logf("Getting config option %s = %s\n", path, val);
 			if(offset + size < len) {
 				memcpy(buf, val + offset, size);
 				return size;
@@ -283,7 +283,18 @@ static int fsread(const char *path, char *buf, size_t size, off_t offset,
 
 		path += 8;
 		ri = getri(path);
+		if(ri && ((strcmp(path, "__nick") == 0) || (strcmp(get_resource(path), "__nick") == 0))) {
+			size_t len = strlen(ri->self_resource->name);
+			if(offset + size < len) {
+				memcpy(buf, ri->self_resource->name + offset, size);
+				return size;
+			} else {
+				memcpy(buf, ri->self_resource->name + offset, len - offset);
+				return len - offset;
+			}
+		}
 		if(ri) {
+//			if ((ri->type == MUC) && (strcmp(path + strlen(ri->jid)+1)));
 			log = ri->log;
 			if(offset + size < log->len) {
 				memcpy(buf, log->data + offset, size);
@@ -292,6 +303,7 @@ static int fsread(const char *path, char *buf, size_t size, off_t offset,
 				memcpy(buf, log->data + offset, log->len - offset);
 				return log->len - offset;
 			}
+
 		} else return -ENOENT;
 	}
 	return -ENOENT;
@@ -309,15 +321,20 @@ static int fswrite(const char *path, const char *buf, size_t size, off_t offset,
 
 		path += 8;
 		gchar *res = get_resource(path);
-		if (res && (strncmp(res, "__chat", 6) == 0 )) {
+		if (res && (strncmp(res, "__chat", 2) == 0 )) {
 			path = get_jid(path);
 		}
+
 		if (strrchr(buf,'\n'))
 			msg_len--;
+
 		msg = malloc(msg_len+1);
 		memcpy(msg, buf, msg_len);
 		msg[msg_len] = 0;
-		xmpp_send(path, msg);
+		if (res && (strncmp(res, "__nick", 6) == 0 )) 
+			xmpp_muc_change_nick(get_jid(path), msg);
+		else
+			xmpp_send(path, msg);
 		free(msg);
 		return size;
 	}

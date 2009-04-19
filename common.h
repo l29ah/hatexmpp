@@ -87,6 +87,7 @@ extern void xmpp_connect();
 extern void xmpp_disconnect();
 extern void xmpp_add_to_roster(const gchar *jid);
 extern void xmpp_del_from_roster(const gchar *jid);
+extern void xmpp_muc_change_nick(gchar *mucjid, gchar *nick);
 	
 extern int fd_events;
 extern gchar * eventstr(gchar *str);

@@ -481,3 +481,16 @@ void xmpp_disconnect() {
 		lm_connection_close(connection, NULL);
 	}
 }
+
+void xmpp_muc_change_nick(gchar *mucjid, gchar *nick) {
+	logf("Change nick in %s to %s\n", mucjid, nick);
+	rosteritem *ri = g_hash_table_lookup(roster, mucjid);
+	if (ri && nick && (ri->type == MUC)) {
+		logf("Change nick in %s to %s\n", mucjid, nick);
+		ri->self_resource->name = g_strdup(nick);
+		LmMessage *m = lm_message_new(g_strdup_printf("%s/%s", mucjid, nick), LM_MESSAGE_TYPE_PRESENCE);
+//		lm_message_node_set_attr(m->node, "from", g_strdup_printf("%s/%s"));
+		lm_connection_send(connection, m, NULL);
+		lm_message_unref(m);
+	}	
+}
