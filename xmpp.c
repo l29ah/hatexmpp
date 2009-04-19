@@ -36,6 +36,24 @@ static gchar *get_nick(const gchar *jid)
 	return g_strndup (jid, ch-jid);
 }
 
+int banmuc(const char *mucjid, const char *who) {
+        LmMessage *msg = lm_message_new_with_sub_type(mucjid, LM_MESSAGE_TYPE_IQ, LM_MESSAGE_SUB_TYPE_SET);
+        LmMessageNode *query = lm_message_node_add_child(msg->node, "query", NULL);
+        lm_message_node_set_attribute(query, "xmlns", "http://jabber.org/protocol/muc#admin");
+        LmMessageNode *child = lm_message_node_add_child(query, "item", NULL);
+	lm_message_node_set_attributes(child, "affiliation", "outcast", "jid", who);
+	lm_connection_send(connection, msg, NULL);
+}
+
+/* TODO
+int devoice(const char *mucjid; const char *who) {
+	LmMessage *msg = lm_message_new_with_sub_type(mucjid, LM_MESSAGE_TYPE_IQ, LM_MESSAGE_SUB_TYPE_SET);
+	LmMessageNode *query = lm_message_node_add_child(msg->node, "query", NULL);
+        lm_message_node_set_attribute(query, "xmlns", "http://jabber.org/protocol/muc#admin");
+	LmMessageNode *child = lm_message_node_add_child(query, "name", str);
+}
+*/
+
 int partmuc(const char *jid, const char *nick, const char *leave) {
         LmMessage *m;
 	gchar *to;
