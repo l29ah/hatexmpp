@@ -105,6 +105,8 @@ static int fsmkdir(const char *path, mode_t mode) {
 			return -EPERM;
 		} else {
 			pthread_create(&thr, NULL, mainloopthread, NULL);
+			usleep(100);
+			while (connection_state == CONNECTING) usleep(100);
 			return 0;
 		}
 	}

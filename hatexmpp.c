@@ -28,8 +28,8 @@ gchar *eventstr(gchar *str) {	/* TODO const */
 			logf("write to fd_events = %d errno = %d", fd_events, errno);
 			#endif
 		}
-		return str;
 	}
+	return str;
 }
 
 inline void logs(const char *msg, size_t len) {
