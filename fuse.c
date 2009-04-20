@@ -62,7 +62,7 @@ static int fstruncate(const char *path, off_t size) {
 
 static int fsrmdir(const char *path) {
 	if (strcmp(path, "/roster") == 0) {
-		if (connection && lm_connection_is_open(connection)) {
+		if (connection_state != OFFLINE) {
 			xmpp_disconnect();
 			return 0;
 		}
@@ -338,8 +338,22 @@ static int fswrite(const char *path, const char *buf, size_t size, off_t offset,
 		path += 8;
 		gchar *option = g_strdup(path);
 		gchar *val = filter_str(g_strndup(buf, size));
+		// bool options
+		if ((strcmp(option, "events") == 0) ||
+			(strcmp(option, "raw_logs")== 0)) {
+			if ((g_ascii_strcasecmp(val, "no") == 0)|| 
+				(g_ascii_strcasecmp(val, "false") == 0) ||
+				 (val[0] == '0')) {
+				g_free(val);
+				val = g_strdup("0");
+			}
+			else {
+				g_free(val);
+				val = g_strdup("1");
+			}
+		}
 		logf("Setting %s = %s\n", option, val);
-		g_hash_table_insert(config, option, val);	
+		g_hash_table_replace(config, option, val);	
 		return size;
 	}
 	return 0;
