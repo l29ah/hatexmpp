@@ -188,7 +188,7 @@ static LmHandlerResult message_rcvd_cb(LmMessageHandler *handler, LmConnection *
 			if (ri->type == MUC)
 				jid = get_resource(from);
 			if (g_hash_table_lookup(config, "raw_logs"))
-				g_array_append_vals(ri->log, body, strlen(body));
+				g_array_append_vals(ri->log, body, strlen(body) + 1);		// +1 for delimiting messages by \0
 			else {
 				log_str = g_strdup_printf("%d %s: %s\n", (unsigned)ri->lastmsgtime, jid, body);
 				g_array_append_vals(ri->log, log_str, strlen(log_str));
