@@ -12,7 +12,7 @@ time_t last_activity_time;
 enum connection_state_e connection_state;
 
 gchar *eventstr(gchar *str) {	/* TODO const */
-	if (strchr(g_hash_table_lookup(config, "events"), '1')) {
+	if (g_hash_table_lookup(config, "events")) {
 		if (fd_events <= 0) {
 			fd_events = open(events_file, O_WRONLY | O_NONBLOCK);
 			#ifdef DEBUG
@@ -99,14 +99,11 @@ int main(int argc, char **argv) {
 	g_hash_table_insert(config, "server", NULL);
 	g_hash_table_insert(config, "username", NULL);
 	g_hash_table_insert(config, "password", NULL);
-	g_hash_table_insert(config, "resource", NULL);
+	g_hash_table_insert(config, "resource", g_strdup("hatexmpp"));
 	g_hash_table_insert(config, "muc_default_nick", NULL);
 	g_hash_table_insert(config, "jiv_name", NULL);
 	g_hash_table_insert(config, "jiv_os", NULL);
 	g_hash_table_insert(config, "jiv_version", NULL);
-	g_hash_table_insert(config, "auto_reconnect", g_strdup("0"));
-	g_hash_table_insert(config, "raw_logs", g_strdup("0"));
-	g_hash_table_insert(config, "events", g_strdup("0"));
 	
 	// Do something with this!!!!!
 	if (argc) {

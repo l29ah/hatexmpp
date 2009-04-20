@@ -187,7 +187,7 @@ static LmHandlerResult message_rcvd_cb(LmMessageHandler *handler, LmConnection *
 			ri->lastmsgtime = time(NULL);
 			if (ri->type == MUC)
 				jid = get_resource(from);
-			if (strchr(g_hash_table_lookup(config, "raw_logs"), '1'))
+			if (g_hash_table_lookup(config, "raw_logs"))
 				g_array_append_vals(ri->log, body, strlen(body) + 1);		// +1 for delimiting messages by \0
 			else {
 				log_str = g_strdup_printf("%d %s: %s\n", (unsigned)ri->lastmsgtime, jid, body);
@@ -383,7 +383,7 @@ void connection_close_cb (LmConnection *connection, LmDisconnectReason reason, g
 	g_hash_table_remove_all(roster);
 
 	// very stupid auto reconnect
-	if (strchr(g_hash_table_lookup(config,"auto_reconnect"), '1') && (reason != LM_DISCONNECT_REASON_OK)) {
+	if (g_hash_table_lookup(config,"auto_reconnect") && (reason != LM_DISCONNECT_REASON_OK)) {
 		logstr("Auto reconnecting");
 		xmpp_connect();
 	}

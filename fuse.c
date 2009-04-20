@@ -337,20 +337,15 @@ static int fswrite(const char *path, const char *buf, size_t size, off_t offset,
 	if (strncmp(path, "/config/", 8) == 0) {
 		path += 8;
 		gchar *option = g_strdup(path);
-		gchar *val = filter_str(g_strndup(buf, size));
+		gchar *val;
 		// bool options
 		if ((strcmp(option, "events") == 0) ||
-			(strcmp(option, "raw_logs")== 0)) {
-			if ((g_ascii_strcasecmp(val, "no") == 0)|| 
-				(g_ascii_strcasecmp(val, "false") == 0) ||
-				 (val[0] == '0')) {
-				g_free(val);
-				val = g_strdup("0");
-			}
-			else {
-				g_free(val);
-				val = g_strdup("1");
-			}
+			(strcmp(option, "raw_logs")== 0) ||
+			(strcmp(option, "auto_reconnect") == 0)) {
+			val = g_strdup("1"); // just something :)
+		}
+		else {
+			val = filter_str(g_strndup(buf, size));
 		}
 		logf("Setting %s = %s\n", option, val);
 		g_hash_table_replace(config, option, val);	
