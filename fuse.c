@@ -365,6 +365,11 @@ static int fsunlink(const char *path) {
 			xmpp_del_from_roster(path);
 		}
 	}
+	// delete options from /config/, maybe need some checks before actual deleting
+	if (strncmp(path, "/config/",8) == 0) {
+		path += 8;
+		g_hash_table_remove(config, path);
+	}
 	return 0;
 }
 
