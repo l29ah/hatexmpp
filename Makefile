@@ -1,7 +1,11 @@
 CFLAGS = `pkg-config fuse loudmouth-1.0 --cflags`
 LDFLAGS = `pkg-config fuse loudmouth-1.0 --libs`
 
-all: hatexmpp 
+all: hatexmpp lovexmpp
+
+lovexmpp: lovexmpp.o
+
+lovexmpp.o: lovexmpp.c
 
 hatexmpp: version.o hatexmpp.o fuse.o xmpp.o 
 
@@ -18,16 +22,12 @@ version.c: hatexmpp.c common.h xmpp.c fuse.c
 
 .PHONY:	test mtest clean debug
 
-test:	mtest
-	./autotest.sh
-
-mtest:	hatexmpp
-	cd test;../hatexmpp fs;cp config/* fs/config/;mkdir fs/roster || true;sleep 5;mkdir 'fs/roster/hatexmpp@conference.jabber.ru'
-
 clean:
 	rm *.o
 	rm version.c
 	rm hatexmpp
+	rm lovexmpp
 
 debug:
 	make all CFLAGS='${CFLAGS} -ggdb -DDEBUG -O0 -Wall'
+
