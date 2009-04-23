@@ -62,7 +62,7 @@ static int fstruncate(const char *path, off_t size) {
 
 static int fsrmdir(const char *path) {
 	if (strcmp(path, "/roster") == 0) {
-		if (connection && lm_connection_is_open(connection)) {
+		if (connection_state != OFFLINE) {
 			xmpp_disconnect();
 			return 0;
 		}
@@ -105,6 +105,8 @@ static int fsmkdir(const char *path, mode_t mode) {
 			return -EPERM;
 		} else {
 			pthread_create(&thr, NULL, mainloopthread, NULL);
+			usleep(100);
+			while (connection_state == CONNECTING) usleep(100);
 			return 0;
 		}
 	}
@@ -131,12 +133,17 @@ static int fsgetattr(const char *path, struct stat *stbuf)
 		stbuf->st_size = LogBuf->len;
 		return 0;
 	}
-	if (strcmp(path, "/roster") == 0) {
-		if (connection_state != OFFLINE) {
+	if (connection_state != OFFLINE) {
+		if (strcmp(path, "/roster") == 0) {
 			stbuf->st_mode = S_IFDIR | 0755;
 			stbuf->st_nlink = 2;
 			return 0;
-		} else return -ENOENT;
+		}
+		if (strcmp(path, "/rawxmpp") == 0) {
+    		stbuf->st_mode = S_IFREG | 0222;
+			stbuf->st_nlink = 1;
+			return 0;
+		} 
 	}
 	if ((strcmp(path, "/config") == 0) ||
 	    (strcmp(path, "/") == 0)) {
@@ -146,7 +153,6 @@ static int fsgetattr(const char *path, struct stat *stbuf)
 	}
 	if (strncmp(path, "/config/", 8) == 0) {
 		char *conf;
-
 		path += 8;
 		stbuf->st_mode = S_IFREG | 0644;
 		stbuf->st_nlink = 1;
@@ -166,11 +172,9 @@ static int fsgetattr(const char *path, struct stat *stbuf)
 			}
 			stbuf->st_mode = S_IFREG | 0666;	/* TODO fixable perms */
 			stbuf->st_nlink = 1;
-			//logf("jid %s log len is %u\n", path, ri->log->len);
 			stbuf->st_size = ri->log->len;
 			return 0;
 		}
-
 	}
 	return -ENOENT;
 }
@@ -187,7 +191,10 @@ static int fsreaddir(const char *path, void *buf, fuse_fill_dir_t filler,
 		filler(buf, "events", NULL, 0);
 		filler(buf, "log", NULL, 0);
 		filler(buf, "config", NULL, 0);
-		if (roster && lm_connection_is_open(connection)) filler(buf, "roster",NULL, 0);
+		if (roster && (connection_state == ONLINE)) {
+			filler(buf, "roster",NULL, 0);
+			filler(buf, "rawxmpp", NULL, 0);
+		}
 		return 0;
 	}
 	if (strcmp(path, "/config") == 0) {
@@ -337,9 +344,24 @@ static int fswrite(const char *path, const char *buf, size_t size, off_t offset,
 	if (strncmp(path, "/config/", 8) == 0) {
 		path += 8;
 		gchar *option = g_strdup(path);
-		gchar *val = filter_str(g_strndup(buf, size));
+		gchar *val;
+		// bool options
+		if ((strcmp(option, "events") == 0) ||
+			(strcmp(option, "raw_logs")== 0) ||
+			(strcmp(option, "auto_reconnect") == 0)) {
+			val = g_strdup("1"); // just something :)
+		}
+		else {
+			val = filter_str(g_strndup(buf, size));
+		}
 		logf("Setting %s = %s\n", option, val);
-		g_hash_table_insert(config, option, val);	
+		g_hash_table_replace(config, option, val);	
+		return size;
+	}
+	if ((strcmp(path, "/rawxmpp") == 0) && connection_state == ONLINE) {
+		gchar *str = g_strndup(buf, size);
+		lm_connection_send_raw(connection, str, NULL);
+		g_free(str);
 		return size;
 	}
 	return 0;

@@ -1,5 +1,4 @@
 #include "common.h"
-#define EVENTS
 
 GMainLoop *main_loop;
 GMainContext *context;
@@ -13,23 +12,23 @@ time_t last_activity_time;
 enum connection_state_e connection_state;
 
 gchar *eventstr(gchar *str) {	/* TODO const */
-#ifdef EVENTS
-	if (fd_events <= 0) {
-		fd_events = open(events_file, O_WRONLY | O_NONBLOCK);
+	if (g_hash_table_lookup(config, "events")) {
+		if (fd_events <= 0) {
+			fd_events = open(events_file, O_WRONLY | O_NONBLOCK);
+			#ifdef DEBUG
+			logf("open fd_events = %d errno = %d", fd_events, errno);
+			#endif
+		}
 		#ifdef DEBUG
-		logf("open fd_events = %d errno = %d", fd_events, errno);
+		logf("Event: fd_events = %d, str = %s", fd_events, str);
 		#endif
+		if (fd_events != -1) {
+			write(fd_events, str, strlen(str)+1);
+			#ifdef DEBUG
+			logf("write to fd_events = %d errno = %d", fd_events, errno);
+			#endif
+		}
 	}
-	#ifdef DEBUG
-	logf("Event: fd_events = %d, str = %s", fd_events, str);
-	#endif
-	if (fd_events != -1) {
-		write(fd_events, str, strlen(str)+1);
-		#ifdef DEBUG
-		logf("write to fd_events = %d errno = %d", fd_events, errno);
-		#endif
-	}
-#endif
 	return str;
 }
 
@@ -91,21 +90,22 @@ void free_all()		// trying to make a general cleanup
 	g_hash_table_destroy(config);
 }
 
-gchar *conf_read(GKeyFile *cf, const gchar *section, const gchar *key, const gchar *def)
-{
-	gchar *val = g_key_file_get_string(cf, section, key, NULL);
-
-	if (!val)
-		return g_strdup(def);
-	return val;
-}
-
 int main(int argc, char **argv) {
 	LogBuf = g_array_sized_new(FALSE, FALSE, 1, 512);
 	logf("hatexmpp v%s is going up\n", HateXMPP_ver);
 	roster = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify) destroy_ri);
-	config = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-
+	
+	config = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, g_free);
+	g_hash_table_insert(config, "server", NULL);
+	g_hash_table_insert(config, "username", NULL);
+	g_hash_table_insert(config, "password", NULL);
+	g_hash_table_insert(config, "resource", g_strdup("hatexmpp"));
+	g_hash_table_insert(config, "muc_default_nick", NULL);
+	g_hash_table_insert(config, "jiv_name", NULL);
+	g_hash_table_insert(config, "jiv_os", NULL);
+	g_hash_table_insert(config, "jiv_version", NULL);
+	
+	// Do something with this!!!!!
 	if (argc) {
 		events_file = g_strdup_printf("%sevents", argv[1]);
 	}

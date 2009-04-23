@@ -37,6 +37,7 @@ static gchar *get_nick(const gchar *jid)
 }
 
 int banmuc(const char *mucjid, const char *who) {
+	if (connection_state != ONLINE) return -1;
         LmMessage *msg = lm_message_new_with_sub_type(mucjid, LM_MESSAGE_TYPE_IQ, LM_MESSAGE_SUB_TYPE_SET);
         LmMessageNode *query = lm_message_node_add_child(msg->node, "query", NULL);
         lm_message_node_set_attribute(query, "xmlns", "http://jabber.org/protocol/muc#admin");
@@ -56,6 +57,7 @@ int devoice(const char *mucjid; const char *who) {
 
 int partmuc(const char *jid, const char *nick, const char *leave) {
         LmMessage *m;
+	if (connection_state != ONLINE) return -1;
 	gchar *to;
 
 	if (!nick) nick = (gchar *) g_hash_table_lookup(config, "muc_default_nick");
@@ -69,6 +71,7 @@ int partmuc(const char *jid, const char *nick, const char *leave) {
 }
 
 int joinmuc(const gchar *jid, const gchar *password, const gchar *nick) {
+	if (connection_state != ONLINE) return -1;
 	LmMessage *m;
 	LmMessageNode *node;
 	gchar *to;
@@ -390,6 +393,7 @@ void connection_close_cb (LmConnection *connection, LmDisconnectReason reason, g
 }
 
 void xmpp_connect() {
+	if (connection_state != OFFLINE) return;
 	connection_state = CONNECTING;
 	connection = lm_connection_new_with_context ((gchar *) g_hash_table_lookup(config, "server"), context);
 	// TODO: moar c011b4ckz!
@@ -405,6 +409,7 @@ void xmpp_connect() {
 } 
 
 void xmpp_send(const gchar *to, const gchar *body) {
+	if (connection_state != ONLINE) return;
 	LmMessage *m;
 	rosteritem *ri;
 	ri = g_hash_table_lookup(roster, get_jid(to));
@@ -433,6 +438,7 @@ void xmpp_send(const gchar *to, const gchar *body) {
 }
 
 void xmpp_add_to_roster(const gchar *jid) {
+	if (connection_state != ONLINE) return;
 // TODO: this may work, but better to follow protocol. XMPP is so XMPP!
 	if(!g_hash_table_lookup(roster, jid)) {
 		logf("Adding contact %s to roster\n", jid);
@@ -456,6 +462,7 @@ void xmpp_add_to_roster(const gchar *jid) {
 }
 
 void xmpp_del_from_roster(const gchar *jid) {
+	if (connection_state != ONLINE) return;
 	rosteritem *ri = g_hash_table_lookup(roster, jid);
 	if (ri) {
 		logf("Deleting contact %s from roster\n", jid);
@@ -477,7 +484,7 @@ void xmpp_del_from_roster(const gchar *jid) {
 }
 
 void xmpp_disconnect() {
-	if (lm_connection_is_open(connection)) {
+	if (lm_connection_is_open(connection) || (connection_state == ONLINE)) {
 		// disconect gracefully
 		LmMessage *msg = lm_message_new_with_sub_type(NULL, LM_MESSAGE_TYPE_PRESENCE, LM_MESSAGE_SUB_TYPE_UNAVAILABLE);
 		lm_connection_send(connection, msg, NULL);
@@ -488,6 +495,7 @@ void xmpp_disconnect() {
 }
 
 void xmpp_muc_change_nick(const gchar *mucjid, const gchar *nick) {
+	if (connection_state != ONLINE) return;
 	logf("Change nick in %s to %s\n", mucjid, nick);
 	rosteritem *ri = g_hash_table_lookup(roster, mucjid);
 	if (ri && nick && (ri->type == MUC)) {
