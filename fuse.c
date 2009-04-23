@@ -61,6 +61,11 @@ static int fstruncate(const char *path, off_t size) {
 }
 
 static int fsrmdir(const char *path) {
+	if (strcmp(path, "/config") == 0) {
+		g_hash_table_destroy(config);
+		config = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, g_free);
+		return 0;
+	}
 	if (strcmp(path, "/roster") == 0) {
 		if (connection_state != OFFLINE) {
 			xmpp_disconnect();
