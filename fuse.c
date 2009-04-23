@@ -38,11 +38,11 @@ FD * addfd(rosteritem *ri) {
 	FD *fd;
 	int *id;
 
-	fd = calloc(sizeof(fd), 1);
+	fd = g_malloc0(sizeof(fd));
 	fd->id = ++FDn;
 	fd->ri = ri;
 	fd->writebuf = g_array_new(TRUE, FALSE, 1);
-	id = malloc(sizeof(int));
+	id = g_malloc(sizeof(int));
 	*id = fd->id;
 	g_hash_table_insert(FDt, id, fd);
 	return fd;
@@ -51,7 +51,7 @@ FD * addfd(rosteritem *ri) {
 void destroyfd(FD *fd) {
 //	g_array_free(fd->readbuf, TRUE);	/* TODO? */
 	g_array_free(fd->writebuf, TRUE);
-	free(fd);
+	g_free(fd);
 }
 
 /* FS calls */
@@ -324,14 +324,14 @@ static int fswrite(const char *path, const char *buf, size_t size, off_t offset,
 		if (strrchr(buf,'\n'))
 			msg_len--;
 
-		msg = malloc(msg_len+1);
+		msg = g_malloc(msg_len + 1);
 		memcpy(msg, buf, msg_len);
 		msg[msg_len] = 0;
 		if (res && (strncmp(res, "__nick", 6) == 0 )) 
 			xmpp_muc_change_nick(get_jid(path), msg);
 		else
 			xmpp_send(path, msg);
-		free(msg);
+		g_free(msg);
 		return size;
 	}
 	if (strncmp(path, "/config/", 8) == 0) {
@@ -346,6 +346,7 @@ static int fswrite(const char *path, const char *buf, size_t size, off_t offset,
 }
 
 static int fssetxattr(const char *path, const char *a, const char *aa, size_t size, int aaa) {
+	/* Stub. Do we need this? */
 	return 0;
 }
 
@@ -393,7 +394,7 @@ static void * mainloopthread(void *loop) {
 
 static void * fsinit(struct fuse_conn_info *conn) {
 	context = g_main_context_new();
-	FDt = g_hash_table_new_full(g_int_hash, g_int_equal, free, (GDestroyNotify)destroyfd);
+	FDt = g_hash_table_new_full(g_int_hash, g_int_equal, g_free, (GDestroyNotify)destroyfd);	//TODO check the cast
 	return NULL;
 }
 
