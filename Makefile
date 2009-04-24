@@ -1,11 +1,7 @@
 CFLAGS = `pkg-config fuse loudmouth-1.0 --cflags`
 LDFLAGS = `pkg-config fuse loudmouth-1.0 --libs`
 
-all: hatexmpp lovexmpp
-
-lovexmpp: lovexmpp.o
-
-lovexmpp.o: lovexmpp.c
+all: hatexmpp
 
 hatexmpp: version.o hatexmpp.o fuse.o xmpp.o 
 
@@ -26,7 +22,6 @@ clean:
 	rm *.o
 	rm version.c
 	rm hatexmpp
-	rm lovexmpp
 
 debug:
 	make all CFLAGS='${CFLAGS} -ggdb -DDEBUG -O0 -Wall'
