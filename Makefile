@@ -26,3 +26,6 @@ clean:
 debug:
 	make all CFLAGS='${CFLAGS} -ggdb -DDEBUG -O0 -Wall'
 
+proxy:
+	make all CFLAGS='${CFLAGS} -DPROXY'
+

@@ -104,6 +104,12 @@ int main(int argc, char **argv) {
 	g_hash_table_insert(config, "jiv_name", NULL);
 	g_hash_table_insert(config, "jiv_os", NULL);
 	g_hash_table_insert(config, "jiv_version", NULL);
+#ifdef PROXY
+	g_hash_table_insert(config, "proxy_server", NULL);
+	g_hash_table_insert(config, "proxy_port", NULL);
+	g_hash_table_insert(config, "proxy_username", NULL);
+	g_hash_table_insert(config, "proxy_password", NULL);
+#endif
 	
 	// Do something with this!!!!!
 	if (argc) {

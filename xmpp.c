@@ -7,6 +7,10 @@ void xmpp_send(const gchar *to, const gchar *body);
 
 LmConnection *connection;
 
+#ifdef PROXY
+LmProxy *proxy;
+#endif
+
 gchar *get_resource(const gchar *jid)
 {
 	gchar *res;
@@ -38,10 +42,10 @@ static gchar *get_nick(const gchar *jid)
 
 int banmuc(const char *mucjid, const char *who) {
 	if (connection_state != ONLINE) return -1;
-        LmMessage *msg = lm_message_new_with_sub_type(mucjid, LM_MESSAGE_TYPE_IQ, LM_MESSAGE_SUB_TYPE_SET);
-        LmMessageNode *query = lm_message_node_add_child(msg->node, "query", NULL);
-        lm_message_node_set_attribute(query, "xmlns", "http://jabber.org/protocol/muc#admin");
-        LmMessageNode *child = lm_message_node_add_child(query, "item", NULL);
+	LmMessage *msg = lm_message_new_with_sub_type(mucjid, LM_MESSAGE_TYPE_IQ, LM_MESSAGE_SUB_TYPE_SET);
+	LmMessageNode *query = lm_message_node_add_child(msg->node, "query", NULL);
+	lm_message_node_set_attribute(query, "xmlns", "http://jabber.org/protocol/muc#admin");
+	LmMessageNode *child = lm_message_node_add_child(query, "item", NULL);
 	lm_message_node_set_attributes(child, "affiliation", "outcast", "jid", who);
 	lm_connection_send(connection, msg, NULL);
 }
@@ -400,7 +404,23 @@ void xmpp_connect() {
 	lm_connection_register_message_handler(connection, lm_message_handler_new(iq_rcvd_cb, NULL, NULL ), LM_MESSAGE_TYPE_IQ, LM_HANDLER_PRIORITY_NORMAL);
 	lm_connection_register_message_handler(connection, lm_message_handler_new(presence_rcvd_cb, NULL, NULL), LM_MESSAGE_TYPE_PRESENCE, LM_HANDLER_PRIORITY_NORMAL);
 	lm_connection_register_message_handler(connection, lm_message_handler_new(message_rcvd_cb, NULL, NULL), LM_MESSAGE_TYPE_MESSAGE, LM_HANDLER_PRIORITY_NORMAL);
-	lm_connection_set_disconnect_function(connection, connection_close_cb, NULL, g_free);		
+	lm_connection_set_disconnect_function(connection, connection_close_cb, NULL, g_free);
+
+#ifdef PROXY
+	gchar *p_serv = g_hash_table_lookup(config, "proxy_server");
+	gchar *p_port = g_hash_table_lookup(config, "proxy_port");
+	gchar *p_user = g_hash_table_lookup(config, "proxy_username");
+	gchar *p_pasw = g_hash_table_lookup(config, "proxy_password");
+	if (p_serv && p_port) {
+		proxy = lm_proxy_new_with_server(LM_PROXY_TYPE_HTTP, p_serv, atoi(p_port));
+		if (p_user && p_pasw) {
+			lm_proxy_set_username(proxy, p_user);
+			lm_proxy_set_password(proxy, p_pasw);
+		}
+		lm_connection_set_proxy (connection, proxy);
+	}
+#endif
+
 	if (!lm_connection_open (connection, (LmResultFunction) connection_open_cb, NULL, g_free, NULL)) {
 		logstr("lm_connection_open failed\n");
 		g_main_loop_quit(main_loop);
