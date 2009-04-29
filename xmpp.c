@@ -528,3 +528,13 @@ void xmpp_muc_change_nick(const gchar *mucjid, const gchar *nick) {
 		lm_message_unref(m);
 	}	
 }
+
+void xmpp_register_request() {
+	LmMessage *m = lm_message_new_with_sub_type(NULL, LM_MESSAGE_TYPE_IQ, LM_MESSAGE_SUB_TYPE_GET);
+	LmMessageNode *query = lm_message_node_add_child(msg->node, "query", NULL);
+	lm_message_node_set_attribute(query, "xmlns", "jabber:iq:register");
+	lm_connection_send(connection, msg, NULL);
+	lm_message_node_unref(query);
+	lm_message_unref(msg);
+}
+
