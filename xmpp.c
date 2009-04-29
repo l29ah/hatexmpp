@@ -529,8 +529,8 @@ void xmpp_muc_change_nick(const gchar *mucjid, const gchar *nick) {
 	}	
 }
 
-void xmpp_register_request() {
-	LmMessage *m = lm_message_new_with_sub_type(NULL, LM_MESSAGE_TYPE_IQ, LM_MESSAGE_SUB_TYPE_GET);
+void xmpp_register_request_fields() {
+	LmMessage *msg = lm_message_new_with_sub_type(NULL, LM_MESSAGE_TYPE_IQ, LM_MESSAGE_SUB_TYPE_GET);
 	LmMessageNode *query = lm_message_node_add_child(msg->node, "query", NULL);
 	lm_message_node_set_attribute(query, "xmlns", "jabber:iq:register");
 	lm_connection_send(connection, msg, NULL);
@@ -538,3 +538,19 @@ void xmpp_register_request() {
 	lm_message_unref(msg);
 }
 
+void xmpp_register_request(const char *Username, const char *Password, const char *Email) {
+        LmMessage *msg = lm_message_new_with_sub_type(NULL, LM_MESSAGE_TYPE_IQ, LM_MESSAGE_SUB_TYPE_SET);
+	LmMessageNode *query = lm_message_node_add_child(msg->node, "query", NULL);
+	LmMessageNode *un = lm_message_node_add_child(query, "username", Username);
+	LmMessageNode *p = lm_message_node_add_child(query, "password", Password);
+	LmMessageNode *em;
+	if (Email) em = lm_message_node_add_child(query, "email", Email);
+	lm_message_node_set_attribute(query, "xmlns", "jabber:iq:register");
+	lm_connection_send(connection, msg, NULL);
+	lm_message_node_unref(query);
+	lm_message_node_unref(un);
+	lm_message_node_unref(p);
+	if (Email) lm_message_node_unref(em);
+	lm_message_unref(msg);
+
+}
