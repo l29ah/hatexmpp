@@ -246,8 +246,7 @@ static LmHandlerResult iq_rcvd_cb(LmMessageHandler *handler, LmConnection *conne
 			lm_message_unref(msg);
 		}
 		lm_message_node_unref(query);
-	}
-	else if (strcmp(type, "get") == 0) {
+	} else if (strcmp(type, "get") == 0) {
 		LmMessage *msg = lm_message_new_with_sub_type(lm_message_node_get_attribute(m->node, "from"), LM_MESSAGE_TYPE_IQ, LM_MESSAGE_SUB_TYPE_RESULT);
 		lm_message_node_set_attribute(msg->node, "id", (gchar *)lm_message_node_get_attribute(m->node, "id"));
 		query = lm_message_node_add_child(msg->node, "query", NULL);
@@ -311,6 +310,11 @@ static LmHandlerResult iq_rcvd_cb(LmMessageHandler *handler, LmConnection *conne
 		}
 		lm_message_node_unref(query);
 		lm_message_unref(msg);
+	} else if (strcmp(type, "result") == 0) {
+		/* <iq type='result' id='reg2'/>
+		 *
+		 * and what!?
+		 */
 	}
 	lm_message_unref(m);
 	return LM_HANDLER_RESULT_REMOVE_MESSAGE;
@@ -346,7 +350,11 @@ static void connection_open_cb (LmConnection *connection, gboolean success, void
 		g_main_loop_quit(main_loop);
 		return;
 	}
-	if (!lm_connection_authenticate (connection, 
+
+	/* TODO: something better */
+	if (g_hash_table_lookup(config, "noauth")) {
+		logstr("config/noauth exists, not logging in\n");
+	} else if (!lm_connection_authenticate (connection, 
 					 (gchar *) g_hash_table_lookup(config, "username"),
 					 (gchar *) g_hash_table_lookup(config, "password"),
 					 (gchar *) g_hash_table_lookup(config, "resource"),
@@ -378,7 +386,7 @@ void connection_close_cb (LmConnection *connection, LmDisconnectReason reason, g
 		str = "Another connection was made to the server with the same resource.";
 		break;
 	case LM_DISCONNECT_REASON_INVALID_XML:
-		str = "Invalid XML was sent from the client.";
+		 str = "Invalid XML was sent from the client.";
 		break;
 	case LM_DISCONNECT_REASON_UNKNOWN:
 		str = "An unknown error.";
@@ -433,12 +441,15 @@ void xmpp_send(const gchar *to, const gchar *body) {
 	LmMessage *m;
 	rosteritem *ri;
 	ri = g_hash_table_lookup(roster, get_jid(to));
+	gchar *b;
 	if(ri) {
+		/* TODO: NO WAI!
 		if (strncmp(body, "/clear", 6) == 0) {
 			logf("Clearing log of %s", ri->jid);
 			g_array_remove_range(ri->log, 0, ri->log->len-1);
 			return;
 		}
+		*/
 		if(ri->type == MUC) {
 			if (strchr(to, '/')) 
 				m = lm_message_new_with_sub_type(to, LM_MESSAGE_TYPE_MESSAGE, LM_MESSAGE_SUB_TYPE_CHAT);
@@ -450,9 +461,11 @@ void xmpp_send(const gchar *to, const gchar *body) {
 		
 		if (m) {
 			time(&last_activity_time);
-			lm_message_node_add_child(m->node, "body", body);
+			b = g_strdup(body);
+			lm_message_node_add_child(m->node, "body", b);
 			lm_connection_send(connection, m, NULL);
 			lm_message_unref(m);
+			g_free(b);
 		}
 	}
 }

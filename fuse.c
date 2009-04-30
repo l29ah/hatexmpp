@@ -333,9 +333,6 @@ static int fswrite(const char *path, const char *buf, size_t size, off_t offset,
 			path = get_jid(path);
 		}
 
-		if (strrchr(buf,'\n'))
-			msg_len--;
-
 		msg = g_malloc(msg_len + 1);
 		memcpy(msg, buf, msg_len);
 		msg[msg_len] = 0;
