@@ -11,6 +11,16 @@ LmConnection *connection;
 LmProxy *proxy;
 #endif
 
+void filterjunk(gchar *str) {
+	size_t f, t, len = strlen(str);
+	for(f = 0, t = 0; f < len; f++) {
+		if (str[f] >= ' ' || str[f] == '\n' || str[f] == '\r' || str[f] == '\t') {
+			str[t++] = str[f];
+		}
+	}
+	str[t] = 0;
+}
+
 gchar *get_resource(const gchar *jid)
 {
 	gchar *res;
@@ -462,6 +472,7 @@ void xmpp_send(const gchar *to, const gchar *body) {
 		if (m) {
 			time(&last_activity_time);
 			b = g_strdup(body);
+			filterjunk(b);
 			lm_message_node_add_child(m->node, "body", b);
 			lm_connection_send(connection, m, NULL);
 			lm_message_unref(m);
