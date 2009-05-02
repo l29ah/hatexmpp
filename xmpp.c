@@ -14,7 +14,13 @@ LmProxy *proxy;
 void filterjunk(gchar *str) {
 	size_t f, t, len = strlen(str);
 	for(f = 0, t = 0; f < len; f++) {
-		if (str[f] >= ' ' || str[f] == '\n' || str[f] == '\r' || str[f] == '\t') {
+		if ( (unsigned) str[f] >= 0xc0 && f+1 < len && (unsigned) str[f+1] >= 0x80) {
+			str[t++] = str[f];
+			str[t++] = str[f+1];
+			f++;
+		}
+		if (str[f] >= ' ' || str[f] == '\n' || str[f] == '\r' || str[f] == '\t' ||
+			((str[f] >= 192) && (f+1 < len) && (str[f+1] >= 128))) {
 			str[t++] = str[f];
 		}
 	}
