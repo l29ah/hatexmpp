@@ -361,6 +361,7 @@ static void connection_auth_cb(LmConnection *connection, gboolean success, void 
 static void connection_open_cb (LmConnection *connection, gboolean success, void *data)
 {
 	if (!success) {
+		connection_state = OFFLINE;
 		logstr("Cannot open connection\n");
 		eventstr("connect_fail");
 		g_main_loop_quit(main_loop);
