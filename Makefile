@@ -29,3 +29,6 @@ debug:
 proxy:
 	make all CFLAGS='${CFLAGS} -DPROXY'
 
+install: hatexmpp
+	install hatexmpp /usr/bin
+
