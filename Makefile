@@ -5,8 +5,8 @@
 #CFLAGS+=-DPROXY
 #
 
-CFLAGS+=`pkg-config fuse loudmouth-1.0 --cflags`
-LDFLAGS+=`pkg-config fuse loudmouth-1.0 --libs`
+CFLAGS+=$(shell pkg-config fuse loudmouth-1.0 --cflags)
+LDFLAGS+=$(shell pkg-config fuse loudmouth-1.0 --libs)
 
 all: hatexmpp
 
