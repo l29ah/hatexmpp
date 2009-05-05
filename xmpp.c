@@ -64,6 +64,7 @@ int banmuc(const char *mucjid, const char *who) {
 	LmMessageNode *child = lm_message_node_add_child(query, "item", NULL);
 	lm_message_node_set_attributes(child, "affiliation", "outcast", "jid", who);
 	lm_connection_send(connection, msg, NULL);
+	return 0;
 }
 
 /* TODO
