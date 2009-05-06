@@ -23,7 +23,7 @@ xmpp.o: xmpp.c common.h
 version.o: version.c
 
 version.c: hatexmpp.c common.h xmpp.c fuse.c
-	echo "char HateXMPP_ver[] = "\"0.1.`git log --pretty=oneline | wc -l`\""; char * getversion(void) { return HateXMPP_ver; }" > version.c
+	echo "char HateXMPP_ver[] = "\"0.2-`git log|head -n1|sed 's/commit //'`\""; char * getversion(void) { return HateXMPP_ver; }" > version.c
 
 .PHONY:	clean
 
