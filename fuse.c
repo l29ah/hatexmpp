@@ -295,7 +295,8 @@ static int fsread(const char *path, char *buf, size_t size, off_t offset,
 
 		path += 8;
 		ri = getri(path);
-		if(ri && ((strcmp(path, "__nick") == 0) || (strcmp(get_resource(path), "__nick") == 0))) {
+		gchar *resource = get_resource(path);
+		if(ri && ((strcmp(path, "__nick") == 0) || (resource && strcmp(resource, "__nick") == 0))) {
 			size_t len = strlen(ri->self_resource->name);
 			if(offset + size < len) {
 				memcpy(buf, ri->self_resource->name + offset, size);
