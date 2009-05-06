@@ -19,8 +19,7 @@ void filterjunk(gchar *str) {
 			str[t++] = str[f+1];
 			f++;
 		}
-		if (str[f] >= ' ' || str[f] == '\n' || str[f] == '\r' || str[f] == '\t' ||
-			((str[f] >= 192) && (f+1 < len) && (str[f+1] >= 128))) {
+		if (str[f] >= ' ' || str[f] == '\n' || str[f] == '\r' || str[f] == '\t') {
 			str[t++] = str[f];
 		}
 	}

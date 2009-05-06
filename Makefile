@@ -1,9 +1,11 @@
-# Uncomment to enable debug stuff
-#CFLAGS+=-ggdb -DDEBUG -O0 -Wall
-#
-# Uncomment to enable proxy support
-#CFLAGS+=-DPROXY
-#
+ifdef FEATURES
+	ifneq ($(findstring debug, $(FEATURES)),)
+		CFLAGS+=-ggdb -DDEBUG -O0 -Wall
+	endif
+	ifneq ($(findstring proxy, $(FEATURES)),)
+		CFLAGS+=-DPROXY
+	endif
+endif
 
 CFLAGS+=$(shell pkg-config fuse loudmouth-1.0 --cflags)
 LDFLAGS+=$(shell pkg-config fuse loudmouth-1.0 --libs)
