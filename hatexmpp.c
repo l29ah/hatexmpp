@@ -117,6 +117,8 @@ int main(int argc, char **argv) {
 	}
 
 	logf("Events FIFO: %s\n", events_file);
-	return fuseinit(argc, argv);
+
+	fs_init();
+	return 0;
 }
 

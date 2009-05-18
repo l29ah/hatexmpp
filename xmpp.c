@@ -5,7 +5,9 @@
 
 void xmpp_send(const gchar *to, const gchar *body);
 
+#ifndef UXMPP
 LmConnection *connection;
+#endif
 
 #ifdef PROXY
 LmProxy *proxy;
@@ -57,12 +59,15 @@ static gchar *get_nick(const gchar *jid)
 
 int banmuc(const char *mucjid, const char *who) {
 	if (connection_state != ONLINE) return -1;
+
+	#ifndef UXMPP
 	LmMessage *msg = lm_message_new_with_sub_type(mucjid, LM_MESSAGE_TYPE_IQ, LM_MESSAGE_SUB_TYPE_SET);
 	LmMessageNode *query = lm_message_node_add_child(msg->node, "query", NULL);
 	lm_message_node_set_attribute(query, "xmlns", "http://jabber.org/protocol/muc#admin");
 	LmMessageNode *child = lm_message_node_add_child(query, "item", NULL);
 	lm_message_node_set_attributes(child, "affiliation", "outcast", "jid", who);
 	lm_connection_send(connection, msg, NULL);
+	#endif
 	return 0;
 }
 
@@ -76,6 +81,7 @@ int devoice(const char *mucjid; const char *who) {
 */
 
 int partmuc(const char *jid, const char *nick, const char *leave) {
+	#ifndef UXMPP
         LmMessage *m;
 	if (connection_state != ONLINE) return -1;
 	gchar *to;
@@ -87,11 +93,14 @@ int partmuc(const char *jid, const char *nick, const char *leave) {
 	lm_connection_send(connection, m, NULL);
 	lm_message_unref(m);
 	g_free(to);
+	#endif
 	return 0;
 }
 
 int joinmuc(const gchar *jid, const gchar *password, const gchar *nick) {
 	if (connection_state != ONLINE) return -1;
+
+	#ifndef UXMPP
 	LmMessage *m;
 	LmMessageNode *node;
 	gchar *to;
@@ -112,6 +121,7 @@ int joinmuc(const gchar *jid, const gchar *password, const gchar *nick) {
 	rosteritem *ri = addri(jid, NULL, MUC);
 	if (ri) ri->self_resource->name = g_strdup(nick);
 	g_free(to);
+	#endif
 	return 0;
 }
 
@@ -421,7 +431,8 @@ void connection_close_cb (LmConnection *connection, LmDisconnectReason reason, g
 	}
 }
 
-void xmpp_connect() {
+int xmpp_connect() {
+	#ifndef UXMPP
 	if (connection_state != OFFLINE) return;
 	connection_state = CONNECTING;
 	connection = lm_connection_new_with_context ((gchar *) g_hash_table_lookup(config, "server"), context);
@@ -451,6 +462,11 @@ void xmpp_connect() {
 		g_main_loop_quit(main_loop);
 		connection_state = OFFLINE;
 	}
+	#else
+	xmppaccount_t xmpp = {user, pass, CallBack, transport, buf_peer};
+	XMPPStart(&xmpp, 500);
+	#endif
+	return 0;
 } 
 
 void xmpp_send(const gchar *to, const gchar *body) {
@@ -479,7 +495,7 @@ void xmpp_send(const gchar *to, const gchar *body) {
 		if (m) {
 			time(&last_activity_time);
 			b = g_strdup(body);
-			filterjunk(b);
+			//filterjunk(b);	/* Temporary disabled due to buggy behaviour */
 			lm_message_node_add_child(m->node, "body", b);
 			lm_connection_send(connection, m, NULL);
 			lm_message_unref(m);

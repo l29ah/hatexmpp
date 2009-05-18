@@ -1,6 +1,3 @@
-
-#define FUSE_USE_VERSION 26
-
 #include <stdio.h>
 #include <errno.h>
 #include <sys/types.h>
@@ -13,9 +10,7 @@
 #include <pthread.h>
 #include <stdlib.h>
 #include <string.h>
-#include <fuse.h>
 #include <time.h>
-#include <loudmouth/loudmouth.h>
 
 #define PROGRAM_NAME "HateXMPP"
 #define DEFAULT_CONFIG "hatexmpp.conf"
@@ -25,6 +20,8 @@
 
 #define PRESENCE_OFFLINE 0
 #define PRESENCE_ONLINE 1
+
+#define fatal(...) ixp_eprint("ixpsrv: fatal: " __VA_ARGS__)
 
 typedef struct resourceitem_s {
 	gchar *name;
@@ -50,7 +47,6 @@ typedef struct FD_s {
 	GArray *writebuf;
 } FD;
 
-extern struct fuse_operations fuseoper;
 extern char HateXMPP_ver[];
 
 //extern void * mainloopthread(void *loop);
@@ -61,11 +57,12 @@ extern GMainLoop *main_loop;
 extern GMainContext *context;
 extern GHashTable *config;
 extern GHashTable *roster;
-extern LmConnection *connection;
 
 /* Logging'n'debug stuff */
 #define OMGBUG g_on_error_query(PROGRAM_NAME);
-extern int fuseinit(int argc, char **argv);
+
+extern int fs_init();
+
 extern void logs(const char *, size_t);
 extern char * logstr(char *);
 #define logf(FMT,ARGS...) free(logstr(g_strdup_printf(FMT, ##ARGS)))
@@ -102,3 +99,4 @@ enum connection_state_e {
 	CONNECTING,
 	ONLINE
 } connection_state;
+
