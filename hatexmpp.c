@@ -1,8 +1,11 @@
 #include "common.h"
 
+/*
 GMainLoop *main_loop;
 GMainContext *context;
+*/
 GHashTable *config;
+/*
 GHashTable *roster;
 
 GArray *LogBuf;
@@ -11,7 +14,7 @@ gchar *events_file;
 time_t last_activity_time;
 enum connection_state_e connection_state;
 
-gchar *eventstr(gchar *str) {	/* TODO const */
+gchar *eventstr(gchar *str) {	// TODO const
 	if (g_hash_table_lookup(config, "events")) {
 		if (fd_events <= 0) {
 			fd_events = open(events_file, O_WRONLY | O_NONBLOCK);
@@ -30,13 +33,13 @@ gchar *eventstr(gchar *str) {	/* TODO const */
 		}
 	}
 	return str;
-}
+}*/
 
 inline void logs(const char *msg, size_t len) {
 	g_array_append_vals(LogBuf, msg, len);
 }
 
-gchar * logstr(gchar *msg) {	/* TODO const */
+gchar * logstr(gchar *msg) {	// TODO const
 	size_t len;
 	
 	g_printf("LOGF: %s",msg);
@@ -46,6 +49,7 @@ gchar * logstr(gchar *msg) {	/* TODO const */
 	return msg;
 }
 
+/*
 void destroy_resource(resourceitem *resi) {
 	if (resi) {
 		if (resi->name) g_free(resi->name);
@@ -62,7 +66,7 @@ rosteritem *addri(const gchar *jid, GHashTable *resources, unsigned type) {
 	if (ri) {
 		ri->jid = g_strdup(jid);
 		if (resources)
-			ri->resources = resources;	/* TODO */
+			ri->resources = resources;	// TODO
 		else
 			ri->resources = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify) destroy_resource);
 		ri->log = g_array_new(FALSE, FALSE, 1);
@@ -72,6 +76,7 @@ rosteritem *addri(const gchar *jid, GHashTable *resources, unsigned type) {
 	}
 	return ri;
 }
+*/
 
 void destroy_ri(rosteritem *RI) {
 	if (!RI) return;
@@ -83,12 +88,14 @@ void destroy_ri(rosteritem *RI) {
 	g_free(RI);
 }
 
+/*
 void free_all()		// trying to make a general cleanup
 {
 	g_hash_table_destroy(roster);
 	g_array_free(LogBuf, TRUE);
 	g_hash_table_destroy(config);
 }
+*/
 
 int main(int argc, char **argv) {
 	LogBuf = g_array_sized_new(FALSE, FALSE, 1, 512);
@@ -112,11 +119,13 @@ int main(int argc, char **argv) {
 #endif
 	
 	// Do something with this!!!!!
+	/*
 	if (argc) {
 		events_file = g_strdup_printf("%sevents", argv[1]);
 	}
 
 	logf("Events FIFO: %s\n", events_file);
+	*/
 
 	fs_init();
 	return 0;

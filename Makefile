@@ -16,9 +16,10 @@ hatexmpp: version.o hatexmpp.o fuse.o xmpp.o
 
 hatexmpp.o: hatexmpp.c common.h
 
-fuse.o: fuse.c common.h
+#fuse.o: fuse.c common.h
+filesystem.o: filesystem.c common.h
 
-xmpp.o: xmpp.c common.h
+#xmpp.o: xmpp.c common.h
 
 version.o: version.c
 
