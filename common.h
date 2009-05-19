@@ -1,6 +1,8 @@
 
 #define FUSE_USE_VERSION 26
 
+#include "config.h"
+
 #include <stdio.h>
 #include <errno.h>
 #include <sys/types.h>

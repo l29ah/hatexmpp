@@ -12,6 +12,7 @@ time_t last_activity_time;
 enum connection_state_e connection_state;
 
 gchar *eventstr(gchar *str) {	/* TODO const */
+#ifdef EVENTS
 	if (g_hash_table_lookup(config, "events")) {
 		if (fd_events <= 0) {
 			fd_events = open(events_file, O_WRONLY | O_NONBLOCK);
@@ -29,6 +30,7 @@ gchar *eventstr(gchar *str) {	/* TODO const */
 			#endif
 		}
 	}
+#endif
 	return str;
 }
 
