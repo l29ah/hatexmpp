@@ -1,0 +1,3 @@
+#!/bin/bash
+echo -n `echo $* | uconv -t eucjis |kakasi -Ha -Ka -Ja -Ea -ka -s -p`
+
