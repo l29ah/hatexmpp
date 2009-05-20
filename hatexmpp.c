@@ -14,6 +14,10 @@ gchar *events_file;
 time_t last_activity_time;
 enum connection_state_e connection_state;
 
+gchar * eventstr(gchar *str) {
+	return str;
+}
+
 /*
 gchar *eventstr(gchar *str) {	// TODO const
 	if (g_hash_table_lookup(config, "events")) {
@@ -50,13 +54,14 @@ gchar * logstr(gchar *msg) {	// TODO const
 	return msg;
 }
 
-/*
+
 void destroy_resource(resourceitem *resi) {
 	if (resi) {
 		if (resi->name) g_free(resi->name);
 		g_free(resi);
 	}
 }
+
 
 rosteritem *addri(const gchar *jid, GHashTable *resources, unsigned type) {
 	rosteritem *ri;
@@ -77,7 +82,7 @@ rosteritem *addri(const gchar *jid, GHashTable *resources, unsigned type) {
 	}
 	return ri;
 }
-*/
+
 
 void destroy_ri(rosteritem *RI) {
 	if (!RI) return;
