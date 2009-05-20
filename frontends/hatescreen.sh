@@ -15,18 +15,18 @@ mynick=`cat __nick`
 cat > $tmprc.pl << EOF
 use Date::Format; 
 while (<STDIN>) {
-	if (\$_ =~ /(.+) (.*?): (.*$)/) {
-		
-		\$date=time2str("%T", "\$1"); 
-		if (\$date != "") { print \$date; } 
+	if (\$_ =~ /(\\d+) ([^:]+?:|\\*) (.*$)/) {
+		\$date=time2str("%T", "\$1");
+		if (\$date !~ //) { print \$date; } 
 		else { print \$1; } 
 
-		\$msg = \$3;
-#		\$msg =~ s/$mynick/\\033[1m${mynick}\\033[0m/gi;
-		\$col = unpack("%32C*", "\$2")%7+1; 
-		print "\e[3\${col}m \$2\e[0m"; 
-		print ": \$msg\n";
+		(\$nick, \$msg) = (\$2, \$3);
+		\$msg =~ s/$mynick/\\033[1m${mynick}\\033[0m/gi;
+		\$col = unpack("%32C*", "\$nick")%6+1; 
+		print "\e[3\${col}m \$nick\e[0m"; 
+		print " \$msg\n";
 	}
+	else { print "\$_"; }
 }
 EOF
 
