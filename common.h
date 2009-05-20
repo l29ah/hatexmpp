@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <loudmouth/loudmouth.h>
 
 #define PROGRAM_NAME "HateXMPP"
 #define DEFAULT_CONFIG "hatexmpp.conf"
@@ -71,7 +72,6 @@ extern GArray *LogBuf;
 extern gchar *get_resource(const gchar *jid);
 extern gchar *get_jid(const gchar *jid);
 
-extern void xmpp_connect();
 extern void xmpp_send(const gchar *to, const gchar *body);
 extern int joinmuc(const gchar *jid, const gchar *password, const gchar *nick);
 extern int partmuc(const gchar *jid, const gchar *nick, const gchar *leave);
@@ -80,7 +80,7 @@ extern rosteritem *addri(const gchar *jid, GHashTable *resources, unsigned type)
 extern int destroyri(rosteritem *RI);
 
 extern void free_all();
-extern void xmpp_connect();
+extern int xmpp_connect();
 extern void xmpp_disconnect();
 extern void xmpp_add_to_roster(const gchar *jid);
 extern void xmpp_del_from_roster(const gchar *jid);

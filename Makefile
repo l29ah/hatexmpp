@@ -7,24 +7,24 @@ ifdef FEATURES
 	endif
 endif
 
-CFLAGS+=$(shell pkg-config fuse loudmouth-1.0 --cflags)
-LDFLAGS+=$(shell pkg-config fuse loudmouth-1.0 --libs)
+CFLAGS+=$(shell pkg-config loudmouth-1.0 --cflags) 
+LDFLAGS+=$(shell pkg-config loudmouth-1.0 --libs) -lixp
 
 all: hatexmpp
 
-hatexmpp: version.o hatexmpp.o fuse.o xmpp.o 
+hatexmpp: version.o hatexmpp.o filesystem.o xmpp.o 
 
 hatexmpp.o: hatexmpp.c common.h
 
 #fuse.o: fuse.c common.h
 filesystem.o: filesystem.c common.h
 
-#xmpp.o: xmpp.c common.h
+xmpp.o: xmpp.c common.h
 
 version.o: version.c
 
-version.c: hatexmpp.c common.h xmpp.c fuse.c
-	echo "char HateXMPP_ver[] = "\"0.2-`git log|head -n1|sed 's/commit //'`\""; char * getversion(void) { return HateXMPP_ver; }" > version.c
+version.c: hatexmpp.c common.h xmpp.c
+	echo "char HateXMPP_ver[] = "\"0.3-`git log|head -n1|sed 's/commit //'`\""; char * getversion(void) { return HateXMPP_ver; }" > version.c
 
 .PHONY:	clean
 

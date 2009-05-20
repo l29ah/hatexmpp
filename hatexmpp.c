@@ -1,11 +1,11 @@
 #include "common.h"
 
-/*
+
 GMainLoop *main_loop;
 GMainContext *context;
-*/
+
 GHashTable *config;
-/*
+
 GHashTable *roster;
 
 GArray *LogBuf;
@@ -14,6 +14,7 @@ gchar *events_file;
 time_t last_activity_time;
 enum connection_state_e connection_state;
 
+/*
 gchar *eventstr(gchar *str) {	// TODO const
 	if (g_hash_table_lookup(config, "events")) {
 		if (fd_events <= 0) {
@@ -80,7 +81,7 @@ rosteritem *addri(const gchar *jid, GHashTable *resources, unsigned type) {
 
 void destroy_ri(rosteritem *RI) {
 	if (!RI) return;
-	eventf("del_ri %s", RI->jid);
+//	eventf("del_ri %s", RI->jid);
 	if(RI->jid) g_free(RI->jid);
 	if(RI->resources) g_hash_table_destroy(RI->resources);
 	if(RI->log) g_array_free(RI->log, TRUE);
