@@ -1,11 +1,12 @@
 #!/bin/bash
-tmprc=".hatescreen"
+tmprc="/tmp/.hatescreen"
 
-echo -e "\
-screen tail -f '$1'\n\
-split\n\
-focus\n\
-resize 5\n\
-screen bash -c 'while :; do read s; echo \$s > '$1'; done'" > "$tmprc"
+cat > $tmprc << EOF
+screen tail -f $1
+split
+focus
+resize 5
+screen bash -c 'while :; do read s; echo -n \$s > '$1'; done'
+EOF
 
 screen -t "$1" -c "$tmprc"
