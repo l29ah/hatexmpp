@@ -8,7 +8,7 @@ screen bash -c 'tail -f $f | (while read -r d n m; do if dd=\$(date +%H:%M:%S -d
 split
 focus
 resize 5
-screen rlwrap -c bash -c 'while read -e s; do clear; echo -nE "\$s" >> '$f'; done'
+screen rlwrap -c bash -c 'while read -re s; do clear; echo -nE "\$s" >> '$f'; done'
 EOF
  
 screen -t "$f" -c "$tmprc"
