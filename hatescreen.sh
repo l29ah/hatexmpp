@@ -4,7 +4,7 @@ f=`basename $1`
 cd `dirname $1`
 cat > $tmprc << EOF
 bind Q quit
-screen bash -c 'tail -f $f | (while read d m; do echo -E \$(date +%H:%M:%S -d @\$d) "\$m"; done)'
+screen bash -c 'tail -f $f | (while read d n m; do echo -En \$(date +%H:%M:%S -d @\$d); echo -en "\E[3\$((\$(echo \$n | sum | cut -c1) % 7 +1));40m"; echo -ne " \$n\E[37;40m"; echo -E " \$m";  done)'
 split
 focus
 resize 5
