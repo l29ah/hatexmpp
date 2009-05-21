@@ -6,6 +6,8 @@
 #  - rlwrap
 #  - Perl with Date::Format (gentoo: dev-perl/TimeDate, other distros: http://search.cpan.org/~gbarr/TimeDate-1.16/lib/Date/Format.pm);
 
+[ -e "$1" ] || { echo "Usage: $0 <hatexmpp_chatlog>"; exit 1; }
+
 tmprc="/tmp/.hatescreen"
 f=`basename $1`
 cd `dirname $1`
