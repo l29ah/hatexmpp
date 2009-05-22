@@ -1,0 +1,6 @@
+#!/bin/bash
+#echo $#
+n=$RANDOM
+n=`expr $n % $#`
+bash -c 'echo -n $'$n $*
+

@@ -1,10 +1,5 @@
-ifdef FEATURES
-	ifneq ($(findstring debug, $(FEATURES)),)
-		CFLAGS+=-ggdb -DDEBUG -O0 -Wall
-	endif
-	ifneq ($(findstring proxy, $(FEATURES)),)
-		CFLAGS+=-DPROXY
-	endif
+ifdef DEBUG
+	CFLAGS+=-ggdb -DDEBUG -O0 -Wall
 endif
 
 CFLAGS+=$(shell pkg-config loudmouth-1.0 --cflags) 

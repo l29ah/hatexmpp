@@ -1,5 +1,12 @@
 #include <gtk/gtk.h>
 #include <stdlib.h>
+#include <sys/types.h>
+#include <sys/dir.h>
+#include <sys/param.h>
+#include <dirent.h>
+#include <sys/stat.h>
+#include <string.h>
+#include <gdk/gdk.h>
 
 
 /*Виджеты используемые в окне чата*/
@@ -11,6 +18,7 @@
 	GtkWidget *scroll_mt, *scroll_rt;
 	
 	
+	
 //Если нажать на крестик - окно закроется
 gint delete_event( GtkWidget *widget, GdkEvent *event, gpointer data )
 {
@@ -18,13 +26,15 @@ gint delete_event( GtkWidget *widget, GdkEvent *event, gpointer data )
 }
 
 //Обработчик события нажатия на кнопку "Отправить"
+
 void gtk_send_button_clicked(GtkButton *button)
 {
-	char str[10];
-	text_buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (main_text));
-	sprintf(str,"profit?\n");
-	gtk_text_buffer_insert_at_cursor(GTK_TEXT_BUFFER (text_buffer), str, -1);
+	char *str;
+	str = gtk_entry_get_text(GTK_ENTRY(entry));	
+	send_message("fs/roster/anime@conference.jabber.ru/__chat", str);
+	gtk_entry_set_text(entry, "");
 } 
+
 
 //Функция рисует окно чата
 int g_chat_form (int argc, char **argv)
@@ -38,16 +48,13 @@ int g_chat_form (int argc, char **argv)
 					main_text = gtk_text_view_new(); 
 				scroll_rt = gtk_scrolled_window_new(NULL, NULL);
 					roster_text = gtk_tree_view_new();	
-				//	roster_text = gtk_text_view_new();
 			hbox_bottom = gtk_hbox_new (FALSE, 1);
 				entry = gtk_entry_new();	
 				send_button = gtk_button_new_with_label("Отправить");
 	text_buffer = gtk_text_buffer_new(NULL);
 
-
-
 /*Сигналы*/
-	//этот сгнал грохнет окошко, наверное его отключить
+	//этот сгнал грохнет окошко, наверное его стоит отключить
 	gtk_signal_connect (GTK_OBJECT (chat_window), "delete_event",
 		GTK_SIGNAL_FUNC (delete_event), NULL);
 	//Сигнал нажатия на кнопку отправить
@@ -70,23 +77,12 @@ int g_chat_form (int argc, char **argv)
 			gtk_container_add (GTK_CONTAINER (scroll_rt), roster_text );
 			
 	gtk_box_pack_start (GTK_BOX (vbox_main), hbox_bottom, FALSE, FALSE,1);
-		gtk_box_pack_start (GTK_BOX (hbox_bottom), entry, TRUE, TRUE,1);	
+		gtk_box_pack_start (GTK_BOX (hbox_bottom), entry, TRUE, TRUE,1);
 		gtk_box_pack_start (GTK_BOX (hbox_bottom), send_button	, FALSE, FALSE,1);
-	
-	//Отображаем все виджеты
-	gtk_widget_show (vbox_main);
-		gtk_widget_show (hbox_main);	
-			gtk_widget_show (scroll_mt);
-				gtk_widget_show (main_text);		
-			gtk_widget_show (scroll_rt);
-				gtk_widget_show (roster_text);
-		gtk_widget_show (hbox_bottom);
-			gtk_widget_show (entry);
-			gtk_widget_show (send_button);		
-	
-	
+			
+						
 	gtk_container_add (GTK_CONTAINER (chat_window), vbox_main);	//так надо
-	gtk_widget_show (chat_window);
+	gtk_widget_show_all (chat_window);
 	gtk_main();
 
 	return 0;
@@ -109,20 +105,55 @@ int g_chat_form (int argc, char **argv)
 			GtkWidget *s_hbox_jiv_name, *e_jiv_name, *l_jiv_name;
 			GtkWidget *s_hbox_jiv_os, *e_jiv_os,*l_jiv_os ;
 			GtkWidget *s_hbox_jiv_version, *e_jiv_version, *l_jiv_version ;
-			GtkWidget *s_hbox_proxy_serv, *e_proxy_serv, *l_proxy_serv ;
+		/*	GtkWidget *s_hbox_proxy_serv, *e_proxy_serv, *l_proxy_serv ;
 			GtkWidget *s_hbox_proxy_port, *e_proxy_port, *l_proxy_port ;
 			GtkWidget *s_hbox_proxy_user, *e_proxy_user, *l_proxy_user ;
 			GtkWidget *s_hbox_proxy_pass, *e_proxy_pass, *l_proxy_pass ;
+		*/
 			GtkWidget *s_hbox_jiv_version, *e_jiv_version, *l_jiv_version ;			
 			GtkWidget *s_hbox_bottom, *bt_s_ok, *bt_exit;	
 
 //Обработчик события нажатия на кнопку "далее" на форме настроек
 void gtk_bt_s_ok_clicked(GtkButton *button, int argc, char **argv)
 {
-	//сначала - прячем само окно
+	int folder;
+	char *serv, *user, *pass, *muc_nick;
+	char *jiv_name, *jiv_os, *jiv_version;
+//	char *proxy_serv, *proxy_port, *proxy_user, *proxy_pass;
+	//Считываем настройки
+	serv = gtk_entry_get_text(e_serv);	
+	user = gtk_entry_get_text(e_user);
+	pass = gtk_entry_get_text(e_pass);
+	muc_nick = gtk_entry_get_text(e_muc_nick);
+	jiv_name = gtk_entry_get_text(e_jiv_name);
+	jiv_os = gtk_entry_get_text(e_jiv_os);
+	jiv_version = gtk_entry_get_text(e_jiv_version);
+/*	proxy_serv = gtk_entry_get_text(e_proxy_serv);
+	proxy_port = gtk_entry_get_text(e_proxy_port);
+	proxy_user = gtk_entry_get_text(e_proxy_user);
+	proxy_pass = gtk_entry_get_text(e_proxy_pass);
+*/
+	//Записываем настройки
+
+	write_settings_to_file("fs/config/server", serv);
+	write_settings_to_file("fs/config/username", user);
+	write_settings_to_file("fs/config/password", pass);
+	write_settings_to_file("fs/config/muc_default_nick", muc_nick);
+	write_settings_to_file("fs/config/jiv_name", jiv_name);
+	write_settings_to_file("fs/config/jiv_os", jiv_os);
+	write_settings_to_file("fs/config/jiv_version", jiv_version);
+/*	write_settings_to_file("fs/config/proxy_serv", proxy_serv);
+	write_settings_to_file("fs/config/proxy_serv", proxy_serv);
+	write_settings_to_file("fs/config/proxy_serv", proxy_serv);
+	write_settings_to_file("fs/config/proxy_serv", proxy_serv);
+*/
+	//прячем само окно
 	gtk_widget_hide(GTK_WINDOW (settings_window));
 	roster_form (&argc, &argv);
+
 } 
+	
+	
 	
 //Это если приспичило нажать на кнопку выхода	
 void settings_window_destroy( GtkWidget *widget, gpointer data )
@@ -130,6 +161,8 @@ void settings_window_destroy( GtkWidget *widget, gpointer data )
 	g_print("Выход из окна настроек\n");
 	exit(0);
 }	
+	
+	
 	
 	
 //Вот оно, окно настроек	
@@ -160,7 +193,7 @@ int g_settings_form (int argc, char **argv)
 			s_hbox_jiv_version = gtk_hbox_new (FALSE, 1);
 				e_jiv_version = gtk_entry_new();
 				l_jiv_version = gtk_label_new("jiv_vers");
-			s_hbox_proxy_serv = gtk_hbox_new (FALSE, 1);
+/*			s_hbox_proxy_serv = gtk_hbox_new (FALSE, 1);
 				e_proxy_serv = gtk_entry_new();
 				l_proxy_serv = gtk_label_new("proxy serv");
 			s_hbox_proxy_port = gtk_hbox_new (FALSE, 1);
@@ -172,6 +205,7 @@ int g_settings_form (int argc, char **argv)
 			s_hbox_proxy_pass = gtk_hbox_new (FALSE, 1);
 				e_proxy_pass = gtk_entry_new();
 				l_proxy_pass = gtk_label_new("proxy pass");
+*/
 			s_hbox_bottom = gtk_hbox_new (TRUE, 1);			
 				bt_s_ok = gtk_button_new_with_label("Далее");
 				bt_exit = gtk_button_new_with_label("Выход");
@@ -231,7 +265,7 @@ int g_settings_form (int argc, char **argv)
 			gtk_box_pack_start (GTK_BOX (s_hbox_jiv_version), e_jiv_version, TRUE, TRUE,1);
 			gtk_box_pack_start (GTK_BOX (s_hbox_jiv_version), l_jiv_version, TRUE, TRUE,1);		
 			
-		gtk_box_pack_start (GTK_BOX (s_vbox_main), s_hbox_proxy_serv, TRUE, TRUE,1);	
+/*		gtk_box_pack_start (GTK_BOX (s_vbox_main), s_hbox_proxy_serv, TRUE, TRUE,1);	
 			gtk_widget_set_size_request (GTK_WIDGET(l_proxy_serv), 50, -1  );
 			gtk_box_pack_start (GTK_BOX (s_hbox_proxy_serv), e_proxy_serv, TRUE, TRUE,1);
 			gtk_box_pack_start (GTK_BOX (s_hbox_proxy_serv), l_proxy_serv, TRUE, TRUE,1);		
@@ -250,30 +284,13 @@ int g_settings_form (int argc, char **argv)
 			gtk_widget_set_size_request (GTK_WIDGET(l_proxy_pass), 50, -1  );	
 			gtk_box_pack_start (GTK_BOX (s_hbox_proxy_pass), e_proxy_pass, TRUE, TRUE,1);
 			gtk_box_pack_start (GTK_BOX (s_hbox_proxy_pass), l_proxy_pass, TRUE, TRUE,1);		
-		
+*/		
 		gtk_box_pack_start (GTK_BOX (s_vbox_main), s_hbox_bottom, TRUE, TRUE,1);	
 			gtk_box_pack_start (GTK_BOX (s_hbox_bottom), bt_s_ok, TRUE, TRUE,1);
 			gtk_box_pack_start (GTK_BOX (s_hbox_bottom), bt_exit, TRUE, TRUE,1);		
 		
-		
-	gtk_widget_show (s_vbox_main);
-	gtk_widget_show (s_hbox_serv); gtk_widget_show (e_serv); gtk_widget_show (l_serv);
-	gtk_widget_show (s_hbox_user); gtk_widget_show (e_user); gtk_widget_show (l_user);
-	gtk_widget_show (s_hbox_pass); gtk_widget_show (e_pass); gtk_widget_show (l_pass);
-	gtk_widget_show (s_hbox_muc_nick); gtk_widget_show (e_muc_nick); gtk_widget_show (l_muc_nick);
-	gtk_widget_show (s_hbox_jiv_name); gtk_widget_show (e_jiv_name); gtk_widget_show (l_jiv_name);
-	gtk_widget_show (s_hbox_jiv_os); gtk_widget_show (e_jiv_os);gtk_widget_show (l_jiv_os) ;
-	gtk_widget_show (s_hbox_jiv_version); gtk_widget_show (e_jiv_version); gtk_widget_show (l_jiv_version) ;
-	gtk_widget_show (s_hbox_proxy_serv); gtk_widget_show (e_proxy_serv); gtk_widget_show (l_proxy_serv) ;
-	gtk_widget_show (s_hbox_proxy_port); gtk_widget_show (e_proxy_port); gtk_widget_show (l_proxy_port) ;
-	gtk_widget_show (s_hbox_proxy_user); gtk_widget_show (e_proxy_user); gtk_widget_show (l_proxy_user) ;
-	gtk_widget_show (s_hbox_proxy_pass); gtk_widget_show (e_proxy_pass); gtk_widget_show (l_proxy_pass) ;
-	gtk_widget_show (s_hbox_jiv_version); gtk_widget_show (e_jiv_version); gtk_widget_show (l_jiv_version) ;			
-	gtk_widget_show (s_hbox_bottom); gtk_widget_show (bt_s_ok); gtk_widget_show (bt_exit);		
-	//так было нужно		
-
 	gtk_container_add (GTK_CONTAINER (settings_window), s_vbox_main);
-	gtk_widget_show (settings_window);
+	gtk_widget_show_all (settings_window);
 		
 	gtk_main();
 
@@ -281,12 +298,17 @@ int g_settings_form (int argc, char **argv)
 }
 
 
+
+
+
+
 /* Виджеты для третьего окна:
  * по аналогии с gajim - там оно есть такое.
  * Возможно в нём будет удобно отображать
  */ 
 	GtkWidget *roster_window;
-	GtkWidget *r_vbox_main, *r_menu_bar;
+	GtkWidget *r_vbox_main, *r_hboh_bottom, *r_menu_bar;
+	GtkWidget *r_entry, *r_bt_connect;
 	GtkWidget *r_text, *r_text_buffer;	
 	GtkWidget *r_scroll;
 	GtkWidget *r_menu_1, *r_menu_2, *r_menu_3, *r_menu_4;
@@ -296,7 +318,8 @@ int g_settings_form (int argc, char **argv)
 	
 void gtk_r_menu_3_clicked(GtkMenuItem *menuitem)
 {
-	g_print("Хм, работает\n");
+	int folder;
+	folder = mkdir("fs/roster/anime@conference.jabber.ru",S_IRWXU );
 } 
 
 void gtk_r_menu_4_clicked(GtkMenuItem *menuitem)
@@ -305,8 +328,40 @@ void gtk_r_menu_4_clicked(GtkMenuItem *menuitem)
 	exit(0);		
 } 
 
+
+void show_roster()
+{       
+	struct dirent **namelist;
+	int n = 2;
+	int m;
+    m = scandir("fs/roster", &namelist, 0, alphasort);
+	if (m < 0)
+		perror("scandir");
+    else 
+	{
+		while (n < m) 
+			{
+				printf("%s\n", namelist[n]->d_name);
+				n++;
+				//free(namelist[n]);
+			}
+        //free(*namelist);
+	}
+	g_chat_form (NULL, NULL);
+}
+
+void gtk_r_bt_connect_clicked()
+{
+	int folder;
+	char *f_name, c_name[100] = "fs/roster/";
+	f_name = gtk_entry_get_text(r_entry);
+	folder = mkdir(strcat(c_name, f_name), S_IRWXU);
+	gtk_entry_set_text(r_entry, "");
+}
+
 int roster_form(int argc, char **argv)
 {
+	int folder;
 	gtk_init (&argc, &argv);
 	
 	roster_window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
@@ -314,11 +369,14 @@ int roster_form(int argc, char **argv)
 		r_vbox_main = gtk_vbox_new (FALSE, 1);
 			r_scroll = gtk_scrolled_window_new(NULL, NULL);
 				r_text = gtk_tree_view_new(); 
+			r_hboh_bottom = gtk_hbox_new (FALSE, 1);
+				r_entry = gtk_entry_new();
+				r_bt_connect = gtk_button_new_with_label("Соединить");
 	r_menu_1 = gtk_menu_item_new_with_label("Бдыщь 1");
 		sub_1 = gtk_menu_new(); 
 	r_menu_2 = gtk_menu_item_new_with_label("Бдыщь 2");
 	r_menu_3 = gtk_menu_item_new_with_label("Бдыщь 3");
-	r_menu_4 = gtk_menu_item_new_with_label("Бдыщь 4");
+	r_menu_4 = gtk_menu_item_new_with_label("Выход");
 	
 	r_text_buffer = gtk_text_buffer_new(NULL);
 	
@@ -331,6 +389,9 @@ int roster_form(int argc, char **argv)
 
 	gtk_signal_connect (GTK_OBJECT (r_menu_4), "activate", 
 		GTK_SIGNAL_FUNC (gtk_r_menu_4_clicked), NULL);
+
+	gtk_signal_connect (GTK_OBJECT (r_bt_connect), "clicked", 
+		GTK_SIGNAL_FUNC (gtk_r_bt_connect_clicked), NULL);		
 		
 /*Снова магия*/
 	gtk_window_set_default_size (GTK_WINDOW (roster_window), 300, 400);
@@ -344,25 +405,42 @@ int roster_form(int argc, char **argv)
 		gtk_menu_shell_insert (r_menu_bar,r_menu_2,2);
 
 	gtk_box_pack_start (GTK_BOX (r_vbox_main), r_scroll, TRUE, TRUE,1);	
+	gtk_box_pack_start (GTK_BOX (r_vbox_main), r_hboh_bottom, FALSE, FALSE,1);
+		gtk_box_pack_start (GTK_BOX (r_hboh_bottom), r_entry, TRUE, TRUE,1);
+		gtk_box_pack_start (GTK_BOX (r_hboh_bottom), r_bt_connect, FALSE, FALSE,1);
 		gtk_container_add (GTK_CONTAINER (r_scroll), r_text);
 		gtk_widget_set_size_request (GTK_WIDGET(r_text), -1, 280  );
 	gtk_widget_set_size_request (GTK_WIDGET(r_menu_bar), -1, 20  );
 
 	
-	gtk_widget_show (r_menu_bar);
-	gtk_widget_show (r_menu_1);
-		gtk_widget_show (sub_1);
-	gtk_widget_show (r_menu_2);
-	gtk_widget_show (r_menu_3);	
-	gtk_widget_show (r_menu_4);		
-	gtk_widget_show (r_scroll);
-	gtk_widget_show (r_text);		
-	gtk_widget_show (r_vbox_main);
-
 	gtk_container_add (GTK_CONTAINER (roster_window), r_vbox_main);	
-	gtk_widget_show (roster_window);
+	gtk_widget_show_all (roster_window);
+	
+	folder = mkdir("fs/roster",S_IRWXU );
 	//вызываем окно чата
-	g_chat_form (&argc, &argv);
+	show_roster();
 	gtk_main();
 	return 0;
+}
+
+void write_settings_to_file(char *file_name, char *w_phrase)
+{
+	FILE *w_file;
+	if ( (w_file = fopen(file_name, "w")) == NULL )
+		{	
+			printf("Не могу открыть файл\n");
+		}
+	fprintf(w_file, w_phrase);
+	fclose(w_file);	
+}
+
+void send_message(char *file_name, char *w_phrase)
+{
+	FILE *w_file;
+	if ( (w_file = fopen(file_name, "w")) == NULL )
+		{	
+			printf("Не могу открыть файл\n");
+		}
+	fprintf(w_file, w_phrase);
+	fclose(w_file);	
 }
