@@ -1,3 +1,5 @@
+#include "common.h"
+
 #define nil NULL
 
 #define IXP_P9_STRUCTS
@@ -179,7 +181,7 @@ rerrno(Ixp9Req *r, char *m) {
 void
 fs_attach(Ixp9Req *r) {
 
-	debug("fs_attach(%p)\n", r);
+	logf("fs_attach(%p)\n", r);
 
 	r->fid->qid.type = QTDIR;
 	r->fid->qid.path = (uintptr_t)r->fid;
@@ -408,15 +410,11 @@ fs_freefid(Fid *f) {
 	free(f->aux);
 }
 
+
 // mount -t 9p 127.1 /tmp/cache -o port=20006,noextend
 /* Yuck. */
-#if defined(__linux__)
-#  define MF(n) MS_##n
-#  define mymount(src, dest, flags, opts) mount(src, dest, "9p", flags, opts)
-#elif defined(__FreeBSD__) || defined(__OpenBSD__)
-#  define MF(n) MNT_##n
-#  define mymount(src, dest, flags, opts) mount("9p", dest, flags, src)
-#endif
+#define MF(n) MS_##n
+#define mymount(src, dest, flags, opts) mount(src, dest, "9p", flags, opts)
 
 static ulong mountflags =
 	  MF(NOATIME)
@@ -447,7 +445,7 @@ getaddr(char *mountaddr, char **ip, char **port) {
 	return strtoul(*port, 0, 0);
 }
 
-#ifdef erwgrgh
+#if 0
 int
 main(int argc, char *argv[]) {
 	int fd;
