@@ -8,7 +8,10 @@
 */
 
 // Proxy support
-#define PROXY
+// #define PROXY
 
 // Buggy /events support (maybe it works)
-#define EVENTS
+// #define EVENTS
+
+// New logs format (like tkabber's, with hard escaping)
+// #define NEW_LOGS

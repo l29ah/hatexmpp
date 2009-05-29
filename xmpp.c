@@ -11,6 +11,31 @@ LmConnection *connection;
 LmProxy *proxy;
 #endif
 
+gchar *escape(const gchar * src) {
+	const gchar esc[] = "\bb\ff\nn\rr\tt\\\\\"\"";
+	// maximum possible length of escaped string
+	gchar *dest = g_malloc(strlen(src)*2+1);
+	const gchar *p = src;
+	gchar *q = dest;
+	gchar *c;
+	while (*p) {
+		c = (gchar *) esc;
+		while (*c) {
+			if (*c == *p) {
+				*q++ = '\\';
+				*q++ = c[1];
+				break;
+			}
+			c += 2;
+		}
+		if (!*c) 
+			*q++ = *p;
+		p++;
+	}
+	*q=0;
+	return g_realloc(dest, strlen(dest));
+}
+
 void filterjunk(gchar *str) {
 	size_t f, t, len = strlen(str);
 	for(f = 0, t = 0; f < len; f++) {
@@ -198,11 +223,14 @@ static LmHandlerResult message_rcvd_cb(LmMessageHandler *handler, LmConnection *
 	gchar *log_str;
 	rosteritem *ri;
 
+#ifdef NEW_LOGS
+	gchar *esc_str;
+#endif
+
 	from = lm_message_node_get_attribute(m->node, "from");
 	to = lm_message_node_get_attribute(m->node, "to");
 	body = lm_message_node_get_value(lm_message_node_get_child(m->node, "body"));
 	if (from && body) {
-		logf("Message from %s to %s: %s\n", from, to, body );
 		eventf("msg %s %s %s", from, to, body);
 		jid = get_jid((gchar *) from);
 		ri = g_hash_table_lookup(roster, jid);
@@ -213,7 +241,13 @@ static LmHandlerResult message_rcvd_cb(LmMessageHandler *handler, LmConnection *
 			if (g_hash_table_lookup(config, "raw_logs"))
 				g_array_append_vals(ri->log, body, strlen(body) + 1);		// +1 for delimiting messages by \0
 			else {
+#ifdef NEW_LOGS
+				esc_str = escape(body);
+				log_str = g_strdup_printf("%d jid %s nick %s body {%s}\n", (unsigned)ri->lastmsgtime, from, jid, esc_str);
+				g_free(esc_str);
+#else
 				log_str = g_strdup_printf("%d %s: %s\n", (unsigned)ri->lastmsgtime, jid, body);
+#endif
 				g_array_append_vals(ri->log, log_str, strlen(log_str));
 				g_free(log_str);
 			}
