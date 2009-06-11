@@ -200,11 +200,12 @@ static LmHandlerResult presence_rcvd_cb(LmMessageHandler *handler, LmConnection 
 				if (ri->type == MUC && !g_hash_table_lookup(config, "raw_logs")) {
 					LmMessageNode *child = lm_message_node_find_child(m->node, "item");
 					gchar *log_str;
-					if (child) {
-						log_str = g_strdup_printf("%d * %s (%s) has entered the room\n", (unsigned) time(NULL), res, lm_message_node_get_attribute(child, "jid"));
-					} else {
+					// i dont understand this
+					// if (child) {
+					//	log_str = g_strdup_printf("%d * %s (%s) has entered the room\n", (unsigned) time(NULL), res, lm_message_node_get_attribute(child, "jid"));
+					//} else {
 						log_str = g_strdup_printf("%d * %s has entered the room\n", (unsigned) time(NULL), res);
-					}
+					//}
 					g_array_append_vals(ri->log, log_str, strlen(log_str));
 					g_free(log_str);
 				}
