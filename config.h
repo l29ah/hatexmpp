@@ -14,4 +14,4 @@
 // #define EVENTS
 
 // New logs format (like tkabber's, with hard escaping)
-#define NEW_LOGS
+// #define NEW_LOGS
