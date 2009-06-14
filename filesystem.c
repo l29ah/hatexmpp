@@ -184,9 +184,11 @@ fs_attach(Ixp9Req *r) {
 	logf("fs_attach(%p)\n", r);
 
 	r->fid->qid.type = QTDIR;
-	r->fid->qid.path = (uintptr_t)r->fid;
-	r->fid->aux = newfidaux("/");
-	r->ofcall.rattach.qid = r->fid->qid;
+//	r->fid->qid.path = (uintptr_t)r->fid;
+	r->fid->qid.path = 0;
+//	r->fid->aux = newfidaux("/");
+//	r->ofcall.rattach.qid = r->fid->qid;
+	r->ofcall.qid = r->fid->qid;
 	respond(r, nil);
 }
 
