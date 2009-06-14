@@ -6,6 +6,6 @@ for i in `sudo fuser fs 2>&1|sed -n 's/.*\/proc\/\(.*\)\/fd.*/\1/p'`
 done
 sleep 1;
 ./getfup.sh
-./cmdlex.sh &
+./hatebot.sh &
 echo $! > bpid
 
