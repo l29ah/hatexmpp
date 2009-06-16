@@ -28,7 +28,7 @@
 
 /* Temporary */
 #define fatal(...) ixp_eprint("ixpsrv: fatal: " __VA_ARGS__)
-#define debug(...) if(debuglevel) fprintf(stderr, "ixpsrv: " __VA_ARGS__)
+//#define debug(...) if(debuglevel) fprintf(stderr, "ixpsrv: " __VA_ARGS__)
 
 /* Datatypes: */
 typedef struct FidAux FidAux;
@@ -64,17 +64,17 @@ static void fs_remove(Ixp9Req *r);
 static void fs_freefid(IxpFid *f);
 
 Ixp9Srv p9srv = {
-	.open=	fs_open,
-	.walk=	fs_walk,
-	.read=	fs_read,
-	.stat=	fs_stat,
-	.write=	fs_write,
-	.clunk=	fs_clunk,
-	.flush=	fs_flush,
-	.attach=fs_attach,
-	.create=fs_create,
-	.remove=fs_remove,
-	.freefid=fs_freefid
+	.open =		fs_open,
+	.walk =		fs_walk,
+	.read =		fs_read,
+	.stat =		fs_stat,
+	.write =	fs_write,
+	.clunk =	fs_clunk,
+	.flush =	fs_flush,
+	.attach =	fs_attach,
+	.create =	fs_create,
+	.remove =	fs_remove,
+	.freefid =	fs_freefid
 };
 
 
@@ -184,11 +184,11 @@ fs_attach(Ixp9Req *r) {
 	logf("fs_attach(%p)\n", r);
 
 	r->fid->qid.type = QTDIR;
-//	r->fid->qid.path = (uintptr_t)r->fid;
-	r->fid->qid.path = 0;
-//	r->fid->aux = newfidaux("/");
-//	r->ofcall.rattach.qid = r->fid->qid;
-	r->ofcall.qid = r->fid->qid;
+	r->fid->qid.path = (uintptr_t)r->fid;
+//	r->fid->qid.path = 0;
+	r->fid->aux = newfidaux("/");
+	r->ofcall.rattach.qid = r->fid->qid;
+//	r->ofcall.qid = r->fid->qid;
 	respond(r, nil);
 }
 
@@ -199,7 +199,7 @@ fs_walk(Ixp9Req *r) {
 	FidAux *f;
 	int i;
 	
-	debug("fs_walk(%p)\n", r);
+	logf("fs_walk(%p)\n", r);
 
 	f = r->fid->aux;
 	name = malloc(PATH_MAX);
@@ -239,8 +239,8 @@ fs_stat(Ixp9Req *r) {
 	int size;
 	
 	f = r->fid->aux;
-	debug("fs_stat(%p)\n", r);
-	debug("fs_stat %s\n", f->name);
+	logf("fs_stat(%p)\n", r);
+	logf("fs_stat %s\n", f->name);
 
 	name = f->name;
 	if (stat(name, &st) < 0){
@@ -268,7 +268,7 @@ fs_read(Ixp9Req *r) {
 	int n, offset;
 	int size;
 
-	debug("fs_read(%p)\n", r);
+	logf("fs_read(%p)\n", r);
 
 	f = r->fid->aux;
 
@@ -325,7 +325,7 @@ void
 fs_write(Ixp9Req *r) {
 	FidAux *f;
 
-	debug("fs_write(%p)\n", r);
+	logf("fs_write(%p)\n", r);
 
 	if(r->ifcall.twrite.count == 0) {
 		respond(r, nil);
@@ -344,7 +344,7 @@ fs_open(Ixp9Req *r) {
 	int dir;
 	FidAux *f;
 
-	debug("fs_open(%p)\n", r);
+	logf("fs_open(%p)\n", r);
 
 	f = r->fid->aux;
 	dir = isdir(f->name);
@@ -369,13 +369,13 @@ fs_open(Ixp9Req *r) {
 
 void
 fs_create(Ixp9Req *r) {
-	debug("fs_create(%p)\n", r);
+	logf("fs_create(%p)\n", r);
 	respond(r, Enoperm);
 }
 
 void
 fs_remove(Ixp9Req *r) {
-	debug("fs_remove(%p)\n", r);
+	logf("fs_remove(%p)\n", r);
 	respond(r, Enoperm);
 
 }
@@ -385,7 +385,7 @@ fs_clunk(Ixp9Req *r) {
 	int dir;
 	FidAux *f;
 
-	debug("fs_clunk(%p)\n", f);
+	logf("fs_clunk(%p)\n", f);
 
 	f = r->fid->aux;
 	dir = isdir(f->name);
@@ -402,17 +402,17 @@ fs_clunk(Ixp9Req *r) {
 
 void
 fs_flush(Ixp9Req *r) {
-	debug("fs_flush(%p)\n", r);
+	logf("fs_flush(%p)\n", r);
 	respond(r, nil);
 }
 
 void
 fs_freefid(Fid *f) {
-	debug("fs_freefid(%p)\n", f);
+	logf("fs_freefid(%p)\n", f);
 	free(f->aux);
 }
 
-
+#if 0
 // mount -t 9p 127.1 /tmp/cache -o port=20006,noextend
 /* Yuck. */
 #define MF(n) MS_##n
@@ -425,6 +425,7 @@ static ulong mountflags =
 	| MF(NOEXEC)
 	| MF(NOSUID)
 	| MF(RDONLY);
+#endif
 
 int
 getaddr(char *mountaddr, char **ip, char **port) {
@@ -529,11 +530,31 @@ main(int argc, char *argv[]) {
 int fs_init() {
         char *address;
 	int fd;
+	IxpConn *acceptor;
+	char *mountaddr = NULL;
 
-	address = getenv("IXP_ADDRESS");
+//	address = getenv("IXP_ADDRESS");	// STUB
+	address = "tcp!localhost!5432";
 	if(!address) fatal("$IXP_ADDRESS not set\n");
         if(!(user = getenv("USER"))) fatal("$USER not set\n");
 	fd = ixp_announce(address);
+	acceptor = ixp_listen(&server, fd, &p9srv, serve_9pcon, NULL);
+	/*
+        int f = fork();
+        if (f < 0) errx(1, "fork!");
+	if (!f) {
+		char *addr, *aport;
+		int port;
+	        char options[128];
+                port = getaddr(mountaddr, &addr, &aport);
+                sprintf(options, "port=%d,noextend", port);
+                if (mymount(addr, "/tmp/cache", mountflags, options) < 0)
+	                errx(1, "Mount failed");
+	}
+	*/
+	ixp_serverloop(&server);
+	printf("msg %s\n", ixp_errbuf());
+
 	return 0;
 }
 
