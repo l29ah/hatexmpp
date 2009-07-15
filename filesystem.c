@@ -204,12 +204,15 @@ fs_walk(Ixp9Req *r) {
 	f = r->fid->aux;
 	name = malloc(PATH_MAX);
 	strcpy(name, f->name);
-	if (stat(name, &buf) < 0){
-		respond(r, Enofile);
-		return;
-	}
+	logf("Trying to walk dir %s\n", name);
+	r->ofcall.rwalk.nwqid = 0;	// what's that?
+	//if (stat(name, &buf) < 0){
+	//respond(r, Enofile);
+	//return;
+	//}
 
 	/* build full path. Stat full path. Done */
+	/*
 	for(i=0; i < r->ifcall.twalk.nwname; i++) {
 		strcat(name, "/");
 		strcat(name, r->ifcall.twalk.wname[i]);
@@ -224,8 +227,19 @@ fs_walk(Ixp9Req *r) {
 
 	r->newfid->aux = newfidaux(name);
 	r->ofcall.rwalk.nwqid = i;
-	free(name);
-	respond(r, nil);
+	*/
+	/*
+	for (i = 0; i < r->ifcall.twalk.nwname; i++) {
+		strcat(name, "/");
+		strcat(name, "afile");
+		break;
+	}
+	//respond(r, Enofile);
+	*/
+	//free(name);
+	//respond(r, nil);
+	r->
+	
 }
 
 void
