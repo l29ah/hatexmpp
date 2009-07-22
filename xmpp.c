@@ -178,10 +178,14 @@ static LmHandlerResult presence_rcvd_cb(LmMessageHandler *handler, LmConnection 
 		if (type && (strcmp(type, "unavailable") == 0) && res) {
 			logf("Deleting resource %s from %s\n", res, jid);
 			eventf("del_resource %s/%s", jid, res);
-			if (ri->type == MUC && !g_hash_table_lookup(config, "raw_logs")) {
+			if (ri->type == MUC) {
 				gchar *log_str = g_strdup_printf("%d * %s has left the room\n", (unsigned) time(NULL), res);
 				g_array_append_vals(ri->log, log_str, strlen(log_str));
 				g_hash_table_remove(ri->resources, res);
+				if (strcmp(res, ri->self_resource->name) == 0) {
+					logf("Kicked from %s\n", jid);
+					g_hash_table_remove(roster, jid);
+				}
 			}
 		} else {
 			resourceitem *rr;
