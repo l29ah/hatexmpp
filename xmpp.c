@@ -4,6 +4,7 @@
 #define XMPP_DISCO_XMLNS "http://jabber.org/protocol/disco#info"
 
 void xmpp_send(const gchar *to, const gchar *body);
+void xmpp_register_request(const char *Username, const char *Password, const char *Email);
 
 LmConnection *connection;
 
@@ -406,7 +407,11 @@ static void connection_open_cb (LmConnection *connection, gboolean success, void
 	/* TODO: something better */
 	if (g_hash_table_lookup(config, "noauth")) {
 		logstr("config/noauth exists, not logging in\n");
-	} else if (!lm_connection_authenticate (connection, 
+	} else {
+		if (g_hash_table_lookup(config, "register")) 
+			xmpp_register_request(g_hash_table_lookup(config, "username"), g_hash_table_lookup(config, "password"), "lol@lol.com");
+
+		if (!lm_connection_authenticate (connection, 
 					 (gchar *) g_hash_table_lookup(config, "username"),
 					 (gchar *) g_hash_table_lookup(config, "password"),
 					 (gchar *) g_hash_table_lookup(config, "resource"),
@@ -414,6 +419,7 @@ static void connection_open_cb (LmConnection *connection, gboolean success, void
 		logstr("lm_connection_authenticate failed\n");
 		g_main_loop_quit(main_loop);
 		return;
+		}
 	}
 	eventstr("connect_ok");
 }
