@@ -1,0 +1,6 @@
+glovexmpp: GTK+ frontend for hatexmpp
+
+Compiling: ghc -threaded --make glovexmpp.hs
+
+Usage: tail -f 'roster/anime-talks@conference.jabber.ru/__chat' | glovexmpp > 'roster/anime-talks@conference.jabber.ru/__chat'
+
