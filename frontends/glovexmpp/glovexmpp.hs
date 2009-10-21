@@ -1,8 +1,8 @@
-import Prelude hiding (putStr, getLine, getContents)
+import Prelude hiding (putStr, getLine, print)
 import System.IO.UTF8 
 import Control.Monad
 import Control.Concurrent
-import System.IO hiding (putStr, getLine)
+import System.IO hiding (putStr, getLine, print)
 import Graphics.UI.Gtk
 import Graphics.UI.Gtk.Gdk.Events
 import Graphics.UI.Gtk.Abstract.Paned
@@ -23,13 +23,14 @@ bufferAdd tb s = do
 	t <- bufferGet tb
 	textBufferSetText tb (t ++ s)  
 
-inputKeyPressed inputb e | eventKeyName e == "Return" = do
-				t <- bufferGet inputb
-				putStr t
-				hFlush stdout
-				textBufferSetText inputb ""
-				return True
-			 | otherwise = return False
+inputKeyPressed inputb e = if (eventKeyName e == "Return") && (notElem Shift $ eventModifier e)
+	then do	
+		t <- bufferGet inputb
+		putStr t
+		hFlush stdout
+		textBufferSetText inputb ""
+		return True
+	else return False
 
 main = do
 	--args <- initGUI
