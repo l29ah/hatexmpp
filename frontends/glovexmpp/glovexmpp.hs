@@ -76,5 +76,7 @@ main = do
 	forkOS $ forever $ do 
 		l <- getLine
 		postGUISync $ bufferAdd logb $ pretty l
+		ei <- postGUISync $ textBufferGetEndIter logb
+		postGUISync $ textViewScrollToIter logv ei 0 Nothing
 
 	mainGUI
