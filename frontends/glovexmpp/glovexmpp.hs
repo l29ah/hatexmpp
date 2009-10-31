@@ -1,15 +1,22 @@
-import Prelude hiding (putStr, getLine, print)
+-- We want utf8-aware I/O
+import Prelude hiding (putStr, getLine, print)		
+import System.IO hiding (putStr, getLine, print)	
 import System.IO.UTF8 
+
 import Control.Monad
 import Control.Concurrent
-import System.IO hiding (putStr, getLine, print)
 import Graphics.UI.Gtk
 import Graphics.UI.Gtk.Gdk.Events
 import Graphics.UI.Gtk.Abstract.Paned
+import Data.DateTime
+import Data.Char
 
 -- Make lines from hatexmpp look beautiful
 pretty :: String -> String
-pretty t = t ++ "\n"
+pretty t = let (x:xs) = words t in
+	(if all isDigit x 
+	then (formatDateTime "[%T] " $ fromSeconds $ read x) ++ unwords xs
+	else t) ++ "\n"
 
 bufferGet :: TextBuffer -> IO String
 bufferGet tb = do
@@ -23,6 +30,7 @@ bufferAdd tb s = do
 	t <- bufferGet tb
 	textBufferSetText tb (t ++ s)  
 
+-- Keypress event handler
 inputKeyPressed inputb e = if (eventKeyName e == "Return") && (notElem Shift $ eventModifier e)
 	then do	
 		t <- bufferGet inputb
@@ -64,6 +72,7 @@ main = do
 	widgetShowAll w
 	--windowPresent w
 	
+	-- Inbound messages drawing thread
 	forkOS $ forever $ do 
 		l <- getLine
 		postGUISync $ bufferAdd logb $ pretty l
