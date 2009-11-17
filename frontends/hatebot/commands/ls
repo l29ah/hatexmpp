@@ -1,3 +1,3 @@
 #!/bin/bash
-ls -x commands
+ls -x commands | tr -d "\n"
 
