@@ -1,13 +1,2 @@
 #!/bin/bash
-U=hatebot
-sudo -u $U ghc -e "$*" 2>&1 & p1=$!
-sleep 10 & p2=$!
-while [ -d /proc/$p1 -a -d /proc/$p2 ]
-	do sleep 1
-done  # ждем хоть кого-нить...
-[ -d /proc/$p1 ] && echo -n Time limit exceeded
-sudo killall -u $U &>/dev/null # и убиваем всех
-sleep 1
-sudo killall -9 -u $U &>/dev/null
-
-
+mueval --expression "$*" 2>&1 | tr -d "\n"

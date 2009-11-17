@@ -1,8 +1,10 @@
 #!/bin/bash
-tail -n0 -f fs/roster/anime@conference.jabber.ru/__chat | tee -a animelog | 
-sed -nu '/[0-9]* .*: ^.*/ s/.*: ^\(.*\)/\1/p' | (
-	while true
-		do read i
-		./cmdparse.sh $i &
-	done) \
->> fs/roster/anime@conference.jabber.ru/__chat
+prefix='\^'
+mynick="`cat config/muc_default_nick`"
+export C="$1"
+tail -n0 -f fs/roster/$1/__chat | 
+perl -e '$|=1;' -ne 's/^[0-9]* jid .* nick (?!'"$mynick"').* body {'"$prefix"'(.*?)(\\n.*|)}/$1/ and print' | {
+	while read i; do
+		./cmdparse.sh "$i" &
+	done; 
+} >> fs/roster/$1/__chat
