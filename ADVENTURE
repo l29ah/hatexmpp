@@ -1,0 +1,167 @@
+Welcome to hatexmpp.
+
+> look
+
+You are near the root of a tree.
+
+> look hatexmpp
+
+You see a xmpp client with filesystem frontend.
+
+> configure hatexmpp
+
+Okay: $EDITOR config.h
+Enjoy the comments inside.
+
+> build hatexmpp
+
+Okay: make
+You will need glib (~>=2.18.4), fuse (~>=2.7.4) and loudmouth (~>=1.4.3) 
+in your system to proceed with compilation. 
+On BSD machines you may need to say gmake instead.
+It wasn't tested on Windows, though. If you do, CONTACT us.
+
+> run hatexmpp
+
+Synopsis: ./hatexmpp <mountpoint> [-d]
+mountpoint - a directory where the hatexmpp tree will be deployed
+d - enable it to debug
+
+> go fs
+
+You see config, events, log, rawxmpp and roster
+
+> go config
+
+You see the place filled with different xmpp-related configuration options
+
+> look
+
+jiv_name - the client name to be published
+jiv_os - operating system name
+jiv_version - version of the client
+muc_default_nick - default nickname to be used while joining the conferences
+password - password for your xmpp account
+resource - xmpp resource name
+server - address of the server to connect to
+username - username
+register - create this to make xmpp to register a new account on the server
+based on the stated username and password
+noauth - create to not to authenticate; may be used to do weird things with
+raw xml stream access
+auto_reconnect - create to reconnect on disconnection; still unusable
+raw_logs - raw logs (without time, jids)
+events - events generation on/off
+
+> go /
+> use hatexmpp
+
+command - action - status
+mkdir roster - connect to server - ready
+rmdir roster - disconnect - needs fix?
+cp opt config/ - write config option ‘opt’ - ready
+mkdir roster/mucjid - join MUC ‘mucjid’ - ready
+rmdir roster/mucjid - part MUC ‘mucjid’ - ready
+echo -n lol >> roster/jid - say ‘lol’ to ‘jid’ - ready
+echo -n lol >> roster/mucjid/__chat - say ‘lol’ to MUC ‘mucjid’ - ready
+echo -n lol >> roster/mucjid/nick - say ‘lol’ to MUC ‘mucjid’ participant ‘nick’ - ready
+rm roster/jid - remove ‘jid’ from roster - ready?
+rm roster/mucjid/jid - ban ‘jid’ in MUC ‘mucjid’ - temporary
+rm roster/mucjid/nick - ban ‘nick’ in MUC ‘mucjid’ - not implemented
+echo -n > roster/mucjid/nick - kick ‘nick’ in MUC ‘mucjid’ - not implemented/wtf!?
+tail -f roster/jid - listen to jid’s talk - ready
+tail -f roster/mucjid/__chat - listen to mucjid - ready
+cat /path/to/stream - continiously listen to stream - not implemented
+echo -n lol >> roster/mucjid/__nick - change nickname - ready
+
+> go frontends
+
+You see some frontends to use with hatexmpp.
+
+> go hatebot
+
+You see the hatexmpp-based MUC bot.
+
+> look
+
+You see some bash scripts:
+cmdlex.sh - the script which actually interacts with hatexmpp
+cmdparse.sh - running and cutting the output of the commands
+getfup.sh - setting the bot up
+getbot.sh - the script preparing the environment for the getfup.sh,
+setting the MUCs to sit on and enables logging.
+shutdown.sh - shuts down the bot
+
+Also, there are some directories ahead:
+commands - the commands hatebot will run on the users' requests
+config - the folder to copy to fs/config
+
+> go commands
+
+You see a lot of scripts, you feel a little dizzy.
+
+> look
+
+All the commands boil down to simple interface: they are running with their
+filenames and arguments set in the chat just like in the shell. Their output 
+is redirected to the chat. Also, they may use "C" environment variable to get 
+the name of MUC they were called from.
+
+> go /
+> rest
+
+While resting, you may do something useful, like:
+non-segfaulty behaviour more nonstop testing, recruit beta-testers
+9P-port?
+make some fscalls critical sections (mkdir conference, maybe others: investigation needed)
+streaming logs
+raw mode (to pipe through xmpp safely)
+proper reaction to various XMPP error stanzas
+code cleanup, functions name unification (for example xmpp_* etc)
+contacts in roster as directories for vcard, etc
+non-stupid events protocol
+roster management: add, delete, subscription etc
+direct xml stream access (writing, reading, pipe)
+kawaii frontend (ncurses, slang)
+mount options
+groups in roster (damn, too much rewrite)
+transports
+service discovery
+XEP-0138: Stream Compression
+whiteboarding (.svg)
+file sending/receiving
+user-friendly frontend (gtk one?)
+
+or fix some bugs:
+generating incorrect XMPP messages while using non-trivial unicode (for 
+example, the japanese language)
+non-noticing the disconnect (should send a kind of ping or so)
+cutting the messages in random places (frontend-related, should write all
+the message in one write() syscall)
+
+But the Game Master forbids you to make something like:
+XEP-0245: The /me Command (frontend-related)
+XEP-0196: User Gaming (stupid)
+XEP-0171: Language Translation (stupid)
+
+> show license
+
+Google for the GNU AGPL v3.
+
+> contact
+
+Feel free to write to anime-talks@conference.jabber.ru and l29ah@jabber.ru
+
+> who
+
+L29Ah, http://l29ah-home.wtf.la/
+
+> date
+
+Nov 26, 2009
+
+> quit
+
+Till next time, adventurer!
+Thanks to the vx32 authors for their ADVENTURE!
+

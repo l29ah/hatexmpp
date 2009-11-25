@@ -1,7 +1,1 @@
-hatexmpp is a xmpp-client featuring ii-like interface (xmppfs really)
-
-deps: glib (~>=2.18.4), fuse (~>=2.7.4), loudmouth (~>=1.4.3)
-
-synopsis: ./hatexmpp <mountpoint> [-d]
-
-to scream, go to hatexmpp@conference.jabber.ru
+ADVENTURE
