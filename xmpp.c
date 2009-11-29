@@ -459,15 +459,19 @@ void connection_close_cb (LmConnection *connection, LmDisconnectReason reason, g
 	g_main_loop_quit(main_loop);
 	g_hash_table_remove_all(roster);
 
-	// very stupid auto reconnect
+	// very stupid autoreconnect routine
 	if (g_hash_table_lookup(config,"auto_reconnect") && (reason != LM_DISCONNECT_REASON_OK)) {
-		logstr("Auto reconnecting");
+		logstr("Autoreconnecting\n");
 		xmpp_connect();
 	}
 }
 
 void xmpp_connect() {
-	if (connection_state != OFFLINE) return;
+	if (connection_state != OFFLINE) {
+		logf("Tried to connect while online!\n");
+		return;
+	}
+	logf("Connecting...\n");
 	connection_state = CONNECTING;
 	connection = lm_connection_new_with_context ((gchar *) g_hash_table_lookup(config, "server"), context);
 	// TODO: moar c011b4ckz!
@@ -496,6 +500,7 @@ void xmpp_connect() {
 		g_main_loop_quit(main_loop);
 		connection_state = OFFLINE;
 	}
+	logf("Connected.\n");
 } 
 
 void xmpp_send(const gchar *to, const gchar *body) {
