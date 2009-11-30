@@ -37,21 +37,6 @@ gchar *escape(const gchar * src) {
 	return g_realloc(dest, strlen(dest));
 }
 
-void filterjunk(gchar *str) {
-	size_t f, t, len = strlen(str);
-	for(f = 0, t = 0; f < len; f++) {
-		if ( (unsigned) str[f] >= 0xc0 && f+1 < len && (unsigned) str[f+1] >= 0x80) {
-			str[t++] = str[f];
-			str[t++] = str[f+1];
-			f++;
-		}
-		if (str[f] >= ' ' || str[f] == '\n' || str[f] == '\r' || str[f] == '\t') {
-			str[t++] = str[f];
-		}
-	}
-	str[t] = 0;
-}
-
 gchar *get_resource(const gchar *jid)
 {
 	gchar *res;
@@ -529,7 +514,6 @@ void xmpp_send(const gchar *to, const gchar *body) {
 		if (m) {
 			time(&last_activity_time);
 			b = g_strdup(body);
-			filterjunk(b);
 			lm_message_node_add_child(m->node, "body", b);
 			lm_connection_send(connection, m, NULL);
 			lm_message_unref(m);
