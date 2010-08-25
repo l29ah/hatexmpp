@@ -13,6 +13,10 @@ all: hatexmpp
 
 hatexmpp: version.o hatexmpp.o fuse.o xmpp.o
 
+hatexmpp.o: hatexmpp.c common.h
+fuse.o: fuse.c common.h
+xmpp.o: xmpp.c common.h
+
 version.c:
 	echo "char HateXMPP_ver[] = "\"0.2-`git log -n1 --pretty=format:%H`\""; char * getversion(void) { return HateXMPP_ver; }" > version.c
 
