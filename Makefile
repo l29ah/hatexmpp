@@ -1,9 +1,13 @@
 ifdef DEBUG
-	CFLAGS+=-ggdb -DDEBUG -O0 -Wall
+	CFLAGS+=-ggdb -DDEBUG -O0 -Wall -pedantic
+else
+	CFLAGS+=-DNDEBUG
 endif
 
 CFLAGS+=$(shell pkg-config fuse loudmouth-1.0 --cflags)
 LDFLAGS+=$(shell pkg-config fuse loudmouth-1.0 --libs)
+
+# FIXME: the Makefile doesn't check for the changes in the header files
 
 all: hatexmpp
 
