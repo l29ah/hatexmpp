@@ -17,6 +17,8 @@
 #include <string.h>
 #include <fuse.h>
 #include <time.h>
+#include <stdbool.h>
+#include <assert.h>
 #include <loudmouth/loudmouth.h>
 
 #define PROGRAM_NAME "HateXMPP"

@@ -170,7 +170,7 @@ static int fsgetattr(const char *path, struct stat *stbuf)
 		path += 8;
 		ri = getri(path);
 		if (ri) {
-			if ((ri->type == MUC) && (strlen(path) == strlen(get_jid(path)))) {
+			if (strlen(path) == strlen(get_jid(path))) {
 				stbuf->st_mode = S_IFDIR | 0755;
 				stbuf->st_nlink = 2;
 				return 0;
@@ -230,11 +230,12 @@ static int fsreaddir(const char *path, void *buf, fuse_fill_dir_t filler,
 		rosteritem *ri;
 		
 		ri = getri(path);
-		if (ri && (ri->type == MUC)) {
+		if (ri) {
 			filler(buf, ".", NULL, 0);
 			filler(buf, "..", NULL, 0);
 			filler(buf, "__chat", NULL, 0);
-			filler(buf, "__nick", NULL, 0);
+			if (ri->type == MUC)
+				filler(buf, "__nick", NULL, 0);
 			GHashTableIter iter;
 			gchar *res;
 			g_hash_table_iter_init (&iter, ri->resources);
@@ -296,7 +297,7 @@ static int fsread(const char *path, char *buf, size_t size, off_t offset,
 		path += 8;
 		ri = getri(path);
 		gchar *resource = get_resource(path);
-		if(ri && ((strcmp(path, "__nick") == 0) || (resource && strcmp(resource, "__nick") == 0))) {
+		if(ri && ((strcmp(path, "__nick") == 0) || (resource && strcmp(resource, "__nick") == 0)) && ri->type == MUC) {
 			size_t len = strlen(ri->self_resource->name);
 			if(offset + size < len) {
 				memcpy(buf, ri->self_resource->name + offset, size);
