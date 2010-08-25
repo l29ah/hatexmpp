@@ -103,6 +103,7 @@ int main(int argc, char **argv) {
 	g_hash_table_insert(config, "password", NULL);
 	g_hash_table_insert(config, "register", NULL);
 	g_hash_table_insert(config, "resource", g_strdup("hatexmpp"));
+	g_hash_table_insert(config, "priority", g_strdup("0"));
 	g_hash_table_insert(config, "muc_default_nick", NULL);
 	g_hash_table_insert(config, "jiv_name", NULL);
 	g_hash_table_insert(config, "jiv_os", NULL);

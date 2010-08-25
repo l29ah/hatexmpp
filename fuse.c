@@ -360,6 +360,8 @@ static int fswrite(const char *path, const char *buf, size_t size, off_t offset,
 		}
 		logf("Setting %s = %s\n", option, val);
 		g_hash_table_replace(config, option, val);	
+		if (strcmp(option, "priority") == 0 && connection_state == ONLINE)
+			xmpp_set_priority(atoi(val));
 		return size;
 	}
 	if ((strcmp(path, "/rawxmpp") == 0) && connection_state == ONLINE) {

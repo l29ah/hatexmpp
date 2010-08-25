@@ -619,3 +619,13 @@ void xmpp_register_request(const char *Username, const char *Password, const cha
 	lm_message_unref(msg);
 
 }
+
+void xmpp_set_priority(int8_t P) {
+	gchar *Ps = g_strdup_printf("%i", P);
+
+	LmMessage *msg = lm_message_new(NULL, LM_MESSAGE_TYPE_PRESENCE);
+	lm_message_node_add_child(msg->node, "priority", Ps);
+	lm_connection_send(connection, msg, NULL);
+	lm_message_unref(msg);
+	g_free(Ps);
+}
