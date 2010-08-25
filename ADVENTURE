@@ -45,6 +45,8 @@ password - password for your xmpp account
 priority - the priority of the selected resource
 resource - xmpp resource name
 server - address of the server to connect to
+show - XMPP machine-readable "status" value, can be "", "away", "chat", "dnd" and "xa"
+status - human-readable status
 username - username
 register - create this to make xmpp to register a new account on the server
 based on the stated username and password

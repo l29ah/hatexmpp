@@ -354,14 +354,35 @@ static int fswrite(const char *path, const char *buf, size_t size, off_t offset,
 			(strcmp(option, "raw_logs")== 0) ||
 			(strcmp(option, "auto_reconnect") == 0)) {
 			val = g_strdup("1"); // just something :)
-		}
-		else {
+		} else {
 			val = filter_str(g_strndup(buf, size));
+		
+			if (strcmp(option, "show") == 0 && 
+					strcmp(val, "") &&
+					strcmp(val, "away") &&
+					strcmp(val, "chat") &&
+					strcmp(val, "dnd") &&
+					strcmp(val, "xa")) {
+				logf("Failed to set show to incorrect value %s\n", val);
+				return 0;
+			} else if (strcmp(option, "priority") == 0) {
+				/* Suggest a better way to validate the integer */
+				char *not_ok;
+				long long i = strtoll(val, &not_ok, 10);
+				if (*not_ok || i != (int8_t)i) {
+					logf("Failed to set priority to incorrect value %s\n", val);
+					return 0;
+				}
+			}
 		}
 		logf("Setting %s = %s\n", option, val);
 		g_hash_table_replace(config, option, val);	
-		if (strcmp(option, "priority") == 0 && connection_state == ONLINE)
-			xmpp_set_priority(atoi(val));
+		if (connection_state == ONLINE && (
+					strcmp(option, "priority") == 0 ||
+					strcmp(option, "show") == 0 ||
+					strcmp(option, "status") == 0))
+			xmpp_send_presence();
+		
 		return size;
 	}
 	if ((strcmp(path, "/rawxmpp") == 0) && connection_state == ONLINE) {

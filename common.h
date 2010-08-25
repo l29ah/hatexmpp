@@ -92,7 +92,7 @@ extern void xmpp_disconnect();
 extern void xmpp_add_to_roster(const gchar *jid);
 extern void xmpp_del_from_roster(const gchar *jid);
 extern void xmpp_muc_change_nick(const gchar *mucjid, const gchar *nick);
-extern void xmpp_set_priority(int8_t P);
+extern void xmpp_send_presence();
 	
 extern int fd_events;
 extern gchar * eventstr(gchar *str);

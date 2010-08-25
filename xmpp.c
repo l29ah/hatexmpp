@@ -620,12 +620,23 @@ void xmpp_register_request(const char *Username, const char *Password, const cha
 
 }
 
-void xmpp_set_priority(int8_t P) {
-	gchar *Ps = g_strdup_printf("%i", P);
+void xmpp_send_presence() {
+	gchar *s;
 
 	LmMessage *msg = lm_message_new(NULL, LM_MESSAGE_TYPE_PRESENCE);
-	lm_message_node_add_child(msg->node, "priority", Ps);
+
+	s = g_hash_table_lookup(config, "priority");
+	if (s)
+		lm_message_node_add_child(msg->node, "priority", s); 
+
+	s = g_hash_table_lookup(config, "show");
+	if (s && s[0] != 0)	/* The actual validness must be checked at write(2) */
+		lm_message_node_add_child(msg->node, "show", s);
+
+	s = g_hash_table_lookup(config, "status");
+	if (s)
+		lm_message_node_add_child(msg->node, "status", s);
+
 	lm_connection_send(connection, msg, NULL);
 	lm_message_unref(msg);
-	g_free(Ps);
 }
