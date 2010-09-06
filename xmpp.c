@@ -201,9 +201,15 @@ static LmHandlerResult presence_rcvd_cb(LmMessageHandler *handler, LmConnection 
 				}
 			}
 		}
-	} else
-		logf("Presence from unknown (%s), ignoring\n", jid);
+	} else if (strcmp(jid, lm_connection_get_jid(connection)) == 0) {
+		//TODO set the config stuff
+		logf("Got my very own presence\n");
+	} else logf("Presence from unknown (%s), ignoring\n", jid);
+
 	lm_message_unref(m);
+	free(jid);
+	free(res);
+
 	return LM_HANDLER_RESULT_REMOVE_MESSAGE;
 }
 
@@ -479,6 +485,13 @@ void xmpp_connect() {
 		lm_connection_set_proxy (connection, proxy);
 	}
 #endif
+
+	char *jid;
+	jid = strdup(g_hash_table_lookup(config, "username"));
+	strcat(jid, "@");
+	strcat(jid, g_hash_table_lookup(config, "server"));
+	lm_connection_set_jid(connection, jid); // loudmouth doesn't set it itself somewhy
+	free(jid);
 
 	if (!lm_connection_open (connection, (LmResultFunction) connection_open_cb, NULL, g_free, NULL)) {
 		logstr("lm_connection_open failed\n");

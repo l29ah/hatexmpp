@@ -1,3 +1,4 @@
+CFLAGS+=-std=gnu99
 ifdef DEBUG
 	CFLAGS+=-ggdb -DDEBUG -O0 -Wall -pedantic
 else
