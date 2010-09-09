@@ -8,8 +8,6 @@ endif
 CFLAGS+=$(shell pkg-config fuse loudmouth-1.0 --cflags)
 LDFLAGS+=$(shell pkg-config fuse loudmouth-1.0 --libs)
 
-# FIXME: the Makefile doesn't check for the changes in the header files
-
 all: hatexmpp
 
 hatexmpp: version.o hatexmpp.o fuse.o xmpp.o
@@ -29,5 +27,5 @@ clean:
 	rm hatexmpp
 
 install: hatexmpp
-	install hatexmpp /usr/bin
+	install hatexmpp $(DESTDIR)/usr/bin
 
