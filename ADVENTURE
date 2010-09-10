@@ -59,23 +59,24 @@ events - events generation on/off
 > go /
 > use hatexmpp
 
-command - action - status
-mkdir roster - connect to server - ready
-rmdir roster - disconnect - needs fix?
-cp opt config/ - write config option ‘opt’ - ready
-mkdir roster/mucjid - join MUC ‘mucjid’ - ready
-rmdir roster/mucjid - part MUC ‘mucjid’ - ready
-echo -n lol >> roster/jid - say ‘lol’ to ‘jid’ - ready
-echo -n lol >> roster/mucjid/__chat - say ‘lol’ to MUC ‘mucjid’ - ready
-echo -n lol >> roster/mucjid/nick - say ‘lol’ to MUC ‘mucjid’ participant ‘nick’ - ready
-rm roster/jid - remove ‘jid’ from roster - ready?
-rm roster/mucjid/jid - ban ‘jid’ in MUC ‘mucjid’ - temporary
-rm roster/mucjid/nick - ban ‘nick’ in MUC ‘mucjid’ - not implemented
-echo -n > roster/mucjid/nick - kick ‘nick’ in MUC ‘mucjid’ - not implemented/wtf!?
-tail -f roster/jid - listen to jid’s talk - ready
-tail -f roster/mucjid/__chat - listen to mucjid - ready
+command - action[ - comment]
+mkdir roster - connect to server
+rmdir roster - disconnect
+cp opt config/ - write config option "opt"
+mkdir roster/mucjid - join MUC "mucjid"
+rmdir roster/mucjid - part MUC "mucjid"
+echo -n lol >> roster/jid/__chat - say "lol" to "jid"
+echo -n lol >> roster/jid/resource - say "lol" to "jid"'s "resource
+echo -n lol >> roster/mucjid/__chat - say "lol" to MUC "mucjid"
+echo -n lol >> roster/mucjid/nick - say "lol" to MUC "mucjid" participant "nick"
+rm roster/jid - remove "jid" from roster
+rm roster/mucjid/jid - ban "jid" in MUC "mucjid" - temporary
+rm roster/mucjid/nick - ban "nick" in MUC "mucjid" - not implemented
+echo -n > roster/mucjid/nick - kick "nick" in MUC "mucjid" - not implemented/wtf!?
+tail -f roster/jid/__chat - listen to jid's talk - temporary
+tail -f roster/mucjid/__chat - listen to mucjid - temporary
 cat /path/to/stream - continiously listen to stream - not implemented
-echo -n lol >> roster/mucjid/__nick - change nickname - ready
+echo -n lol >> roster/mucjid/__nick - change nickname
 
 > go frontends
 
