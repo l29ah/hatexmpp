@@ -486,8 +486,8 @@ void xmpp_connect() {
 	}
 #endif
 
-	char *jid;
-	jid = strdup(g_hash_table_lookup(config, "username"));
+	char *jid = malloc(3071); // see rfc3920bis
+	strcpy(jid, g_hash_table_lookup(config, "username"));
 	strcat(jid, "@");
 	strcat(jid, g_hash_table_lookup(config, "server"));
 	lm_connection_set_jid(connection, jid); // loudmouth doesn't set it itself somewhy
