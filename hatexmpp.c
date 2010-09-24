@@ -92,13 +92,8 @@ void free_all()		// trying to make a general cleanup
 	g_hash_table_destroy(config);
 }
 
-int main(int argc, char **argv) {
-	LogBuf = g_array_sized_new(FALSE, FALSE, 1, 512);
-	logf("hatexmpp v%s is going up\n", HateXMPP_ver);
-	roster = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify) destroy_ri);
-	
+void init_config() {
 	config = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, g_free);
-	g_hash_table_insert(config, "server", NULL);
 	g_hash_table_insert(config, "username", NULL);
 	g_hash_table_insert(config, "password", NULL);
 	g_hash_table_insert(config, "register", NULL);
@@ -116,6 +111,16 @@ int main(int argc, char **argv) {
 	g_hash_table_insert(config, "proxy_username", NULL);
 	g_hash_table_insert(config, "proxy_password", NULL);
 #endif
+}
+
+int main(int argc, char **argv) {
+	LogBuf = g_array_sized_new(FALSE, FALSE, 1, 512);
+	logf("hatexmpp v%s is going up\n", HateXMPP_ver);
+	roster = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify) destroy_ri);
+	context = g_main_context_new();
+	main_loop = g_main_loop_new(context, FALSE);
+	init_config();
+	xmpp_init();
 	
 	// Do something with this!!!!!
 	if (argc) {
@@ -123,6 +128,7 @@ int main(int argc, char **argv) {
 	}
 
 	logf("Events FIFO: %s\n", events_file);
+
 	return fuseinit(argc, argv);
 }
 

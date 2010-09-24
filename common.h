@@ -87,6 +87,7 @@ extern rosteritem *addri(const gchar *jid, GHashTable *resources, unsigned type)
 extern int destroyri(rosteritem *RI);
 
 extern void free_all();
+extern void xmpp_init();
 extern void xmpp_connect();
 extern void xmpp_disconnect();
 extern void xmpp_add_to_roster(const gchar *jid);

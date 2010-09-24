@@ -105,13 +105,13 @@ static int fsmknod(const char *path, mode_t mode, dev_t type) {
 
 static int fsmkdir(const char *path, mode_t mode) {
 	if (strcmp(path, "/roster") == 0) {
-		logf("Make roster!\n");
+		logstr("Make roster!\n");
 		if(connection && lm_connection_is_open(connection)) {
 			return -EPERM;
 		} else {
 			pthread_create(&thr, NULL, mainloopthread, NULL);
 			usleep(100);
-			while (connection_state == CONNECTING) usleep(100);
+			while (connection_state == CONNECTING) usleep(100);	// FIXME
 			return 0;
 		}
 	}
@@ -265,6 +265,14 @@ static int fsopen(const char *path, struct fuse_file_info *fi)
 	return 0;
 }
 
+static const char *get_option(const char *option) {
+	if (strcmp(option, "server") == 0) {
+		return lm_connection_get_server(connection);
+	} else {
+		return g_hash_table_lookup(config, option);
+	}
+}
+
 static int fsread(const char *path, char *buf, size_t size, off_t offset,
 		      struct fuse_file_info *fi)
 {
@@ -278,7 +286,7 @@ static int fsread(const char *path, char *buf, size_t size, off_t offset,
 		size_t len;
 
 		path += 8;
-		gchar *val = g_hash_table_lookup(config, path);
+		const char *val = get_option(path);
 		if(val) {
 			len = strlen(val);
 			if(offset + size < len) {
@@ -323,6 +331,59 @@ static int fsread(const char *path, char *buf, size_t size, off_t offset,
 	return -ENOENT;
 }
 
+static char *prepare_option(const char *option, const char *buf, size_t size) {
+	char *val;
+
+	// bool options
+	if ((strcmp(option, "events") == 0) ||
+		(strcmp(option, "raw_logs")== 0) ||
+		(strcmp(option, "auto_reconnect") == 0)) {
+		val = strdup("1"); // just something :)
+	} else {
+		val = filter_str(strndup(buf, size));
+	
+		if (strcmp(option, "show") == 0 && 
+				strcmp(val, "") &&
+				strcmp(val, "away") &&
+				strcmp(val, "chat") &&
+				strcmp(val, "dnd") &&
+				strcmp(val, "xa")) {
+			logf("Failed to set show to incorrect value %s\n", val);
+			return 0;
+		} else if (strcmp(option, "priority") == 0) {
+			/* Suggest a better way to validate the integer */
+			char *not_ok;
+			long long i = strtoll(val, &not_ok, 10);
+			if (*not_ok || i != (int8_t)i) {
+				logf("Failed to set priority to incorrect value %s\n", val);
+				return 0;
+			}
+		}
+	}
+	return val;
+}
+
+static void set_option(char *option, char *val) {
+	bool used = false;
+
+	logf("Setting %s = %s\n", option, val);
+	if (strcmp(option, "server") == 0) {
+		lm_connection_set_server(connection, val);
+	} else {
+		g_hash_table_replace(config, option, val);
+		used = true;
+	}
+	if (connection_state == ONLINE && (
+				strcmp(option, "priority") == 0 ||
+				strcmp(option, "show") == 0 ||
+				strcmp(option, "status") == 0))
+		xmpp_send_presence();
+	if (!used) {
+		free(option);
+		free(val);
+	}
+}
+
 static int fswrite(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi)
 {
 	if (strncmp(path, "/roster/", 8) == 0) {
@@ -347,42 +408,9 @@ static int fswrite(const char *path, const char *buf, size_t size, off_t offset,
 	}
 	if (strncmp(path, "/config/", 8) == 0) {
 		path += 8;
-		gchar *option = g_strdup(path);
-		gchar *val;
-		// bool options
-		if ((strcmp(option, "events") == 0) ||
-			(strcmp(option, "raw_logs")== 0) ||
-			(strcmp(option, "auto_reconnect") == 0)) {
-			val = g_strdup("1"); // just something :)
-		} else {
-			val = filter_str(g_strndup(buf, size));
-		
-			if (strcmp(option, "show") == 0 && 
-					strcmp(val, "") &&
-					strcmp(val, "away") &&
-					strcmp(val, "chat") &&
-					strcmp(val, "dnd") &&
-					strcmp(val, "xa")) {
-				logf("Failed to set show to incorrect value %s\n", val);
-				return 0;
-			} else if (strcmp(option, "priority") == 0) {
-				/* Suggest a better way to validate the integer */
-				char *not_ok;
-				long long i = strtoll(val, &not_ok, 10);
-				if (*not_ok || i != (int8_t)i) {
-					logf("Failed to set priority to incorrect value %s\n", val);
-					return 0;
-				}
-			}
-		}
-		logf("Setting %s = %s\n", option, val);
-		g_hash_table_replace(config, option, val);	
-		if (connection_state == ONLINE && (
-					strcmp(option, "priority") == 0 ||
-					strcmp(option, "show") == 0 ||
-					strcmp(option, "status") == 0))
-			xmpp_send_presence();
-		
+		char *option = g_strdup(path);
+		char *val = prepare_option(option, buf, size);
+		set_option(option, val);
 		return size;
 	}
 	if ((strcmp(path, "/rawxmpp") == 0) && connection_state == ONLINE) {
@@ -435,14 +463,12 @@ static void fsdestroy(void *privdata) {
 }
 
 static void * mainloopthread(void *loop) {
-	main_loop = g_main_loop_new(context, FALSE);
 	xmpp_connect();
 	g_main_loop_run(main_loop);
 	return NULL;
 }
 
 static void * fsinit(struct fuse_conn_info *conn) {
-	context = g_main_context_new();
 	FDt = g_hash_table_new_full(g_int_hash, g_int_equal, g_free, (GDestroyNotify)destroyfd);	//TODO check the cast
 	return NULL;
 }

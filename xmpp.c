@@ -188,10 +188,10 @@ static LmHandlerResult presence_rcvd_cb(LmMessageHandler *handler, LmConnection 
 				eventf("add_resource %s/%s", jid, res);
 				add_resource(ri, res, PRESENCE_ONLINE);
 				if (ri->type == MUC && !g_hash_table_lookup(config, "raw_logs")) {
-					LmMessageNode *child = lm_message_node_find_child(m->node, "item");
+					//LmMessageNode *child = lm_message_node_find_child(m->node, "item");
 					gchar *log_str;
 					// i dont understand this
-					// if (child) {
+					//if (child) {
 					//	log_str = g_strdup_printf("%d * %s (%s) has entered the room\n", (unsigned) time(NULL), res, lm_message_node_get_attribute(child, "jid"));
 					//} else {
 						log_str = g_strdup_printf("%d * %s has entered the room\n", (unsigned) time(NULL), res);
@@ -203,7 +203,7 @@ static LmHandlerResult presence_rcvd_cb(LmMessageHandler *handler, LmConnection 
 		}
 	} else if (strcmp(jid, lm_connection_get_jid(connection)) == 0) {
 		//TODO set the config stuff
-		logf("Got my very own presence\n");
+		logstr("Got my very own presence\n");
 	} else logf("Presence from unknown (%s), ignoring\n", jid);
 
 	lm_message_unref(m);
@@ -251,7 +251,7 @@ static LmHandlerResult message_rcvd_cb(LmMessageHandler *handler, LmConnection *
 		} else {
 			logf("%s isn't in roster, ignoring message", jid);
 		}
-	} else logf("Message from nobody or empty one!\n");
+	} else logstr("Message from nobody or empty one!\n");
 	lm_message_unref(m);
 	return LM_HANDLER_RESULT_REMOVE_MESSAGE;
 }
@@ -398,7 +398,7 @@ static void connection_open_cb (LmConnection *connection, gboolean success, void
 		g_main_loop_quit(main_loop);
 		return;
 	}
-
+	logstr("Connected!\n");
 	/* TODO: something better */
 	if (g_hash_table_lookup(config, "noauth")) {
 		logstr("config/noauth exists, not logging in\n");
@@ -457,14 +457,20 @@ void connection_close_cb (LmConnection *connection, LmDisconnectReason reason, g
 	}
 }
 
+void xmpp_init() {
+	assert(context);
+	connection = lm_connection_new_with_context(NULL, context);
+	assert(connection);
+}
+
 void xmpp_connect() {
 	if (connection_state != OFFLINE) {
-		logf("Tried to connect while online!\n");
+		logstr("Tried to connect while online!\n");
 		return;
 	}
-	logf("Connecting...\n");
+	assert(!lm_connection_is_open(connection));
+	logstr("Connecting...\n");
 	connection_state = CONNECTING;
-	connection = lm_connection_new_with_context ((gchar *) g_hash_table_lookup(config, "server"), context);
 	// TODO: moar c011b4ckz!
 	lm_connection_register_message_handler(connection, lm_message_handler_new(iq_rcvd_cb, NULL, NULL ), LM_MESSAGE_TYPE_IQ, LM_HANDLER_PRIORITY_NORMAL);
 	lm_connection_register_message_handler(connection, lm_message_handler_new(presence_rcvd_cb, NULL, NULL), LM_MESSAGE_TYPE_PRESENCE, LM_HANDLER_PRIORITY_NORMAL);
@@ -489,20 +495,25 @@ void xmpp_connect() {
 	char *jid = malloc(3071); // see rfc3920bis
 	strcpy(jid, g_hash_table_lookup(config, "username"));
 	strcat(jid, "@");
-	strcat(jid, g_hash_table_lookup(config, "server"));
+	strcat(jid, lm_connection_get_server(connection));
 	lm_connection_set_jid(connection, jid); // loudmouth doesn't set it itself somewhy
 	free(jid);
 
-	if (!lm_connection_open (connection, (LmResultFunction) connection_open_cb, NULL, g_free, NULL)) {
-		logstr("lm_connection_open failed\n");
+	GError *err;
+	if (!lm_connection_open(connection, (LmResultFunction) connection_open_cb, NULL, g_free, &err)) {
+		logf("lm_connection_open failed: %s\n", err->message);
+		g_error_free(err);
 		g_main_loop_quit(main_loop);
 		connection_state = OFFLINE;
 	}
-	logf("Connected.\n");
+	logstr("Connection opened\n");
 } 
 
 void xmpp_send(const gchar *to, const gchar *body) {
-	if (connection_state != ONLINE) return;
+	if (connection_state != ONLINE) {
+		logstr("Tried to xmpp_send when not online!\n");
+		return;
+	}
 	LmMessage *m;
 	rosteritem *ri;
 	ri = g_hash_table_lookup(roster, get_jid(to));
