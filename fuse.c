@@ -265,11 +265,13 @@ static int fsopen(const char *path, struct fuse_file_info *fi)
 	return 0;
 }
 
-static const char *get_option(const char *option) {
+static char *get_option(const char *option) {
 	if (strcmp(option, "server") == 0) {
-		return lm_connection_get_server(connection);
+		return strdup(lm_connection_get_server(connection));
+	} else if (strcmp(option, "port") == 0) {
+		return g_strdup_printf("%i", lm_connection_get_port(connection));
 	} else {
-		return g_hash_table_lookup(config, option);
+		return strdup(g_hash_table_lookup(config, option));
 	}
 }
 
@@ -286,7 +288,7 @@ static int fsread(const char *path, char *buf, size_t size, off_t offset,
 		size_t len;
 
 		path += 8;
-		const char *val = get_option(path);
+		char *val = get_option(path);
 		if(val) {
 			len = strlen(val);
 			if(offset + size < len) {
@@ -296,6 +298,7 @@ static int fsread(const char *path, char *buf, size_t size, off_t offset,
 				memcpy(buf, val + offset, len - offset);
 				return len - offset;
 			}
+			free(val);
 		} else return -ENOENT;
 	}
 	if (strncmp(path, "/roster/", 8) == 0) {
@@ -350,12 +353,22 @@ static char *prepare_option(const char *option, const char *buf, size_t size) {
 				strcmp(val, "xa")) {
 			logf("Failed to set show to incorrect value %s\n", val);
 			return 0;
-		} else if (strcmp(option, "priority") == 0) {
+		} else if ((strcmp(option, "priority") == 0) ||
+				(strcmp(option, "port") == 0)) {
 			/* Suggest a better way to validate the integer */
 			char *not_ok;
 			long long i = strtoll(val, &not_ok, 10);
-			if (*not_ok || i != (int8_t)i) {
-				logf("Failed to set priority to incorrect value %s\n", val);
+
+			if (*not_ok) {
+				logf("The %s option must be set to a numeric value, %s received instead!\n", option, val);
+				return 0;
+			}
+			if (i != (int8_t)i) {
+				logf("Failed to set priority to way too big value %s\n", val);
+				return 0;
+			}
+			if (i != (uint16_t)i) {
+				logf("Value %s is an incorrect port number!\n", val);
 				return 0;
 			}
 		}
@@ -369,6 +382,8 @@ static void set_option(char *option, char *val) {
 	logf("Setting %s = %s\n", option, val);
 	if (strcmp(option, "server") == 0) {
 		lm_connection_set_server(connection, val);
+	} else if (strcmp(option, "port") == 0) {
+		lm_connection_set_port(connection, atoi(val));
 	} else {
 		g_hash_table_replace(config, option, val);
 		used = true;

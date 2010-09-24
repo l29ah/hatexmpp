@@ -42,6 +42,7 @@ jiv_os - operating system name
 jiv_version - version of the client
 muc_default_nick - default nickname to be used while joining the conferences
 password - password for your xmpp account
+port - TCP port number of the server
 priority - the priority of the selected resource
 resource - xmpp resource name
 server - address of the server to connect to
