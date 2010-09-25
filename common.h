@@ -66,9 +66,9 @@ extern GMainContext *context;
 extern GHashTable *config;
 extern GHashTable *roster;
 extern LmConnection *connection;
+extern LmSSL        *ssl;
 
 /* Logging'n'debug stuff */
-#define OMGBUG g_on_error_query(PROGRAM_NAME);
 extern int fuseinit(int argc, char **argv);
 extern void logs(const char *, size_t);
 extern char * logstr(char *);

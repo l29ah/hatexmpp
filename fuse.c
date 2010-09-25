@@ -211,6 +211,9 @@ static int fsreaddir(const char *path, void *buf, fuse_fill_dir_t filler,
 		while (g_hash_table_iter_next(&iter, (gpointer *)&key, NULL)) {
 			filler(buf, key, NULL, 0);
 		}
+		filler(buf, "server", NULL, 0);
+		filler(buf, "port", NULL, 0);
+		filler(buf, "ssl", NULL, 0);
 
 	}
 	if (strcmp(path, "/roster") == 0)
@@ -267,12 +270,34 @@ static int fsopen(const char *path, struct fuse_file_info *fi)
 
 static char *get_option(const char *option) {
 	if (strcmp(option, "server") == 0) {
-		return strdup(lm_connection_get_server(connection));
+		const char *r = lm_connection_get_server(connection);
+		if (r) 
+			return strdup(r);
+	} else if (strcmp(option, "ssl") == 0) {
+		if (ssl) {
+			if (lm_ssl_get_use_starttls(ssl)) {
+				if (lm_ssl_get_require_starttls(ssl)) {
+					return strdup("required_starttls");
+				} else {
+					return strdup("starttls");
+				}
+			} else {
+				return strdup("enabled");
+			}
+		} else {
+			return strdup("disabled");
+		}
 	} else if (strcmp(option, "port") == 0) {
-		return g_strdup_printf("%i", lm_connection_get_port(connection));
+		int p = lm_connection_get_port(connection);
+		assert(p);
+		p=12354;
+		return g_strdup_printf("%d", p);
 	} else {
-		return strdup(g_hash_table_lookup(config, option));
+		char *r = g_hash_table_lookup(config, option);
+		if (r)
+			return strdup(r);
 	}
+	return NULL;
 }
 
 static int fsread(const char *path, char *buf, size_t size, off_t offset,
@@ -289,9 +314,9 @@ static int fsread(const char *path, char *buf, size_t size, off_t offset,
 
 		path += 8;
 		char *val = get_option(path);
-		if(val) {
+		if (val) {
 			len = strlen(val);
-			if(offset + size < len) {
+			if (offset + size < len) {
 				memcpy(buf, val + offset, size);
 				return size;
 			} else {
@@ -345,16 +370,27 @@ static char *prepare_option(const char *option, const char *buf, size_t size) {
 	} else {
 		val = filter_str(strndup(buf, size));
 	
+		bool pr;
 		if (strcmp(option, "show") == 0 && 
 				strcmp(val, "") &&
 				strcmp(val, "away") &&
 				strcmp(val, "chat") &&
 				strcmp(val, "dnd") &&
 				strcmp(val, "xa")) {
-			logf("Failed to set show to incorrect value %s\n", val);
+			logf("Failed to set %s to incorrect value %s\n", option, val);
 			return 0;
-		} else if ((strcmp(option, "priority") == 0) ||
-				(strcmp(option, "port") == 0)) {
+		} else if (strcmp(option, "ssl") == 0) {
+			/* A kludge to avoid double string checking */
+			if (strcmp(val, "disabled") == 0) return (char *)1;
+			else if (strcmp(val, "enabled") == 0) return (char *)2;
+			else if (strcmp(val, "starttls") == 0) return (char *)3;
+			else if (strcmp(val, "required_starttls") == 0) return (char *)4;
+			else {
+				logf("Failed to set %s to incorrect value %s\n", option, val);
+				return 0;
+			}
+		} else if ((pr = (strcmp(option, "priority") == 0)) ||
+				((strcmp(option, "port") == 0))) {
 			/* Suggest a better way to validate the integer */
 			char *not_ok;
 			long long i = strtoll(val, &not_ok, 10);
@@ -363,13 +399,16 @@ static char *prepare_option(const char *option, const char *buf, size_t size) {
 				logf("The %s option must be set to a numeric value, %s received instead!\n", option, val);
 				return 0;
 			}
-			if (i != (int8_t)i) {
-				logf("Failed to set priority to way too big value %s\n", val);
-				return 0;
-			}
-			if (i != (uint16_t)i) {
-				logf("Value %s is an incorrect port number!\n", val);
-				return 0;
+			if (pr) {
+				if (i != (int8_t)i) {
+					logf("Failed to set priority to way too big value %s\n", val);
+					return 0;
+				}
+			} else {
+				if (i != (uint16_t)i) {
+					logf("Value %s is an incorrect port number!\n", val);
+					return 0;
+				}
 			}
 		}
 	}
@@ -384,6 +423,21 @@ static void set_option(char *option, char *val) {
 		lm_connection_set_server(connection, val);
 	} else if (strcmp(option, "port") == 0) {
 		lm_connection_set_port(connection, atoi(val));
+	} else if (strcmp(option, "ssl") == 0) {
+		if (val) {
+			bool st = (long)val & 2, str = ((long)val & 3) == 3;
+
+			while (!ssl) {
+				ssl = lm_ssl_new(NULL, NULL, NULL, NULL);
+				assert(ssl);
+				lm_connection_set_ssl(connection, ssl);
+			}
+			lm_ssl_use_starttls(ssl, st, str);
+		} else {
+			lm_connection_set_ssl(connection, NULL);
+			lm_ssl_unref(ssl);
+			ssl = NULL;
+		}
 	} else {
 		g_hash_table_replace(config, option, val);
 		used = true;
@@ -425,8 +479,10 @@ static int fswrite(const char *path, const char *buf, size_t size, off_t offset,
 		path += 8;
 		char *option = g_strdup(path);
 		char *val = prepare_option(option, buf, size);
-		set_option(option, val);
-		return size;
+		if (val) {
+			set_option(option, val);
+			return size;
+		} else return 0;
 	}
 	if ((strcmp(path, "/rawxmpp") == 0) && connection_state == ONLINE) {
 		gchar *str = g_strndup(buf, size);

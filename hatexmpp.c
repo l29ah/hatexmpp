@@ -114,6 +114,10 @@ void init_config() {
 }
 
 int main(int argc, char **argv) {
+	if (!lm_ssl_is_supported()) {
+		fprintf(stderr, "Your loudmouth distribution doesn't support SSL. hatexmpp won't work properly. Poke the author if you'd like to be able to run it in plaintext-only mode. Exiting.\n");
+		exit(1);
+	}
 	LogBuf = g_array_sized_new(FALSE, FALSE, 1, 512);
 	logf("hatexmpp v%s is going up\n", HateXMPP_ver);
 	roster = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify) destroy_ri);

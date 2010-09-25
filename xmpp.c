@@ -7,6 +7,7 @@ void xmpp_send(const gchar *to, const gchar *body);
 void xmpp_register_request(const char *Username, const char *Password, const char *Email);
 
 LmConnection *connection;
+LmSSL        *ssl;
 
 #ifdef PROXY
 LmProxy *proxy;
