@@ -534,7 +534,7 @@ void xmpp_send(const gchar *to, const gchar *body) {
 				m = lm_message_new_with_sub_type(to, LM_MESSAGE_TYPE_MESSAGE, LM_MESSAGE_SUB_TYPE_GROUPCHAT);
 		}
 		else
-			m = lm_message_new(to, LM_MESSAGE_TYPE_MESSAGE);
+			m = lm_message_new_with_sub_type(to, LM_MESSAGE_TYPE_MESSAGE, LM_MESSAGE_SUB_TYPE_CHAT);
 		
 		if (m) {
 			time(&last_activity_time);
