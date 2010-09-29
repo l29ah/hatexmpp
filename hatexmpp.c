@@ -101,7 +101,7 @@ void init_config() {
 	g_hash_table_insert(config, "priority", g_strdup("0"));
 	g_hash_table_insert(config, "show", NULL);
 	g_hash_table_insert(config, "status", NULL);
-	g_hash_table_insert(config, "muc_default_nick", NULL);
+	g_hash_table_insert(config, "muc_default_nick", g_strdup("hatexmpp"));
 	g_hash_table_insert(config, "jiv_name", NULL);
 	g_hash_table_insert(config, "jiv_os", NULL);
 	g_hash_table_insert(config, "jiv_version", NULL);
