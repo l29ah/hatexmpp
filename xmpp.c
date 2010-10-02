@@ -121,7 +121,7 @@ int joinmuc(const gchar *jid, const gchar *password, const gchar *nick) {
 	lm_connection_send(connection, m, NULL);
 	lm_message_unref(m);
 
-	rosteritem *ri = addri(jid, NULL, MUC);
+	rosteritem *ri = addri(jid, NULL, MUC);	// FIXME: add only after a successful join
 	if (ri) ri->self_resource->name = g_strdup(nick);
 	g_free(to);
 	return 0;
@@ -202,9 +202,6 @@ static LmHandlerResult presence_rcvd_cb(LmMessageHandler *handler, LmConnection 
 				}
 			}
 		}
-	} else if (strcmp(jid, lm_connection_get_jid(connection)) == 0) {
-		//TODO set the config stuff
-		logstr("Got my very own presence\n");
 	} else logf("Presence from unknown (%s), ignoring\n", jid);
 
 	lm_message_unref(m);
@@ -250,9 +247,11 @@ static LmHandlerResult message_rcvd_cb(LmMessageHandler *handler, LmConnection *
 				g_free(log_str);
 			}
 		} else {
-			logf("%s isn't in roster, ignoring message", jid);
+			logf("%s isn't in roster, ignoring message\n", jid);
 		}
-	} else logstr("Message from nobody or empty one!\n");
+	} else {
+		logf("Received a message from nobody or empty one: %s\n", lm_message_node_to_string(lm_message_get_node(m)));
+	}
 	lm_message_unref(m);
 	return LM_HANDLER_RESULT_REMOVE_MESSAGE;
 }
@@ -358,11 +357,8 @@ static LmHandlerResult iq_rcvd_cb(LmMessageHandler *handler, LmConnection *conne
 		}
 		lm_message_node_unref(query);
 		lm_message_unref(msg);
-	} else if (strcmp(type, "result") == 0) {
-		/* <iq type='result' id='reg2'/>
-		 *
-		 * and what!?
-		 */
+	} else {
+		logf("Received unknown iq: %s\n", lm_message_node_to_string(lm_message_get_node(m)));
 	}
 	lm_message_unref(m);
 	return LM_HANDLER_RESULT_REMOVE_MESSAGE;
@@ -417,6 +413,7 @@ static void connection_open_cb (LmConnection *connection, gboolean success, void
 		return;
 		}
 	}
+	addri(lm_connection_get_jid(connection), NULL, GUY);
 	eventstr("connect_ok");
 }
 
