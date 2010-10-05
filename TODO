@@ -1,0 +1,26 @@
+? bugfix
+	.- test the autoreconnection feature
+	? make the initial presence work
+		?+ make the stream logging
+? shitfix
+	o deprecate connection_state in favor of the loudmouth state
+	o+ move all the shit to lm_connection
+	o Events
+	. ssl error reporting (isn't it already done?)
+	. fs error reporting (/usr/include/asm-generic/errno.h, man errno)
+	o make all the write calls writing into a dedicated buffer and the parsing called after close (do we need this? everyone writes by blocks anyway)
+? minor improvements
+	.- get_keep_alive_rate
+	. set_keep_alive_rate
+? new functionality
+	o settable buffer size
+		o make the log a ringbuf on top of dynamic array
+		o zero
+			o blocking reads
+		. more
+? frontends
+	? flood
+	? hatescreen
+	? glovexmpp
+	? hatebot
+	? lovexmpp
