@@ -62,6 +62,7 @@ events - events generation on/off
 > use hatexmpp
 
 command - action[ - comment]
+hatexmpp -h - command line options description
 mkdir roster - connect to server
 rmdir roster - disconnect
 cp opt config/ - write config option "opt"

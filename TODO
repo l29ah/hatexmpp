@@ -1,7 +1,5 @@
 ? bugfix
 	.- test the autoreconnection feature
-	? make the initial presence work
-		?+ make the stream logging
 ? shitfix
 	o deprecate connection_state in favor of the loudmouth state
 	o+ move all the shit to lm_connection
@@ -21,13 +19,14 @@
 		. more
 	o non-stupid events protocol
 	o roster management: add, delete, subscription etc
-	o groups in roster
+	o- groups in roster
 	o service discovery
-	o XEP-0138: Stream Compression
-	o whiteboarding (.svg)
-	o file sending/receiving
+	o- XEP-0138: Stream Compression
+	o- whiteboarding (.svg)
+	o- file sending/receiving
 ? frontends
 	? flood
+		. captcha callback
 	? hatescreen
 	? glovexmpp
 	? hatebot

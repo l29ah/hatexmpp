@@ -286,12 +286,6 @@ static LmHandlerResult iq_rcvd_cb(LmMessageHandler *handler, LmConnection *conne
 			item = item->next;
 		}
 	
-		// say our presence only after receiving roster, not adding contact or smth
-		if (strcmp(lm_message_node_get_attribute(m->node, "type"), "result") == 0) {
-			LmMessage *msg = lm_message_new_with_sub_type(NULL, LM_MESSAGE_TYPE_PRESENCE, LM_MESSAGE_SUB_TYPE_AVAILABLE);
-			lm_connection_send(connection, msg, NULL);
-			lm_message_unref(msg);
-		}
 		lm_message_node_unref(query);
 	} else if (strcmp(type, "get") == 0) {
 		LmMessage *msg = lm_message_new_with_sub_type(lm_message_node_get_attribute(m->node, "from"), LM_MESSAGE_TYPE_IQ, LM_MESSAGE_SUB_TYPE_RESULT);
@@ -364,30 +358,31 @@ static LmHandlerResult iq_rcvd_cb(LmMessageHandler *handler, LmConnection *conne
 	return LM_HANDLER_RESULT_REMOVE_MESSAGE;
 }
 
-static void connection_auth_cb(LmConnection *connection, gboolean success, void *data)
-{
+static void connection_auth_cb(LmConnection *connection, gboolean success, void *data) {
 	LmMessage *m;
 	gboolean result;
 
-	if (success)
-	{
+	if (success) {
+		logstr("Authenticated!\n");
+		xmpp_send_presence();
+
+		// Requesting the roster
 		m = lm_message_new_with_sub_type(NULL, LM_MESSAGE_TYPE_IQ, LM_MESSAGE_SUB_TYPE_GET);
 		lm_message_node_set_attribute(lm_message_node_add_child(m->node, "query", NULL), "xmlns", "jabber:iq:roster");
         	result = lm_connection_send(connection, m, NULL);
         	lm_message_unref (m);
+
 		time(&last_activity_time);
 		eventstr("auth_ok");
 		connection_state = ONLINE;
-	} else
-	{
+	} else {
 		logstr("Authentication failed!\n");
 		eventstr("auth_fail");
 		connection_state = OFFLINE;
 	}
 }
 
-static void connection_open_cb (LmConnection *connection, gboolean success, void *data)
-{
+static void connection_open_cb (LmConnection *connection, gboolean success, void *data) {
 	if (!success) {
 		connection_state = OFFLINE;
 		logstr("Cannot open connection\n");
@@ -401,16 +396,16 @@ static void connection_open_cb (LmConnection *connection, gboolean success, void
 		logstr("config/noauth exists, not logging in\n");
 	} else {
 		if (g_hash_table_lookup(config, "register")) 
-			xmpp_register_request(g_hash_table_lookup(config, "username"), g_hash_table_lookup(config, "password"), "lol@lol.com");
+			xmpp_register_request(g_hash_table_lookup(config, "username"), g_hash_table_lookup(config, "password"), "lol@lol.com"); // TODO email input
 
 		if (!lm_connection_authenticate (connection, 
 					 (gchar *) g_hash_table_lookup(config, "username"),
 					 (gchar *) g_hash_table_lookup(config, "password"),
 					 (gchar *) g_hash_table_lookup(config, "resource"),
 					 (LmResultFunction) connection_auth_cb, NULL, g_free, NULL)) {
-		logstr("lm_connection_authenticate failed\n");
-		g_main_loop_quit(main_loop);
-		return;
+			logstr("lm_connection_authenticate failed\n");
+			g_main_loop_quit(main_loop);
+			return;
 		}
 	}
 	addri(lm_connection_get_jid(connection), NULL, GUY);
@@ -648,14 +643,17 @@ void xmpp_send_presence() {
 	LmMessage *msg = lm_message_new(NULL, LM_MESSAGE_TYPE_PRESENCE);
 
 	s = g_hash_table_lookup(config, "priority");
+	logf("Sending presence: priority = %s, ", s);
 	if (s)
 		lm_message_node_add_child(msg->node, "priority", s); 
 
 	s = g_hash_table_lookup(config, "show");
+	logf("show = %s, ", s);
 	if (s && s[0] != 0)	/* The actual validness must be checked at write(2) */
 		lm_message_node_add_child(msg->node, "show", s);
 
 	s = g_hash_table_lookup(config, "status");
+	logf("status = %s\n", s);
 	if (s)
 		lm_message_node_add_child(msg->node, "status", s);
 
