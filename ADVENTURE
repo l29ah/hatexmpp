@@ -114,50 +114,13 @@ is redirected to the chat. Also, they may use "C" environment variable to get
 the name of MUC they were called from.
 
 > go /
-> rest
-
-While resting, you may do something useful, like:
-non-segfaulty behaviour more nonstop testing, recruit beta-testers
-9P-port?
-make some fscalls critical sections (mkdir conference, maybe others: 
-investigation needed)
-streaming logs
-raw mode (to pipe through xmpp safely)
-proper reaction to various XMPP error stanzas
-code cleanup, functions name unification (for example xmpp_* etc)
-non-stupid events protocol
-roster management: add, delete, subscription etc
-direct xml stream access (writing, reading, pipe)
-kawaii frontend (ncurses, slang)
-mount options
-groups in roster
-service discovery
-XEP-0138: Stream Compression
-whiteboarding (.svg)
-file sending/receiving
-user-friendly frontend (gtk one?)
-
-or fix some bugs:
-not noticing the disconnect (should send a kind of xmpp's crappy ping or so)
-cutting the messages in random places (frontend-related, should write all
-the message in one write() syscall, also see the fuse options)
-
-But the Game Master forbids you to make something like:
-XEP-0245: The /me Command (frontend-related)
-XEP-0196: User Gaming (stupid)
-XEP-0171: Language Translation (stupid)
-
-> show license
-
-Google for the GNU AGPL v3.
-
 > contact
 
 Feel free to write to gentoo@conference.jabber.ru and l29ah@jabber.ru
 
 > who
 
-L29Ah, http://l29ah-home.wtf.la/
+L29Ah, http://l29ah.wtf.la/
 LexsZero, http://lexs.it.cx/
 
 > quit

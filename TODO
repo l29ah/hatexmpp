@@ -12,15 +12,27 @@
 ? minor improvements
 	.- get_keep_alive_rate
 	. set_keep_alive_rate
+	o sanitize mount options
 ? new functionality
 	o settable buffer size
 		o make the log a ringbuf on top of dynamic array
 		o zero
 			o blocking reads
 		. more
+	o non-stupid events protocol
+	o roster management: add, delete, subscription etc
+	o groups in roster
+	o service discovery
+	o XEP-0138: Stream Compression
+	o whiteboarding (.svg)
+	o file sending/receiving
 ? frontends
 	? flood
 	? hatescreen
 	? glovexmpp
 	? hatebot
 	? lovexmpp
+? NotTODO
+	? XEP-0245: The /me Command (frontend-related)
+	? XEP-0196: User Gaming (stupid)
+	? XEP-0171: Language Translation (stupid)
