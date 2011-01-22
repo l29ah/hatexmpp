@@ -13,6 +13,10 @@ LmSSL        *ssl;
 LmProxy *proxy;
 #endif
 
+bool is_connected() {
+	return connection_state == ONLINE;	// TODO ask lm
+}
+
 gchar *escape(const gchar * src) {
 	const gchar esc[] = "\bb\ff\nn\rr\tt\\\\\"\"";
 	// maximum possible length of escaped string
@@ -659,4 +663,69 @@ void xmpp_send_presence() {
 
 	lm_connection_send(connection, msg, NULL);
 	lm_message_unref(msg);
+}
+
+void xmpp_get_avatar() {
+	// TODO
+	LmMessage *msg = lm_message_new_with_sub_type(NULL, LM_MESSAGE_TYPE_IQ, LM_MESSAGE_SUB_TYPE_GET);
+	LmMessageNode *query = lm_message_node_add_child(msg->node, "query", NULL);
+	lm_message_node_set_attribute(query, "xmlns", "http://jabber.org/protocol/disco#items");
+	lm_connection_send(connection, msg, NULL);
+	lm_message_unref(msg);
+}
+
+void xmpp_set_avatar(const char *buf, size_t size) {
+	logstr("Setting the avatar\n");
+	char *c;
+	char *b64b = g_base64_encode((guchar *)buf, size);
+	char *cs = g_compute_checksum_for_data(G_CHECKSUM_SHA1, (guchar *)buf, size);
+	LmMessage *msg = lm_message_new_with_sub_type(NULL, LM_MESSAGE_TYPE_IQ, LM_MESSAGE_SUB_TYPE_SET);
+	lm_message_node_set_attribute(msg->node, "from", "l29ah@jabber.ru/hatexmpp"); //FIXME
+	LmMessageNode *pubsub = lm_message_node_add_child(msg->node, "pubsub", NULL);
+	lm_message_node_set_attribute(pubsub, "xmlns", "http://jabber.org/protocol/pubsub");
+	LmMessageNode *publish = lm_message_node_add_child(pubsub, "publish", NULL);
+	lm_message_node_set_attribute(publish, "node", "urn:xmpp:avatar:data");
+	LmMessageNode *item = lm_message_node_add_child(publish, "item", NULL);
+	lm_message_node_set_attribute(item, "id", cs);
+	LmMessageNode *data = lm_message_node_add_child(item, "data", b64b);
+	lm_message_node_set_attribute(data, "xmlns", "urn:xmpp:avatar:data");
+	lm_connection_send(connection, msg, NULL);
+	lm_message_unref(msg);
+	
+	sleep(1);	// FIXME: result checking
+	
+	msg = lm_message_new_with_sub_type(NULL, LM_MESSAGE_TYPE_IQ, LM_MESSAGE_SUB_TYPE_SET);
+	pubsub = lm_message_node_add_child(msg->node, "pubsub", NULL);
+	lm_message_node_set_attribute(pubsub, "xmlns", "http://jabber.org/protocol/pubsub");
+	publish = lm_message_node_add_child(pubsub, "publish", NULL);
+	lm_message_node_set_attribute(publish, "node", "urn:xmpp:avatar:metadata");
+	item = lm_message_node_add_child(publish, "item", NULL);
+	lm_message_node_set_attribute(item, "id", cs);
+	data = lm_message_node_add_child(item, "metadata", NULL);
+	lm_message_node_set_attribute(data, "xmlns", "urn:xmpp:avatar:metadata");
+	LmMessageNode *info = lm_message_node_add_child(data, "info", NULL);
+	c = g_strdup_printf("%lu", size);
+	lm_message_node_set_attribute(info, "bytes", c);
+	lm_message_node_set_attribute(info, "id", cs);
+	/*
+	lm_message_node_set_attribute(info, "height", "100");	
+	lm_message_node_set_attribute(info, "width", "100");
+	*/
+	lm_connection_send(connection, msg, NULL);
+	lm_message_unref(msg);
+	g_free(c);
+}
+
+char *xmpp_get_vcard(char *jid) {
+	LmMessage *msg = lm_message_new_with_sub_type(NULL, LM_MESSAGE_TYPE_IQ, LM_MESSAGE_SUB_TYPE_GET);
+	if (jid) lm_message_node_set_attribute(msg->node, "to", jid);
+	LmMessageNode *vCard = lm_message_node_add_child(msg->node, "vCard", NULL);
+	lm_message_node_set_attribute(vCard, "xmlns", "vcard-temp");
+	lm_connection_send(connection, msg, NULL);
+	lm_message_unref(msg);
+}
+
+void xmpp_set_vcard(char *str) {
+	msg = lm_message_new_with_sub_type(NULL, LM_MESSAGE_TYPE_IQ, LM_MESSAGE_SUB_TYPE_SET);
+	
 }

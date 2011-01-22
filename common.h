@@ -94,6 +94,9 @@ extern void xmpp_add_to_roster(const gchar *jid);
 extern void xmpp_del_from_roster(const gchar *jid);
 extern void xmpp_muc_change_nick(const gchar *mucjid, const gchar *nick);
 extern void xmpp_send_presence();
+extern void xmpp_set_avatar(const char *buf, size_t size);
+
+extern bool is_connected();
 	
 extern int fd_events;
 extern gchar * eventstr(gchar *str);

@@ -5,6 +5,8 @@ unsigned FDn;
 static void * mainloopthread(void *loop);
 pthread_t thr;
 
+GString *AvatarWriteBuf;
+
 gchar *filter_str(gchar *str) {
 	gchar *ch = strchr(str, '\n');
 	if (ch) 
@@ -124,69 +126,54 @@ static int fsmkdir(const char *path, mode_t mode) {
 	return -EPERM;
 }
 
-static int fsgetattr(const char *path, struct stat *stbuf)
-{
+static int fsgetattr(const char *path, struct stat *stbuf) {
 	memset(stbuf, 0, sizeof(struct stat));
+#define WDIR { stbuf->st_mode = S_IFDIR | 0755; stbuf->st_nlink = 2; }
+#define WFILE(size) { stbuf->st_mode = S_IFREG | 0644; stbuf->st_nlink = 1; stbuf->st_size = size; }
 	if (strcmp(path, "/events") == 0) {
-		stbuf->st_mode = S_IFIFO | 0444;
-		stbuf->st_nlink = 1;
-		return 0;
-	}
-	if (strcmp(path, "/log") == 0) {
-    	stbuf->st_mode = S_IFREG | 0666;
-		stbuf->st_nlink = 1;
-		stbuf->st_size = LogBuf->len;
-		return 0;
-	}
-	if (connection_state != OFFLINE) {
-		if (strcmp(path, "/roster") == 0) {
-			stbuf->st_mode = S_IFDIR | 0755;
-			stbuf->st_nlink = 2;
-			return 0;
-		}
-		if (strcmp(path, "/rawxmpp") == 0) {
-    		stbuf->st_mode = S_IFREG | 0222;
-			stbuf->st_nlink = 1;
-			return 0;
-		} 
-	}
-	if ((strcmp(path, "/config") == 0) ||
+		WDIR;
+	} else if (strcmp(path, "/log") == 0) {
+		WFILE(LogBuf->len);
+	} else if ((strcmp(path, "/config") == 0) ||
 	    (strcmp(path, "/") == 0)) {
-		stbuf->st_mode = S_IFDIR | 0755;
-		stbuf->st_nlink = 2;
-		return 0;
-	}
-	if (strncmp(path, "/config/", 8) == 0) {
+		WDIR;
+	} else if (strncmp(path, "/config/", 8) == 0) {
 		char *conf;
 		path += 8;
-		stbuf->st_mode = S_IFREG | 0644;
-		stbuf->st_nlink = 1;
 		conf = g_hash_table_lookup(config, path);
-		if(conf) stbuf->st_size = strlen(conf);
-		return 0;
-	}
-	if (strncmp(path, "/roster/", 8) == 0) {
-		rosteritem *ri;
-		path += 8;
-		ri = getri(path);
-		if (ri) {
-			if (strlen(path) == strlen(get_jid(path))) {
-				stbuf->st_mode = S_IFDIR | 0755;
-				stbuf->st_nlink = 2;
-				return 0;
-			}
-			stbuf->st_mode = S_IFREG | 0666;	/* TODO fixable perms */
-			stbuf->st_nlink = 1;
-			stbuf->st_size = ri->log->len;
-			return 0;
-		}
-	}
-	return -ENOENT;
+		if (conf) {
+			WFILE(strlen(conf));
+		} else WFILE(0);
+	} else if (connection_state != OFFLINE) {
+		if ((strcmp(path, "/roster") == 0) ||
+		    (strcmp(path, "/vcard") == 0)) {
+			WDIR;
+		} else if (strcmp(path, "/rawxmpp") == 0) {
+			WFILE(0);
+		} else if (strncmp(path, "/roster/", 8) == 0) {
+			rosteritem *ri;
+			path += 8;
+			ri = getri(path);
+			if (ri) {
+				if (strlen(path) == strlen(get_jid(path))) {
+					WDIR;
+				} else {
+					WFILE(ri->log->len);
+				}
+			} else return -ENOENT;
+		} else if (strncmp(path, "/vcard/", 7) == 0) {
+			path += 7;
+			if (strcmp(path, "raw") == 0) {
+				WFILE(0);
+			} else return -ENOENT;
+		} else return -ENOENT;
+	} else return -ENOENT;
+	return 0;
+#undef WDIR
+#undef WFILE
 }
 
-static int fsreaddir(const char *path, void *buf, fuse_fill_dir_t filler,
-			 off_t offset, struct fuse_file_info *fi)
-{
+static int fsreaddir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi) {
 	(void) offset;
 	(void) fi;
 
@@ -196,13 +183,12 @@ static int fsreaddir(const char *path, void *buf, fuse_fill_dir_t filler,
 		filler(buf, "events", NULL, 0);
 		filler(buf, "log", NULL, 0);
 		filler(buf, "config", NULL, 0);
-		if (roster && (connection_state == ONLINE)) {
+		if (roster && is_connected()) {
 			filler(buf, "roster",NULL, 0);
 			filler(buf, "rawxmpp", NULL, 0);
+			filler(buf, "vcard", NULL, 0);
 		}
-		return 0;
-	}
-	if (strcmp(path, "/config") == 0) {
+	} else if (strcmp(path, "/config") == 0) {
 		filler(buf, ".", NULL, 0);
 		filler(buf, "..", NULL, 0);
 		GHashTableIter iter;
@@ -214,10 +200,9 @@ static int fsreaddir(const char *path, void *buf, fuse_fill_dir_t filler,
 		filler(buf, "server", NULL, 0);
 		filler(buf, "port", NULL, 0);
 		filler(buf, "ssl", NULL, 0);
+		filler(buf, "avatar", NULL, 0);
 
-	}
-	if (strcmp(path, "/roster") == 0)
-	{
+	} else if (strcmp(path, "/roster") == 0) {
 		filler(buf, ".", NULL, 0);
 		filler(buf, "..", NULL, 0);
 		
@@ -226,9 +211,7 @@ static int fsreaddir(const char *path, void *buf, fuse_fill_dir_t filler,
 		g_hash_table_iter_init (&iter, roster);
 		while (g_hash_table_iter_next(&iter, NULL, (gpointer) &ri))
 			filler(buf, ri->jid, NULL, 0);
-		return 0;
-	}
-	if (strncmp(path, "/roster/", 8) == 0) {
+	} else if (strncmp(path, "/roster/", 8) == 0) {
 		path += 8;
 		rosteritem *ri;
 		
@@ -245,13 +228,17 @@ static int fsreaddir(const char *path, void *buf, fuse_fill_dir_t filler,
 			while (g_hash_table_iter_next(&iter, (gpointer) &res, NULL)) 
 				filler(buf, res, NULL, 0);
 		}
-	}
-
+	} else if (strcmp(path, "/vcard") == 0) {
+		filler(buf, ".", NULL, 0);
+		filler(buf, "..", NULL, 0);
+		filler(buf, "raw", NULL, 0);
+		// FIXME full vcard support
+	} else return -ENOENT;
 	return 0;
 }
 
-static int fsopen(const char *path, struct fuse_file_info *fi)
-{
+static int fsopen(const char *path, struct fuse_file_info *fi) {
+	// TODO privs check
 	/* FDs are introduced only for writing ops */
 	if ((fi->flags & O_WRONLY) || (fi->flags & O_RDWR)) {
 	        if (strncmp(path, "/roster/", 8) == 0) {
@@ -262,9 +249,25 @@ static int fsopen(const char *path, struct fuse_file_info *fi)
 			if (ri) {
 				/* TODO */
                 	} 
+		} else if (strcmp(path, "/config/avatar") == 0) {
+			if (AvatarWriteBuf) {
+				return -EBUSY;
+			} else {
+				AvatarWriteBuf = g_string_sized_new(65536);
+			}
 		}
 	}
 	/* TODO */
+	return 0;
+}
+
+static int fsrelease(const char *path, struct fuse_file_info *fi) {
+	if (((fi->flags & O_WRONLY) || (fi->flags & O_RDWR)) &&
+			strcmp(path, "/config/avatar") == 0) {
+		assert(AvatarWriteBuf);
+		xmpp_set_avatar(AvatarWriteBuf->str, AvatarWriteBuf->len);
+		g_string_free(AvatarWriteBuf, true);
+	}
 	return 0;
 }
 
@@ -453,8 +456,7 @@ static void set_option(char *option, char *val) {
 	}
 }
 
-static int fswrite(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi)
-{
+static int fswrite(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi) {
 	if (strncmp(path, "/roster/", 8) == 0) {
 		char *msg;
 		size_t msg_len = size;
@@ -473,30 +475,40 @@ static int fswrite(const char *path, const char *buf, size_t size, off_t offset,
 		else
 			xmpp_send(path, msg);
 		g_free(msg);
-		return size;
-	}
-	if (strncmp(path, "/config/", 8) == 0) {
+	} else if (strncmp(path, "/config/", 8) == 0) {
 		path += 8;
 		char *option = g_strdup(path);
-		char *val = prepare_option(option, buf, size);
-		if (val) {
-			set_option(option, val);
-			return size;
-		} else return 0;
-	}
-	if ((strcmp(path, "/rawxmpp") == 0) && connection_state == ONLINE) {
+		if (strcmp(option, "avatar") == 0) {
+			assert(AvatarWriteBuf);
+			assert(offset == AvatarWriteBuf->len);
+			g_string_append_len(AvatarWriteBuf, buf, size);
+		} else {
+			char *val = prepare_option(option, buf, size);
+			if (val) {
+				set_option(option, val);
+			} else return 0;
+		}
+	} else if ((strcmp(path, "/rawxmpp") == 0) && is_connected()) {
 		gchar *str = g_strndup(buf, size);
 		lm_connection_send_raw(connection, str, NULL);
 		g_free(str);
-		return size;
-	}
-	return 0;
+	} else if (strncmp(path, "/vcard/", 7) == 0) {
+		path += 7;
+		if (strcmp(path, "raw") == 0) {
+			gchar *str = g_strndup(buf, size);
+			xmpp_set_vcard(str);
+			g_free(str);
+		} else return 0;
+	} else return 0;
+	return size;
 }
 
+/*
 static int fssetxattr(const char *path, const char *a, const char *aa, size_t size, int aaa) {
-	/* Stub. Do we need this? */
+	// Stub. Do we need this?
 	return 0;
 }
+*/
 
 static int fsunlink(const char *path) {
 	if (strncmp(path, "/roster/", 8) == 0) {
@@ -558,7 +570,7 @@ struct fuse_operations fuseoper = {
 	.open		= fsopen,
 	.read		= fsread,
 	.write		= fswrite,
-	.setxattr	= fssetxattr,
+	//.setxattr	= fssetxattr,
 	.mkdir		= fsmkdir,
 	.rmdir		= fsrmdir,
 	.mknod		= fsmknod,
@@ -567,5 +579,6 @@ struct fuse_operations fuseoper = {
 	.init		= fsinit,
 	.destroy	= fsdestroy,
 	.truncate	= fstruncate,
+	.release	= fsrelease
 };
 
