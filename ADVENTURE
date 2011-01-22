@@ -115,6 +115,11 @@ is redirected to the chat. Also, they may use "C" environment variable to get
 the name of MUC they were called from.
 
 > go /
+> bugs
+
+Sure, lots of them! The known ones are broken events and failing to cut all
+the illegal symbols from the user-supplied messages.
+
 > contact
 
 Feel free to write to gentoo@conference.jabber.ru and l29ah@jabber.ru
