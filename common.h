@@ -11,7 +11,6 @@
 #include <unistd.h>
 #include <glib.h>
 #include <glib/gprintf.h>
-#include <glib/gthread.h>
 #include <pthread.h>
 #include <stdlib.h>
 #include <string.h>
