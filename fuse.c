@@ -316,14 +316,16 @@ static int fsread(const char *path, char *buf, size_t size, off_t offset,
 		char *val = get_option(path);
 		if (val) {
 			len = strlen(val);
+			int retval;
 			if (offset + size < len) {
 				memcpy(buf, val + offset, size);
-				return size;
+				retval = size;
 			} else {
 				memcpy(buf, val + offset, len - offset);
-				return len - offset;
+				retval = len - offset;
 			}
 			free(val);
+			return retval;
 		} else return -ENOENT;
 	}
 	if (strncmp(path, "/roster/", 8) == 0) {
@@ -549,6 +551,7 @@ int fuseinit(int argc, char **argv) {
 //	fifo = open("fs/log", O_WRONLY | O_NONBLOCK);
 	logstr("fuse is going up\n");
 	ret = fuse_main(argc, argv, &fuseoper, NULL);
+	logstr("fuse is finished\n");
 	return ret;
 }
 
