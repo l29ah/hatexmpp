@@ -5,12 +5,13 @@ else
 	CFLAGS+=-DNDEBUG
 endif
 
+EXE=hatexmpp
 CFLAGS+=$(shell pkg-config fuse loudmouth-1.0 --cflags)
-LDFLAGS+=$(shell pkg-config fuse loudmouth-1.0 --libs)
+LDLIBS=$(shell pkg-config fuse loudmouth-1.0 --libs)
 
-all: hatexmpp
+all: $(EXE)
 
-hatexmpp: version.o hatexmpp.o fuse.o xmpp.o
+$(EXE): version.o hatexmpp.o fuse.o xmpp.o
 
 hatexmpp.o: hatexmpp.c common.h
 fuse.o: fuse.c common.h
@@ -24,8 +25,8 @@ version.c:
 clean:
 	rm *.o
 	rm version.c
-	rm hatexmpp
+	rm $(EXE)
 
-install: hatexmpp
-	install hatexmpp $(DESTDIR)/usr/bin
+install: $(EXE)
+	install $(EXE) $(DESTDIR)/usr/bin
 
