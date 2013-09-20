@@ -9,18 +9,17 @@
 [ -e "$1" ] || { echo "Usage: $0 <hatexmpp_chatlog>"; exit 1; }
 
 tmprc="/tmp/.hatescreen"
-f=`basename $1`
-cd `dirname $1`
-mynick=`cat __nick`
+name=`basename $1`
+dir=`dirname $1`
+mynick=`cat $dir/__nick`
 
 # generate output filter on Perl
 cat > $tmprc.pl << EOF
 use Date::Format; 
 while (<STDIN>) {
-	if (\$_ =~ /(\\d+) ([^:]+?:|\\*) (.*$)/) {
+	if (/(\\d+) jid (.*?) nick (.*?) body {(.*)}\$/) {
 		print time2str("%T", "\$1");
-
-		(\$nick, \$msg) = (\$2, \$3);
+		(\$nick, \$msg) = (\$3, \$4);
 		\$msg =~ s/$mynick/\\033[1m${mynick}\\033[0m/gi;
 		\$col = unpack("%32C*", "\$nick")%6+1; 
 		print "\e[3\${col}m \$nick\e[0m:"; 
@@ -35,11 +34,11 @@ EOF
 
 cat > $tmprc << EOF
 bind Q quit
-screen bash -c 'head -n70 $f | perl $tmprc.pl | while read -r s; do echo -e \\"\$s\"; done'
+screen bash -c 'tail -f -n70 $1 | perl $tmprc.pl '
 split
 focus
 resize 5
-screen rlwrap -c bash -c 'while read -re s; do clear; echo -nE "\$s" >> '$f'; done'
+screen rlwrap -c bash -c 'while read -re s; do clear; echo -nE "\$s" >> '$1'; done'
 EOF
- 
-#screen -t "$f" -c "$tmprc"
+
+screen -t "$name" -c "$tmprc"
