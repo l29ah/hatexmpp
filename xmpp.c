@@ -369,8 +369,10 @@ static void connection_auth_cb(LmConnection *connection, gboolean success, void 
 		// Requesting the roster
 		m = lm_message_new_with_sub_type(NULL, LM_MESSAGE_TYPE_IQ, LM_MESSAGE_SUB_TYPE_GET);
 		lm_message_node_set_attribute(lm_message_node_add_child(m->node, "query", NULL), "xmlns", "jabber:iq:roster");
-        	result = lm_connection_send(connection, m, NULL);
-        	lm_message_unref (m);
+		if (TRUE != lm_connection_send(connection, m, NULL)) {
+			logstr("Failed to request the roster\n");
+		}
+		lm_message_unref (m);
 
 		time(&last_activity_time);
 		eventstr("auth_ok");
