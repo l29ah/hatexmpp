@@ -289,8 +289,6 @@ static char *get_option(const char *option) {
 		}
 	} else if (strcmp(option, "port") == 0) {
 		int p = lm_connection_get_port(connection);
-		assert(p);
-		p=12354;
 		return g_strdup_printf("%d", p);
 	} else {
 		char *r = g_hash_table_lookup(config, option);
