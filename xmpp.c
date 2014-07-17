@@ -13,15 +13,15 @@ LmSSL        *ssl;
 LmProxy *proxy;
 #endif
 
-gchar *escape(const gchar * src) {
+gchar *escape(const gchar *src) {
 	const gchar esc[] = "\bb\ff\nn\rr\tt\\\\\"\"";
 	// maximum possible length of escaped string
 	gchar *dest = g_malloc(strlen(src)*2+1);
 	const gchar *p = src;
 	gchar *q = dest;
-	gchar *c;
+	const gchar *c;
 	while (*p) {
-		c = (gchar *) esc;
+		c = esc;
 		while (*c) {
 			if (*c == *p) {
 				*q++ = '\\';
@@ -59,12 +59,12 @@ gchar *get_jid(const gchar *jid)
 
 static gchar *get_nick(const gchar *jid)
 {
-        const gchar *ch;
+	const gchar *ch;
 	g_return_val_if_fail(jid != NULL, NULL);
 	ch = strchr(jid, '@');
-	if (!ch) 
-		return (gchar *) jid;
-	return g_strndup (jid, ch-jid);
+	if (!ch)
+		return g_strdup(jid);
+	return g_strndup(jid, ch-jid);
 }
 
 int banmuc(const char *mucjid, const char *who) {
@@ -92,7 +92,7 @@ int partmuc(const char *jid, const char *nick, const char *leave) {
 	if (connection_state != ONLINE) return -1;
 	gchar *to;
 
-	if (!nick) nick = (gchar *) g_hash_table_lookup(config, "muc_default_nick");
+	if (!nick) nick = g_hash_table_lookup(config, "muc_default_nick");
 	to = g_strdup_printf("%s/%s", jid, nick);
 	m = lm_message_new_with_sub_type(to, LM_MESSAGE_TYPE_PRESENCE, LM_MESSAGE_SUB_TYPE_UNAVAILABLE);
 	if (leave) lm_message_node_add_child(m->node, "status", leave);
@@ -108,7 +108,7 @@ int joinmuc(const gchar *jid, const gchar *password, const gchar *nick) {
 	LmMessageNode *node;
 	gchar *to;
 
-	if (!nick) nick = (gchar *) g_hash_table_lookup(config, "muc_default_nick");
+	if (!nick) nick = g_hash_table_lookup(config, "muc_default_nick");
 	to = g_strdup_printf("%s/%s", jid, nick);
 	m = lm_message_new_with_sub_type(to, LM_MESSAGE_TYPE_PRESENCE, LM_MESSAGE_SUB_TYPE_AVAILABLE);
 	node = lm_message_node_add_child(m->node, "x", NULL);
@@ -145,17 +145,18 @@ void add_resource(rosteritem *ri, const gchar *res, const unsigned presence) {
 
 static LmHandlerResult presence_rcvd_cb(LmMessageHandler *handler, LmConnection *connection, LmMessage *m, gpointer data)
 {
-	gchar *from, *jid, *res, *type;
+	const gchar *from, *type;
+	gchar *jid, *res;
 	rosteritem *ri;
 
-	from = (gchar *)lm_message_node_get_attribute(m->node, "from");
+	from = lm_message_node_get_attribute(m->node, "from");
 	jid = get_jid(from);
 	res = get_resource(from);
 	ri = g_hash_table_lookup(roster, jid);
 	// TODO: do something with this awful if's logic
 	if (ri)	{
 		// TODO: do something better with presence
-		type = (gchar *) lm_message_node_get_attribute(m->node, "type");
+		type = lm_message_node_get_attribute(m->node, "type");
 		if (type && (strcmp(type, "subscribe") == 0)) {
 			// always agree with subscription requests, myabe do something better in future
 			eventf("subscr_request %s", from);
@@ -227,7 +228,7 @@ static LmHandlerResult message_rcvd_cb(LmMessageHandler *handler, LmConnection *
 	body = lm_message_node_get_value(lm_message_node_get_child(m->node, "body"));
 	if (from && body) {
 		eventf("msg %s %s %s", from, to, body);
-		jid = get_jid((gchar *) from);
+		jid = get_jid(from);
 		ri = g_hash_table_lookup(roster, jid);
 		if(ri) {
 			ri->lastmsgtime = time(NULL);
@@ -266,16 +267,16 @@ static LmHandlerResult iq_rcvd_cb(LmMessageHandler *handler, LmConnection *conne
 		lm_message_unref(m);
 		return LM_HANDLER_RESULT_REMOVE_MESSAGE;
 	}
-	gchar *xmlns = (gchar *) lm_message_node_get_attribute(query, "xmlns");
-	gchar *type = (gchar *) lm_message_node_get_attribute(m->node, "type");
+	const gchar *xmlns = lm_message_node_get_attribute(query, "xmlns");
+	const gchar *type = lm_message_node_get_attribute(m->node, "type");
 	
 	// working with roster
 	if (strcmp(xmlns, "jabber:iq:roster") == 0) {
 		item  = lm_message_node_get_child (query, "item");
 		rosteritem *ri;
-		gchar *jid;
+		const gchar *jid;
 		while (item) {
-			jid = (gchar *) lm_message_node_get_attribute(item, "jid");
+			jid = lm_message_node_get_attribute(item, "jid");
 			if (strcmp(lm_message_node_get_attribute(item, "subscription"), "remove") == 0) {
 				g_hash_table_remove(roster, jid);
 			}
@@ -289,7 +290,7 @@ static LmHandlerResult iq_rcvd_cb(LmMessageHandler *handler, LmConnection *conne
 		lm_message_node_unref(query);
 	} else if (strcmp(type, "get") == 0) {
 		LmMessage *msg = lm_message_new_with_sub_type(lm_message_node_get_attribute(m->node, "from"), LM_MESSAGE_TYPE_IQ, LM_MESSAGE_SUB_TYPE_RESULT);
-		lm_message_node_set_attribute(msg->node, "id", (gchar *)lm_message_node_get_attribute(m->node, "id"));
+		lm_message_node_set_attribute(msg->node, "id", lm_message_node_get_attribute(m->node, "id"));
 		query = lm_message_node_add_child(msg->node, "query", NULL);
 		lm_message_node_set_attribute(query, "xmlns", xmlns);
 		
@@ -401,10 +402,10 @@ static void connection_open_cb (LmConnection *connection, gboolean success, void
 			xmpp_register_request(g_hash_table_lookup(config, "username"), g_hash_table_lookup(config, "password"), "lol@lol.com"); // TODO email input
 
 		if (!lm_connection_authenticate (connection, 
-					 (gchar *) g_hash_table_lookup(config, "username"),
-					 (gchar *) g_hash_table_lookup(config, "password"),
-					 (gchar *) g_hash_table_lookup(config, "resource"),
-					 (LmResultFunction) connection_auth_cb, NULL, g_free, NULL)) {
+					g_hash_table_lookup(config, "username"),
+					g_hash_table_lookup(config, "password"),
+					g_hash_table_lookup(config, "resource"),
+					(LmResultFunction) connection_auth_cb, NULL, g_free, NULL)) {
 			logstr("lm_connection_authenticate failed\n");
 			g_main_loop_quit(main_loop);
 			return;
