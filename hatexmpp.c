@@ -109,6 +109,7 @@ void init_config() {
 		{ "jiv_name",		NULL },
 		{ "jiv_os",		NULL },
 		{ "jiv_version",	NULL },
+		{ "send_receipts",	"1" },
 #ifdef PROXY
 		{ "proxy_server",	NULL },
 		{ "proxy_port",		NULL },

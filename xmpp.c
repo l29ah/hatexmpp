@@ -212,10 +212,21 @@ static LmHandlerResult presence_rcvd_cb(LmMessageHandler *handler, LmConnection 
 	return LM_HANDLER_RESULT_REMOVE_MESSAGE;
 }
 
+static void send_receipt(const gchar *to, const gchar *id) {
+	LmMessage *m;
+
+	m = lm_message_new(to, LM_MESSAGE_TYPE_MESSAGE);
+	assert(m);
+	LmMessageNode *received = lm_message_node_add_child(m->node, "received", NULL);
+	lm_message_node_set_attribute(received, "xmlns", "urn:xmpp:receipts");
+	lm_message_node_set_attribute(received, "id", id);
+	lm_connection_send(connection, m, NULL);
+	lm_message_unref(m);
+}
 
 static LmHandlerResult message_rcvd_cb(LmMessageHandler *handler, LmConnection *connection, LmMessage *m, gpointer data)
 {
-	const gchar *from, *to, *body, *jid;
+	const gchar *from, *to, *id, *body, *jid;
 	gchar *log_str;
 	rosteritem *ri;
 
@@ -225,6 +236,7 @@ static LmHandlerResult message_rcvd_cb(LmMessageHandler *handler, LmConnection *
 
 	from = lm_message_node_get_attribute(m->node, "from");
 	to = lm_message_node_get_attribute(m->node, "to");
+	id = lm_message_node_get_attribute(m->node, "id");
 	body = lm_message_node_get_value(lm_message_node_get_child(m->node, "body"));
 	if (from && body) {
 		eventf("msg %s %s %s", from, to, body);
@@ -246,6 +258,15 @@ static LmHandlerResult message_rcvd_cb(LmMessageHandler *handler, LmConnection *
 #endif
 				g_array_append_vals(ri->log, log_str, strlen(log_str));
 				g_free(log_str);
+			}
+
+			// FIXME multiple requests
+			LmMessageNode *request = lm_message_node_get_child(m->node, "request");
+			if (request) {
+				const gchar *xmlns = lm_message_node_get_attribute(request, "xmlns");
+				if (0 == strcmp(xmlns, "urn:xmpp:receipts")) {	// XEP-0184
+					send_receipt(from, id);
+				}
 			}
 		} else {
 			logf("%s isn't in roster, ignoring message\n", jid);
@@ -333,11 +354,12 @@ static LmHandlerResult iq_rcvd_cb(LmMessageHandler *handler, LmConnection *conne
 		}
 
 		// Saying our discovery info
-		else if (strcmp(xmlns, XMPP_DISCO_XMLNS) == 0) {		
+		else if (strcmp(xmlns, XMPP_DISCO_XMLNS) == 0) {
 			lm_message_node_set_attribute(lm_message_node_add_child(query, "feature", NULL), "var", XMPP_DISCO_XMLNS);		
 			lm_message_node_set_attribute(lm_message_node_add_child(query, "feature", NULL), "var", "jabber:iq:version");
 			lm_message_node_set_attribute(lm_message_node_add_child(query, "feature", NULL), "var", "jabber:iq:time");
 			lm_message_node_set_attribute(lm_message_node_add_child(query, "feature", NULL), "var", "jabber:iq:last");
+			lm_message_node_set_attribute(lm_message_node_add_child(query, "feature", NULL), "var", "urn:xmpp:receipts");	// XEP-0184
 			lm_connection_send(connection, msg, NULL);
 		}
 		
@@ -361,7 +383,6 @@ static LmHandlerResult iq_rcvd_cb(LmMessageHandler *handler, LmConnection *conne
 
 static void connection_auth_cb(LmConnection *connection, gboolean success, void *data) {
 	LmMessage *m;
-	gboolean result;
 
 	if (success) {
 		logstr("Authenticated!\n");
