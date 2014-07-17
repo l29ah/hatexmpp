@@ -23,9 +23,7 @@ version.c:
 .PHONY:	clean
 
 clean:
-	rm *.o
-	rm version.c
-	rm $(EXE)
+	rm -rf *.o version.c $(EXE)
 
 install: $(EXE)
 	install $(EXE) $(DESTDIR)/usr/bin
