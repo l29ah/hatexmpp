@@ -94,23 +94,35 @@ void free_all()		// trying to make a general cleanup
 
 void init_config() {
 	config = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, g_free);
-	g_hash_table_insert(config, "username", NULL);
-	g_hash_table_insert(config, "password", NULL);
-	g_hash_table_insert(config, "register", NULL);
-	g_hash_table_insert(config, "resource", g_strdup("hatexmpp"));
-	g_hash_table_insert(config, "priority", g_strdup("0"));
-	g_hash_table_insert(config, "show", NULL);
-	g_hash_table_insert(config, "status", NULL);
-	g_hash_table_insert(config, "muc_default_nick", g_strdup("hatexmpp"));
-	g_hash_table_insert(config, "jiv_name", NULL);
-	g_hash_table_insert(config, "jiv_os", NULL);
-	g_hash_table_insert(config, "jiv_version", NULL);
+	const struct cfg_s {
+		char *name;
+		char *value;
+	} cfg[] = {
+		{ "username",		NULL },
+		{ "password",		NULL },
+		{ "register",		NULL },
+		{ "resource",		"hatexmpp" },
+		{ "priority",		"0" },
+		{ "show",		NULL },
+		{ "status",		NULL },
+		{ "muc_default_nick",	"hatexmpp" },
+		{ "jiv_name",		NULL },
+		{ "jiv_os",		NULL },
+		{ "jiv_version",	NULL },
 #ifdef PROXY
-	g_hash_table_insert(config, "proxy_server", NULL);
-	g_hash_table_insert(config, "proxy_port", NULL);
-	g_hash_table_insert(config, "proxy_username", NULL);
-	g_hash_table_insert(config, "proxy_password", NULL);
+		{ "proxy_server",	NULL },
+		{ "proxy_port",		NULL },
+		{ "proxy_username",	NULL },
+		{ "proxy_password",	NULL },
 #endif
+		{ NULL, NULL },
+	};
+	const struct cfg_s *cfgp = cfg;
+
+	do {
+		void *v = cfgp->value ? g_strdup(cfgp->value) : NULL;
+		g_hash_table_insert(config, cfgp->name, v);
+	} while ((++cfgp)->name);
 }
 
 int main(int argc, char **argv) {
