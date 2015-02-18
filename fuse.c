@@ -418,7 +418,13 @@ static char *prepare_option(const char *option, const char *buf, size_t size) {
 static void set_option(char *option, char *val) {
 	bool used = false;
 
-	logf("Setting %s = %s\n", option, val);
+	// FIXME: in the case of ssl, the argument is not a string but a number
+	if (strcmp(option, "ssl")) {
+		logf("Setting %s = %s\n", option, val);
+	} else {
+		logf("Setting %s = %" PRIdPTR "\n", option, (intptr_t)val);
+	}
+
 	if (strcmp(option, "server") == 0) {
 		lm_connection_set_server(connection, val);
 	} else if (strcmp(option, "port") == 0) {
@@ -448,8 +454,10 @@ static void set_option(char *option, char *val) {
 				strcmp(option, "status") == 0))
 		xmpp_send_presence();
 	if (!used) {
+		if (strcmp(option, "ssl")) {
+			free(val);
+		}
 		free(option);
-		free(val);
 	}
 }
 

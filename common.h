@@ -14,6 +14,7 @@
 #include <pthread.h>
 #include <stdlib.h>
 #include <string.h>
+#include <inttypes.h>
 #include <fuse.h>
 #include <time.h>
 #include <stdbool.h>
