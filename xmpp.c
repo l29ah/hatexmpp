@@ -511,6 +511,12 @@ void xmpp_connect() {
 	}
 #endif
 
+	char *username = g_hash_table_lookup(config, "username");
+	if (username == NULL || username[0] == 0) {
+		logstr("username is unset, aborted\n");
+		connection_state = OFFLINE;
+		return;
+	}
 	char *jid = malloc(3071); // see rfc3920bis
 	strcpy(jid, g_hash_table_lookup(config, "username"));
 	strcat(jid, "@");
