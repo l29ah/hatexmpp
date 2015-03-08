@@ -555,9 +555,7 @@ static void * fsinit(struct fuse_conn_info *conn) {
 int fuseinit(int argc, char **argv) {
 	int ret;
 //	fifo = open("fs/log", O_WRONLY | O_NONBLOCK);
-	logstr("fuse is going up\n");
 	ret = fuse_main(argc, argv, &fuseoper, NULL);
-	logstr("fuse is finished\n");
 	return ret;
 }
 
