@@ -24,11 +24,13 @@ rosteritem * getri(const char *path) {
 	rosteritem *ri;
 
 	if (*path == '/')
-                path ++;
-        gchar *ch = strchr(path, '/');
-        if (ch) {
-        	p = g_strndup(path, ch - path);
-	} else p = g_strdup(path);
+		path ++;
+	gchar *ch = strchr(path, '/');
+	if (ch) {
+		p = g_strndup(path, ch - path);
+	} else {
+		p = g_strdup(path);
+	}
 	ri = g_hash_table_lookup(roster, p);
 	g_free(p);
 	return ri;
