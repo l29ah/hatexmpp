@@ -415,7 +415,6 @@ static void connection_open_cb (LmConnection *connection, gboolean success, void
 		connection_state = OFFLINE;
 		logstr("Cannot open connection\n");
 		eventstr("connect_fail");
-		g_main_loop_quit(main_loop);
 		return;
 	}
 	logstr("Connected!\n");
@@ -432,7 +431,6 @@ static void connection_open_cb (LmConnection *connection, gboolean success, void
 					g_hash_table_lookup(config, "resource"),
 					(LmResultFunction) connection_auth_cb, NULL, g_free, NULL)) {
 			logstr("lm_connection_authenticate failed\n");
-			g_main_loop_quit(main_loop);
 			return;
 		}
 	}
@@ -468,7 +466,6 @@ void connection_close_cb (LmConnection *connection, LmDisconnectReason reason, g
 	logf("Disconnected. Reason: %s\n", str);
 	eventf("disconnected %s", str);
 	connection_state = OFFLINE;
-	g_main_loop_quit(main_loop);
 	g_hash_table_remove_all(roster);
 
 	// very stupid autoreconnect routine
@@ -530,7 +527,6 @@ void xmpp_connect() {
 	if (!lm_connection_open(connection, (LmResultFunction) connection_open_cb, NULL, g_free, &err)) {
 		logf("lm_connection_open failed: %s\n", err->message);
 		g_error_free(err);
-		g_main_loop_quit(main_loop);
 		connection_state = OFFLINE;
 	}
 	logstr("Connection opened\n");
