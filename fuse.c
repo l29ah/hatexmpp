@@ -361,13 +361,13 @@ static int fsread(const char *path, char *buf, size_t size, off_t offset,
 	return -ENOENT;
 }
 
+// FIXME fuse with set_option
 static char *prepare_option(const char *option, const char *buf, size_t size) {
 	char *val;
 
 	// bool options
 	if ((strcmp(option, "events") == 0) ||
-		(strcmp(option, "raw_logs")== 0) ||
-		(strcmp(option, "auto_reconnect") == 0)) {
+		(strcmp(option, "raw_logs")== 0)) {
 		val = strdup("1"); // just something :)
 	} else {
 		val = filter_str(strndup(buf, size));

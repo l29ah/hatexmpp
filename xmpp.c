@@ -469,8 +469,13 @@ void connection_close_cb (LmConnection *connection, LmDisconnectReason reason, g
 	g_hash_table_remove_all(roster);
 
 	// very stupid autoreconnect routine
-	if (g_hash_table_lookup(config,"auto_reconnect") && (reason != LM_DISCONNECT_REASON_OK)) {
-		logstr("Autoreconnecting\n");
+	int delay;
+	const char *delay_s;
+	if ((delay_s = g_hash_table_lookup(config,"auto_reconnect")) && (reason != LM_DISCONNECT_REASON_OK)) {
+		delay = atoi(delay_s);
+		logs("Reconnecting in %ds\n", delay);
+		sleep(delay);
+		logstr("Reconnecting...\n");
 		xmpp_connect();
 	}
 }
