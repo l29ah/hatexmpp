@@ -528,6 +528,8 @@ void xmpp_connect() {
 	lm_connection_set_jid(connection, jid); // loudmouth doesn't set it itself somewhy
 	free(jid);
 
+	lm_connection_set_keep_alive_rate(connection, 240);
+
 	GError *err;
 	if (!lm_connection_open(connection, (LmResultFunction) connection_open_cb, NULL, g_free, &err)) {
 		logf("lm_connection_open failed: %s\n", err->message);
