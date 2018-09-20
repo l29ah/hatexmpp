@@ -18,7 +18,7 @@ fuse.o: fuse.c common.h
 xmpp.o: xmpp.c common.h
 
 version.c:
-	echo "char HateXMPP_ver[] = "\"0.2-`git log -n1 --pretty=format:%H`\""; char * getversion(void) { return HateXMPP_ver; }" > version.c
+	echo "char HateXMPP_ver[] = "\"0.2-`git log --no-show-signature -n1 --pretty=format:%H`\""; char * getversion(void) { return HateXMPP_ver; }" > version.c
 
 .PHONY:	clean
 
