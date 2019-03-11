@@ -233,6 +233,11 @@ static LmHandlerResult message_rcvd_cb(LmMessageHandler *handler, LmConnection *
 #ifdef NEW_LOGS
 	gchar *esc_str;
 #endif
+	
+	if (!m->node) {
+		logf("Received an empty <message>\n");
+		goto out;
+	}
 
 	from = lm_message_node_get_attribute(m->node, "from");
 	to = lm_message_node_get_attribute(m->node, "to");
@@ -278,6 +283,8 @@ static LmHandlerResult message_rcvd_cb(LmMessageHandler *handler, LmConnection *
 	} else {
 		logf("Received a message from nobody or empty one: %s\n", lm_message_node_to_string(lm_message_get_node(m)));
 	}
+
+out:
 	lm_message_unref(m);
 	return LM_HANDLER_RESULT_REMOVE_MESSAGE;
 }
