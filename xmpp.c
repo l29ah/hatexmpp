@@ -484,6 +484,12 @@ void xmpp_init() {
 	assert(context);
 	connection = lm_connection_new_with_context(NULL, context);
 	assert(connection);
+
+	// require TLS by default
+	ssl = lm_ssl_new(NULL, NULL, NULL, NULL);
+	assert(ssl);
+	lm_connection_set_ssl(connection, ssl);
+	lm_ssl_use_starttls(ssl, TRUE, TRUE);
 }
 
 void xmpp_connect() {
