@@ -13,7 +13,8 @@ LmSSL        *ssl;
 LmProxy *proxy;
 #endif
 
-gchar *escape(const gchar *src) {
+gchar *escape(const gchar *src)
+{
 	const gchar esc[] = "\bb\ff\nn\rr\tt\\\\\"\"";
 	// maximum possible length of escaped string
 	gchar *dest = g_malloc(strlen(src)*2+1);
@@ -30,7 +31,7 @@ gchar *escape(const gchar *src) {
 			}
 			c += 2;
 		}
-		if (!*c) 
+		if (!*c)
 			*q++ = *p;
 		p++;
 	}
@@ -51,7 +52,7 @@ gchar *get_jid(const gchar *jid)
 {
 	gchar *ch;
 	ch = strchr(jid, '/');
-	if (ch) 
+	if (ch)
 		return g_strndup(jid, ch - jid);
 	else
 		return g_strdup(jid);
@@ -67,7 +68,8 @@ static gchar *get_nick(const gchar *jid)
 	return g_strndup(jid, ch-jid);
 }
 
-int banmuc(const char *mucjid, const char *who) {
+int banmuc(const char *mucjid, const char *who)
+{
 	if (connection_state != ONLINE) return -1;
 	LmMessage *msg = lm_message_new_with_sub_type(mucjid, LM_MESSAGE_TYPE_IQ, LM_MESSAGE_SUB_TYPE_SET);
 	LmMessageNode *query = lm_message_node_add_child(msg->node, "query", NULL);
@@ -87,8 +89,9 @@ int devoice(const char *mucjid; const char *who) {
 }
 */
 
-int partmuc(const char *jid, const char *nick, const char *leave) {
-        LmMessage *m;
+int partmuc(const char *jid, const char *nick, const char *leave)
+{
+	LmMessage *m;
 	if (connection_state != ONLINE) return -1;
 	gchar *to;
 
@@ -102,7 +105,8 @@ int partmuc(const char *jid, const char *nick, const char *leave) {
 	return 0;
 }
 
-int joinmuc(const gchar *jid, const gchar *password, const gchar *nick) {
+int joinmuc(const gchar *jid, const gchar *password, const gchar *nick)
+{
 	if (connection_state != ONLINE) return -1;
 	LmMessage *m;
 	LmMessageNode *node;
@@ -115,7 +119,7 @@ int joinmuc(const gchar *jid, const gchar *password, const gchar *nick) {
 	lm_message_node_set_attribute(node, "xmlns", XMPP_MUC_XMLNS);
 
 	if (password) {
-	        lm_message_node_add_child (node, "password", password);
+		lm_message_node_add_child (node, "password", password);
 	}
 
 	lm_connection_send(connection, m, NULL);
@@ -127,15 +131,15 @@ int joinmuc(const gchar *jid, const gchar *password, const gchar *nick) {
 	return 0;
 }
 
-void add_resource(rosteritem *ri, const gchar *res, const unsigned presence) {
+void add_resource(rosteritem *ri, const gchar *res, const unsigned presence)
+{
 	resourceitem *r;
 	r = g_hash_table_lookup(ri->resources, res);
 	if (r) {
 		if (r->name) g_free(r->name);
 		r->name = g_strdup(res);
 		r->presence = presence;
-	}
-	else {
+	} else {
 		r = g_malloc(sizeof(resourceitem));
 		r->name = g_strdup(res);
 		r->presence = presence;
@@ -176,7 +180,7 @@ static LmHandlerResult presence_rcvd_cb(LmMessageHandler *handler, LmConnection 
 			}
 		} else {
 			resourceitem *rr;
-			if (!res) 
+			if (!res)
 				rr = ri->self_resource;
 			else
 				rr = g_hash_table_lookup(ri->resources, res);
@@ -184,8 +188,7 @@ static LmHandlerResult presence_rcvd_cb(LmMessageHandler *handler, LmConnection 
 				logf("Changing status of %s/%s\n", jid, res);
 				eventf("ch_presence %s", from);
 				// maybe this will do smth in future
-			}
-			else {
+			} else {
 				logf("Adding resource %s to %s\n", res, jid);
 				eventf("add_resource %s/%s", jid, res);
 				add_resource(ri, res, PRESENCE_ONLINE);
@@ -196,7 +199,7 @@ static LmHandlerResult presence_rcvd_cb(LmMessageHandler *handler, LmConnection 
 					//if (child) {
 					//	log_str = g_strdup_printf("%d * %s (%s) has entered the room\n", (unsigned) time(NULL), res, lm_message_node_get_attribute(child, "jid"));
 					//} else {
-						log_str = g_strdup_printf("%d * %s has entered the room\n", (unsigned) time(NULL), res);
+					log_str = g_strdup_printf("%d * %s has entered the room\n", (unsigned) time(NULL), res);
 					//}
 					g_array_append_vals(ri->log, log_str, strlen(log_str));
 					g_free(log_str);
@@ -212,7 +215,8 @@ static LmHandlerResult presence_rcvd_cb(LmMessageHandler *handler, LmConnection 
 	return LM_HANDLER_RESULT_REMOVE_MESSAGE;
 }
 
-static void send_receipt(const gchar *to, const gchar *id) {
+static void send_receipt(const gchar *to, const gchar *id)
+{
 	LmMessage *m;
 
 	m = lm_message_new(to, LM_MESSAGE_TYPE_MESSAGE);
@@ -233,7 +237,7 @@ static LmHandlerResult message_rcvd_cb(LmMessageHandler *handler, LmConnection *
 #ifdef NEW_LOGS
 	gchar *esc_str;
 #endif
-	
+
 	if (!m->node) {
 		logf("Received an empty <message>\n");
 		goto out;
@@ -301,7 +305,7 @@ static LmHandlerResult iq_rcvd_cb(LmMessageHandler *handler, LmConnection *conne
 	}
 	const gchar *xmlns = lm_message_node_get_attribute(query, "xmlns");
 	const gchar *type = lm_message_node_get_attribute(m->node, "type");
-	
+
 	// working with roster
 	if (strcmp(xmlns, "jabber:iq:roster") == 0) {
 		item  = lm_message_node_get_child (query, "item");
@@ -311,21 +315,20 @@ static LmHandlerResult iq_rcvd_cb(LmMessageHandler *handler, LmConnection *conne
 			jid = lm_message_node_get_attribute(item, "jid");
 			if (strcmp(lm_message_node_get_attribute(item, "subscription"), "remove") == 0) {
 				g_hash_table_remove(roster, jid);
-			}
-			else {
+			} else {
 				ri = g_hash_table_lookup(roster, jid);
 				if (!ri) addri(jid, NULL, GUY);
 			}
 			item = item->next;
 		}
-	
+
 		lm_message_node_unref(query);
 	} else if (strcmp(type, "get") == 0) {
 		LmMessage *msg = lm_message_new_with_sub_type(lm_message_node_get_attribute(m->node, "from"), LM_MESSAGE_TYPE_IQ, LM_MESSAGE_SUB_TYPE_RESULT);
 		lm_message_node_set_attribute(msg->node, "id", lm_message_node_get_attribute(m->node, "id"));
 		query = lm_message_node_add_child(msg->node, "query", NULL);
 		lm_message_node_set_attribute(query, "xmlns", xmlns);
-		
+
 		// Saying our version
 		if (strcmp(xmlns, "jabber:iq:version") == 0) {
 			char *str;
@@ -357,7 +360,7 @@ static LmHandlerResult iq_rcvd_cb(LmMessageHandler *handler, LmConnection *conne
 			lm_message_node_add_child(query, "display", buf);
 			lm_connection_send(connection, msg, NULL);
 		}
-		
+
 		// Saying last activity time
 		else if (strcmp(xmlns, "jabber:iq:last") == 0) {
 			lm_message_node_set_attribute(query, "seconds", g_strdup_printf("%d", (int)(time(NULL) - last_activity_time)));
@@ -366,16 +369,16 @@ static LmHandlerResult iq_rcvd_cb(LmMessageHandler *handler, LmConnection *conne
 
 		// Saying our discovery info
 		else if (strcmp(xmlns, XMPP_DISCO_XMLNS) == 0) {
-			lm_message_node_set_attribute(lm_message_node_add_child(query, "feature", NULL), "var", XMPP_DISCO_XMLNS);		
+			lm_message_node_set_attribute(lm_message_node_add_child(query, "feature", NULL), "var", XMPP_DISCO_XMLNS);
 			lm_message_node_set_attribute(lm_message_node_add_child(query, "feature", NULL), "var", "jabber:iq:version");
 			lm_message_node_set_attribute(lm_message_node_add_child(query, "feature", NULL), "var", "jabber:iq:time");
 			lm_message_node_set_attribute(lm_message_node_add_child(query, "feature", NULL), "var", "jabber:iq:last");
 			lm_message_node_set_attribute(lm_message_node_add_child(query, "feature", NULL), "var", "urn:xmpp:receipts");	// XEP-0184
 			lm_connection_send(connection, msg, NULL);
 		}
-		
+
 		// Otherwise, feature not supported
-		else {	
+		else {
 			LmMessageNode *error = lm_message_node_add_child(msg->node, "error", NULL);
 			lm_message_node_set_attribute(error, "type", "cancel");
 			lm_message_node_set_attribute(error, "code", "501");
@@ -392,7 +395,8 @@ static LmHandlerResult iq_rcvd_cb(LmMessageHandler *handler, LmConnection *conne
 	return LM_HANDLER_RESULT_REMOVE_MESSAGE;
 }
 
-static void connection_auth_cb(LmConnection *connection, gboolean success, void *data) {
+static void connection_auth_cb(LmConnection *connection, gboolean success, void *data)
+{
 	LmMessage *m;
 
 	if (success) {
@@ -417,7 +421,8 @@ static void connection_auth_cb(LmConnection *connection, gboolean success, void 
 	}
 }
 
-static void connection_open_cb (LmConnection *connection, gboolean success, void *data) {
+static void connection_open_cb (LmConnection *connection, gboolean success, void *data)
+{
 	if (!success) {
 		connection_state = OFFLINE;
 		logstr("Cannot open connection\n");
@@ -429,14 +434,14 @@ static void connection_open_cb (LmConnection *connection, gboolean success, void
 	if (g_hash_table_lookup(config, "noauth")) {
 		logstr("config/noauth exists, not logging in\n");
 	} else {
-		if (g_hash_table_lookup(config, "register")) 
+		if (g_hash_table_lookup(config, "register"))
 			xmpp_register_request(g_hash_table_lookup(config, "username"), g_hash_table_lookup(config, "password"), "lol@lol.com"); // TODO email input
 
-		if (!lm_connection_authenticate (connection, 
-					g_hash_table_lookup(config, "username"),
-					g_hash_table_lookup(config, "password"),
-					g_hash_table_lookup(config, "resource"),
-					(LmResultFunction) connection_auth_cb, NULL, g_free, NULL)) {
+		if (!lm_connection_authenticate (connection,
+		                                 g_hash_table_lookup(config, "username"),
+		                                 g_hash_table_lookup(config, "password"),
+		                                 g_hash_table_lookup(config, "resource"),
+		                                 (LmResultFunction) connection_auth_cb, NULL, g_free, NULL)) {
 			logstr("lm_connection_authenticate failed\n");
 			return;
 		}
@@ -465,7 +470,7 @@ void connection_close_cb (LmConnection *connection, LmDisconnectReason reason, g
 		str = "Another connection was made to the server with the same resource.";
 		break;
 	case LM_DISCONNECT_REASON_INVALID_XML:
-		 str = "Invalid XML was sent from the client.";
+		str = "Invalid XML was sent from the client.";
 		break;
 	case LM_DISCONNECT_REASON_UNKNOWN:
 		str = "An unknown error.";
@@ -487,7 +492,8 @@ void connection_close_cb (LmConnection *connection, LmDisconnectReason reason, g
 	}
 }
 
-void xmpp_init() {
+void xmpp_init()
+{
 	assert(context);
 	connection = lm_connection_new_with_context(NULL, context);
 	assert(connection);
@@ -499,7 +505,8 @@ void xmpp_init() {
 	lm_ssl_use_starttls(ssl, TRUE, TRUE);
 }
 
-void xmpp_connect() {
+void xmpp_connect()
+{
 	if (connection_state != OFFLINE) {
 		logstr("Tried to connect while online!\n");
 		return;
@@ -550,9 +557,10 @@ void xmpp_connect() {
 		connection_state = OFFLINE;
 	}
 	logstr("Connection opened\n");
-} 
+}
 
-void xmpp_send(const gchar *to, const gchar *body) {
+void xmpp_send(const gchar *to, const gchar *body)
+{
 	if (connection_state != ONLINE) {
 		logstr("Tried to xmpp_send when not online!\n");
 		return;
@@ -570,14 +578,13 @@ void xmpp_send(const gchar *to, const gchar *body) {
 		}
 		*/
 		if(ri->type == MUC) {
-			if (strchr(to, '/')) 
+			if (strchr(to, '/'))
 				m = lm_message_new_with_sub_type(to, LM_MESSAGE_TYPE_MESSAGE, LM_MESSAGE_SUB_TYPE_CHAT);
 			else
 				m = lm_message_new_with_sub_type(to, LM_MESSAGE_TYPE_MESSAGE, LM_MESSAGE_SUB_TYPE_GROUPCHAT);
-		}
-		else
+		} else
 			m = lm_message_new_with_sub_type(to, LM_MESSAGE_TYPE_MESSAGE, LM_MESSAGE_SUB_TYPE_CHAT);
-		
+
 		if (m) {
 			time(&last_activity_time);
 			b = g_strdup(body);
@@ -589,7 +596,8 @@ void xmpp_send(const gchar *to, const gchar *body) {
 	}
 }
 
-void xmpp_add_to_roster(const gchar *jid) {
+void xmpp_add_to_roster(const gchar *jid)
+{
 	if (connection_state != ONLINE) return;
 // TODO: this may work, but better to follow protocol. XMPP is so XMPP!
 	if(!g_hash_table_lookup(roster, jid)) {
@@ -613,7 +621,8 @@ void xmpp_add_to_roster(const gchar *jid) {
 	return;
 }
 
-void xmpp_del_from_roster(const gchar *jid) {
+void xmpp_del_from_roster(const gchar *jid)
+{
 	if (connection_state != ONLINE) return;
 	rosteritem *ri = g_hash_table_lookup(roster, jid);
 	if (ri) {
@@ -635,7 +644,8 @@ void xmpp_del_from_roster(const gchar *jid) {
 	}
 }
 
-void xmpp_disconnect() {
+void xmpp_disconnect()
+{
 	if (lm_connection_is_open(connection) || (connection_state == ONLINE)) {
 		// disconect gracefully
 		LmMessage *msg = lm_message_new_with_sub_type(NULL, LM_MESSAGE_TYPE_PRESENCE, LM_MESSAGE_SUB_TYPE_UNAVAILABLE);
@@ -646,7 +656,8 @@ void xmpp_disconnect() {
 	}
 }
 
-void xmpp_muc_change_nick(const gchar *mucjid, const gchar *nick) {
+void xmpp_muc_change_nick(const gchar *mucjid, const gchar *nick)
+{
 	if (connection_state != ONLINE) return;
 	logf("Change nick in %s to %s\n", mucjid, nick);
 	rosteritem *ri = g_hash_table_lookup(roster, mucjid);
@@ -658,10 +669,11 @@ void xmpp_muc_change_nick(const gchar *mucjid, const gchar *nick) {
 //		lm_message_node_set_attr(m->node, "from", g_strdup_printf("%s/%s"));
 		lm_connection_send(connection, m, NULL);
 		lm_message_unref(m);
-	}	
+	}
 }
 
-void xmpp_register_request_fields() {
+void xmpp_register_request_fields()
+{
 	LmMessage *msg = lm_message_new_with_sub_type(NULL, LM_MESSAGE_TYPE_IQ, LM_MESSAGE_SUB_TYPE_GET);
 	LmMessageNode *query = lm_message_node_add_child(msg->node, "query", NULL);
 	lm_message_node_set_attribute(query, "xmlns", "jabber:iq:register");
@@ -670,8 +682,9 @@ void xmpp_register_request_fields() {
 	lm_message_unref(msg);
 }
 
-void xmpp_register_request(const char *Username, const char *Password, const char *Email) {
-        LmMessage *msg = lm_message_new_with_sub_type(NULL, LM_MESSAGE_TYPE_IQ, LM_MESSAGE_SUB_TYPE_SET);
+void xmpp_register_request(const char *Username, const char *Password, const char *Email)
+{
+	LmMessage *msg = lm_message_new_with_sub_type(NULL, LM_MESSAGE_TYPE_IQ, LM_MESSAGE_SUB_TYPE_SET);
 	LmMessageNode *query = lm_message_node_add_child(msg->node, "query", NULL);
 	LmMessageNode *un = lm_message_node_add_child(query, "username", Username);
 	LmMessageNode *p = lm_message_node_add_child(query, "password", Password);
@@ -687,7 +700,8 @@ void xmpp_register_request(const char *Username, const char *Password, const cha
 
 }
 
-void xmpp_send_presence() {
+void xmpp_send_presence()
+{
 	gchar *s;
 
 	LmMessage *msg = lm_message_new(NULL, LM_MESSAGE_TYPE_PRESENCE);
@@ -695,7 +709,7 @@ void xmpp_send_presence() {
 	s = g_hash_table_lookup(config, "priority");
 	logf("Sending presence: priority = %s, ", s);
 	if (s)
-		lm_message_node_add_child(msg->node, "priority", s); 
+		lm_message_node_add_child(msg->node, "priority", s);
 
 	s = g_hash_table_lookup(config, "show");
 	logf("show = %s, ", s);

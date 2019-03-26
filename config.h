@@ -1,6 +1,6 @@
 /*
 	Suckless configuration of HateXMPP
-	
+
 	Uncomment #define to turn feature on.
 
 	If you adding testing/unstable/cludgy feature, please make possible

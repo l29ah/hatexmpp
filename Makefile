@@ -9,7 +9,7 @@ EXE=hatexmpp
 CFLAGS+=$(shell pkg-config fuse loudmouth-1.0 --cflags)
 LDLIBS=$(shell pkg-config fuse loudmouth-1.0 --libs)
 
-all: $(EXE)
+all: $(EXE) astyle
 
 $(EXE): version.o hatexmpp.o fuse.o xmpp.o
 
@@ -20,7 +20,7 @@ xmpp.o: xmpp.c common.h
 version.c:
 	echo "char HateXMPP_ver[] = "\"0.2-`git log --no-show-signature -n1 --pretty=format:%H`\""; char * getversion(void) { return HateXMPP_ver; }" > version.c
 
-.PHONY:	clean
+.PHONY:	clean astyle
 
 clean:
 	rm -rf *.o version.c $(EXE)
@@ -28,3 +28,5 @@ clean:
 install: $(EXE)
 	install $(EXE) $(DESTDIR)/usr/bin
 
+astyle:
+	astyle --style=linux --indent=tab *.c *.h

@@ -5,21 +5,24 @@ unsigned FDn;
 static void * mainloopthread(void *loop);
 pthread_t thr;
 
-gchar *filter_str(gchar *str) {
+gchar *filter_str(gchar *str)
+{
 	gchar *ch = strchr(str, '\n');
-	if (ch) 
+	if (ch)
 		str[ch-str] = 0;
 	g_strstrip(str);
 	return str;
 }
 
-int fileexists(const char *path) {	/* TODO remove/rewrite */
+int fileexists(const char *path)  	/* TODO remove/rewrite */
+{
 	if (strcmp(path, "/log") == 0) return 1;
 	if (strncmp(path, "/roster/", 8) == 0) return 1;
 	return 0;
 }
 
-rosteritem * getri(const char *path) {
+rosteritem * getri(const char *path)
+{
 	char *p;
 	rosteritem *ri;
 
@@ -36,7 +39,8 @@ rosteritem * getri(const char *path) {
 	return ri;
 }
 
-FD * addfd(rosteritem *ri) {
+FD * addfd(rosteritem *ri)
+{
 	FD *fd;
 	int *id;
 
@@ -50,7 +54,8 @@ FD * addfd(rosteritem *ri) {
 	return fd;
 }
 
-void destroyfd(FD *fd) {
+void destroyfd(FD *fd)
+{
 //	g_array_free(fd->readbuf, TRUE);	/* TODO? */
 	g_array_free(fd->writebuf, TRUE);
 	g_free(fd);
@@ -58,11 +63,13 @@ void destroyfd(FD *fd) {
 
 /* FS calls */
 
-static int fstruncate(const char *path, off_t size) {
+static int fstruncate(const char *path, off_t size)
+{
 	return 0;
 }
 
-static int fsrmdir(const char *path) {
+static int fsrmdir(const char *path)
+{
 	if (strcmp(path, "/config") == 0) {
 		g_hash_table_destroy(config);
 		config = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, g_free);
@@ -81,17 +88,17 @@ static int fsrmdir(const char *path) {
 		ri = getri(path);
 		if(ri) {
 			if(ri->type == MUC) {
-			  partmuc(path, NULL, "TODO here must be default leave message :-)");
-			  g_hash_table_remove(roster, path);
-			}
-			else logstr("Roster items removal isn't implemented\n");; /* TODO */
+				partmuc(path, NULL, "TODO here must be default leave message :-)");
+				g_hash_table_remove(roster, path);
+			} else logstr("Roster items removal isn't implemented\n");; /* TODO */
 			return 0;
 		} else return -ENOENT;
 	}
 	return -EPERM;
 }
 
-static int fscreate(const char *path, mode_t mode, struct fuse_file_info *fi) {
+static int fscreate(const char *path, mode_t mode, struct fuse_file_info *fi)
+{
 	/* TODO add roster items */
 	if (strncmp(path, "/roster/", 8) == 0) {
 		path += 8;
@@ -100,12 +107,14 @@ static int fscreate(const char *path, mode_t mode, struct fuse_file_info *fi) {
 	return 0;
 }
 
-static int fsmknod(const char *path, mode_t mode, dev_t type) {
+static int fsmknod(const char *path, mode_t mode, dev_t type)
+{
 	/* TODO */
 	return 0;
 }
 
-static int fsmkdir(const char *path, mode_t mode) {
+static int fsmkdir(const char *path, mode_t mode)
+{
 	if (strcmp(path, "/roster") == 0) {
 		logstr("Make roster!\n");
 		if(connection && lm_connection_is_open(connection)) {
@@ -135,7 +144,7 @@ static int fsgetattr(const char *path, struct stat *stbuf)
 		return 0;
 	}
 	if (strcmp(path, "/log") == 0) {
-    	stbuf->st_mode = S_IFREG | 0666;
+		stbuf->st_mode = S_IFREG | 0666;
 		stbuf->st_nlink = 1;
 		stbuf->st_size = LogBuf->len;
 		return 0;
@@ -147,10 +156,10 @@ static int fsgetattr(const char *path, struct stat *stbuf)
 			return 0;
 		}
 		if (strcmp(path, "/rawxmpp") == 0) {
-    		stbuf->st_mode = S_IFREG | 0222;
+			stbuf->st_mode = S_IFREG | 0222;
 			stbuf->st_nlink = 1;
 			return 0;
-		} 
+		}
 	}
 	if ((strcmp(path, "/config") == 0) ||
 	    (strcmp(path, "/") == 0)) {
@@ -187,7 +196,7 @@ static int fsgetattr(const char *path, struct stat *stbuf)
 }
 
 static int fsreaddir(const char *path, void *buf, fuse_fill_dir_t filler,
-			 off_t offset, struct fuse_file_info *fi)
+                     off_t offset, struct fuse_file_info *fi)
 {
 	(void) offset;
 	(void) fi;
@@ -218,11 +227,10 @@ static int fsreaddir(const char *path, void *buf, fuse_fill_dir_t filler,
 		filler(buf, "ssl", NULL, 0);
 
 	}
-	if (strcmp(path, "/roster") == 0)
-	{
+	if (strcmp(path, "/roster") == 0) {
 		filler(buf, ".", NULL, 0);
 		filler(buf, "..", NULL, 0);
-		
+
 		GHashTableIter iter;
 		rosteritem *ri;
 		g_hash_table_iter_init (&iter, roster);
@@ -233,7 +241,7 @@ static int fsreaddir(const char *path, void *buf, fuse_fill_dir_t filler,
 	if (strncmp(path, "/roster/", 8) == 0) {
 		path += 8;
 		rosteritem *ri;
-		
+
 		ri = getri(path);
 		if (ri) {
 			filler(buf, ".", NULL, 0);
@@ -244,7 +252,7 @@ static int fsreaddir(const char *path, void *buf, fuse_fill_dir_t filler,
 			GHashTableIter iter;
 			gchar *res;
 			g_hash_table_iter_init (&iter, ri->resources);
-			while (g_hash_table_iter_next(&iter, (gpointer) &res, NULL)) 
+			while (g_hash_table_iter_next(&iter, (gpointer) &res, NULL))
 				filler(buf, res, NULL, 0);
 		}
 	}
@@ -256,24 +264,25 @@ static int fsopen(const char *path, struct fuse_file_info *fi)
 {
 	/* FDs are introduced only for writing ops */
 	if ((fi->flags & O_WRONLY) || (fi->flags & O_RDWR)) {
-	        if (strncmp(path, "/roster/", 8) == 0) {
+		if (strncmp(path, "/roster/", 8) == 0) {
 			rosteritem *ri;
 
-	                path += 8;
-                	ri = getri(path);
+			path += 8;
+			ri = getri(path);
 			if (ri) {
 				/* TODO */
-                	} 
+			}
 		}
 	}
 	/* TODO */
 	return 0;
 }
 
-static char *get_option(const char *option) {
+static char *get_option(const char *option)
+{
 	if (strcmp(option, "server") == 0) {
 		const char *r = lm_connection_get_server(connection);
-		if (r) 
+		if (r)
 			return strdup(r);
 	} else if (strcmp(option, "ssl") == 0) {
 		if (ssl) {
@@ -301,7 +310,7 @@ static char *get_option(const char *option) {
 }
 
 static int fsread(const char *path, char *buf, size_t size, off_t offset,
-		      struct fuse_file_info *fi)
+                  struct fuse_file_info *fi)
 {
 	if (strcmp(path, "/log") == 0) {
 //		write(fi->fh, LogBuf->data+offset, size);
@@ -362,23 +371,24 @@ static int fsread(const char *path, char *buf, size_t size, off_t offset,
 }
 
 // FIXME fuse with set_option
-static char *prepare_option(const char *option, const char *buf, size_t size) {
+static char *prepare_option(const char *option, const char *buf, size_t size)
+{
 	char *val;
 
 	// bool options
 	if ((strcmp(option, "events") == 0) ||
-		(strcmp(option, "raw_logs")== 0)) {
+	    (strcmp(option, "raw_logs")== 0)) {
 		val = strdup("1"); // just something :)
 	} else {
 		val = filter_str(strndup(buf, size));
-	
+
 		bool pr;
-		if (strcmp(option, "show") == 0 && 
-				strcmp(val, "") &&
-				strcmp(val, "away") &&
-				strcmp(val, "chat") &&
-				strcmp(val, "dnd") &&
-				strcmp(val, "xa")) {
+		if (strcmp(option, "show") == 0 &&
+		    strcmp(val, "") &&
+		    strcmp(val, "away") &&
+		    strcmp(val, "chat") &&
+		    strcmp(val, "dnd") &&
+		    strcmp(val, "xa")) {
 			logf("Failed to set %s to incorrect value %s\n", option, val);
 			return 0;
 		} else if (strcmp(option, "ssl") == 0) {
@@ -392,7 +402,7 @@ static char *prepare_option(const char *option, const char *buf, size_t size) {
 				return 0;
 			}
 		} else if ((pr = (strcmp(option, "priority") == 0)) ||
-				((strcmp(option, "port") == 0))) {
+		           ((strcmp(option, "port") == 0))) {
 			/* Suggest a better way to validate the integer */
 			char *not_ok;
 			long long i = strtoll(val, &not_ok, 10);
@@ -417,7 +427,8 @@ static char *prepare_option(const char *option, const char *buf, size_t size) {
 	return val;
 }
 
-static void set_option(char *option, char *val) {
+static void set_option(char *option, char *val)
+{
 	bool used = false;
 
 	// FIXME: in the case of ssl, the argument is not a string but a number
@@ -451,9 +462,9 @@ static void set_option(char *option, char *val) {
 		used = true;
 	}
 	if (connection_state == ONLINE && (
-				strcmp(option, "priority") == 0 ||
-				strcmp(option, "show") == 0 ||
-				strcmp(option, "status") == 0))
+	        strcmp(option, "priority") == 0 ||
+	        strcmp(option, "show") == 0 ||
+	        strcmp(option, "status") == 0))
 		xmpp_send_presence();
 	if (!used) {
 		if (strcmp(option, "ssl")) {
@@ -478,7 +489,7 @@ static int fswrite(const char *path, const char *buf, size_t size, off_t offset,
 		msg = g_malloc(msg_len + 1);
 		memcpy(msg, buf, msg_len);
 		msg[msg_len] = 0;
-		if (res && (strncmp(res, "__nick", 6) == 0 )) 
+		if (res && (strncmp(res, "__nick", 6) == 0 ))
 			xmpp_muc_change_nick(get_jid(path), msg);
 		else
 			xmpp_send(path, msg);
@@ -503,12 +514,14 @@ static int fswrite(const char *path, const char *buf, size_t size, off_t offset,
 	return 0;
 }
 
-static int fssetxattr(const char *path, const char *a, const char *aa, size_t size, int aaa) {
+static int fssetxattr(const char *path, const char *a, const char *aa, size_t size, int aaa)
+{
 	/* Stub. Do we need this? */
 	return 0;
 }
 
-static int fsunlink(const char *path) {
+static int fsunlink(const char *path)
+{
 	if (strncmp(path, "/roster/", 8) == 0) {
 		path += 8;
 		char *sl = strchr(path, '/');
@@ -532,8 +545,9 @@ static int fsunlink(const char *path) {
 	return 0;
 }
 
-static void fsdestroy(void *privdata) {
-	if (connection) 
+static void fsdestroy(void *privdata)
+{
+	if (connection)
 		xmpp_disconnect();
 	free_all();
 	if(main_loop) {
@@ -543,18 +557,21 @@ static void fsdestroy(void *privdata) {
 	return;
 }
 
-static void * mainloopthread(void *loop) {
+static void * mainloopthread(void *loop)
+{
 	xmpp_connect();
 	g_main_loop_run(main_loop);
 	return NULL;
 }
 
-static void * fsinit(struct fuse_conn_info *conn) {
+static void * fsinit(struct fuse_conn_info *conn)
+{
 	FDt = g_hash_table_new_full(g_int_hash, g_int_equal, g_free, (GDestroyNotify)destroyfd);	//TODO check the cast
 	return NULL;
 }
 
-int fuseinit(int argc, char **argv) {
+int fuseinit(int argc, char **argv)
+{
 	int ret;
 //	fifo = open("fs/log", O_WRONLY | O_NONBLOCK);
 	ret = fuse_main(argc, argv, &fuseoper, NULL);

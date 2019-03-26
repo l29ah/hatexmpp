@@ -11,36 +11,39 @@ gchar *events_file;
 time_t last_activity_time;
 enum connection_state_e connection_state;
 
-gchar *eventstr(gchar *str) {	/* TODO const */
+gchar *eventstr(gchar *str)  	/* TODO const */
+{
 #ifdef EVENTS
 	if (g_hash_table_lookup(config, "events")) {
 		if (fd_events <= 0) {
 			fd_events = open(events_file, O_WRONLY | O_NONBLOCK);
-			#ifdef DEBUG
+#ifdef DEBUG
 			logf("open fd_events = %d errno = %d", fd_events, errno);
-			#endif
+#endif
 		}
-		#ifdef DEBUG
+#ifdef DEBUG
 		logf("Event: fd_events = %d, str = %s", fd_events, str);
-		#endif
+#endif
 		if (fd_events != -1) {
 			write(fd_events, str, strlen(str)+1);
-			#ifdef DEBUG
+#ifdef DEBUG
 			logf("write to fd_events = %d errno = %d", fd_events, errno);
-			#endif
+#endif
 		}
 	}
 #endif
 	return str;
 }
 
-inline void logs(const char *msg, size_t len) {
+inline void logs(const char *msg, size_t len)
+{
 	g_array_append_vals(LogBuf, msg, len);
 }
 
-gchar * logstr(gchar *msg) {	/* TODO const */
+gchar * logstr(gchar *msg)  	/* TODO const */
+{
 	size_t len;
-	
+
 	g_printf("LOGF: %s",msg);
 	len = strlen(msg);
 	logs(msg, len);
@@ -48,14 +51,16 @@ gchar * logstr(gchar *msg) {	/* TODO const */
 	return msg;
 }
 
-void destroy_resource(resourceitem *resi) {
+void destroy_resource(resourceitem *resi)
+{
 	if (resi) {
 		if (resi->name) g_free(resi->name);
 		g_free(resi);
 	}
 }
 
-rosteritem *addri(const gchar *jid, GHashTable *resources, unsigned type) {
+rosteritem *addri(const gchar *jid, GHashTable *resources, unsigned type)
+{
 	rosteritem *ri;
 
 	logf("Adding %s to roster\n", jid);
@@ -75,7 +80,8 @@ rosteritem *addri(const gchar *jid, GHashTable *resources, unsigned type) {
 	return ri;
 }
 
-void destroy_ri(rosteritem *RI) {
+void destroy_ri(rosteritem *RI)
+{
 	if (!RI) return;
 	eventf("del_ri %s", RI->jid);
 	if(RI->jid) g_free(RI->jid);
@@ -92,7 +98,8 @@ void free_all()		// trying to make a general cleanup
 	g_hash_table_destroy(config);
 }
 
-void init_config() {
+void init_config()
+{
 	config = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, g_free);
 	const struct cfg_s {
 		char *name;
@@ -126,7 +133,8 @@ void init_config() {
 	} while ((++cfgp)->name);
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
 	if (!lm_ssl_is_supported()) {
 		fprintf(stderr, "Your loudmouth distribution doesn't support SSL. hatexmpp won't work properly. Poke the author if you'd like to be able to run it in plaintext-only mode. Exiting.\n");
 		exit(1);
@@ -138,7 +146,7 @@ int main(int argc, char **argv) {
 	main_loop = g_main_loop_new(context, FALSE);
 	init_config();
 	xmpp_init();
-	
+
 	// Do something with this!!!!!
 	if (argc) {
 		events_file = g_strdup_printf("%sevents", argv[1]);
