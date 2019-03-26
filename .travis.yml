@@ -2,7 +2,7 @@ language: c
 compiler:
   - gcc
   - clang
-script: make
+script: make hatexmpp
 before_install:
  - sudo apt-get update -qq
  - sudo apt-get install -qq libglib2.0-dev libfuse-dev libloudmouth1-dev
