@@ -1,5 +1,3 @@
-? bugfix
-	.- test the autoreconnection feature
 ? shitfix
 	o deprecate connection_state in favor of the loudmouth state
 	o+ move all the shit to lm_connection
