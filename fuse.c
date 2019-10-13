@@ -9,7 +9,7 @@ gchar *filter_str(gchar *str)
 {
 	gchar *ch = strchr(str, '\n');
 	if (ch)
-		str[ch-str] = 0;
+		str[ch - str] = 0;
 	g_strstrip(str);
 	return str;
 }
@@ -208,7 +208,7 @@ static int fsreaddir(const char *path, void *buf, fuse_fill_dir_t filler,
 		filler(buf, "log", NULL, 0);
 		filler(buf, "config", NULL, 0);
 		if (roster && (connection_state == ONLINE)) {
-			filler(buf, "roster",NULL, 0);
+			filler(buf, "roster", NULL, 0);
 			filler(buf, "rawxmpp", NULL, 0);
 		}
 		return 0;
@@ -377,7 +377,7 @@ static char *prepare_option(const char *option, const char *buf, size_t size)
 
 	// bool options
 	if ((strcmp(option, "events") == 0) ||
-	    (strcmp(option, "raw_logs")== 0)) {
+	    (strcmp(option, "raw_logs") == 0)) {
 		val = strdup("1"); // just something :)
 	} else {
 		val = filter_str(strndup(buf, size));
@@ -538,7 +538,7 @@ static int fsunlink(const char *path)
 		}
 	}
 	// delete options from /config/, maybe need some checks before actual deleting
-	if (strncmp(path, "/config/",8) == 0) {
+	if (strncmp(path, "/config/", 8) == 0) {
 		path += 8;
 		g_hash_table_remove(config, path);
 	}

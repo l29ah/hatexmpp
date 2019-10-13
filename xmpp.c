@@ -17,7 +17,7 @@ gchar *escape(const gchar *src)
 {
 	const gchar esc[] = "\bb\ff\nn\rr\tt\\\\\"\"";
 	// maximum possible length of escaped string
-	gchar *dest = g_malloc(strlen(src)*2+1);
+	gchar *dest = g_malloc(strlen(src) * 2 + 1);
 	const gchar *p = src;
 	gchar *q = dest;
 	const gchar *c;
@@ -35,16 +35,16 @@ gchar *escape(const gchar *src)
 			*q++ = *p;
 		p++;
 	}
-	*q=0;
+	*q = 0;
 	return g_realloc(dest, strlen(dest));
 }
 
 gchar *get_resource(const gchar *jid)
 {
 	gchar *res;
-	res = strchr(jid,'/');
+	res = strchr(jid, '/');
 	if (res)
-		return g_strdup(res+1);
+		return g_strdup(res + 1);
 	return NULL;
 }
 
@@ -65,7 +65,7 @@ static gchar *get_nick(const gchar *jid)
 	ch = strchr(jid, '@');
 	if (!ch)
 		return g_strdup(jid);
-	return g_strndup(jid, ch-jid);
+	return g_strndup(jid, ch - jid);
 }
 
 int banmuc(const char *mucjid, const char *who)
@@ -483,7 +483,7 @@ void connection_close_cb(LmConnection *connection, LmDisconnectReason reason, gp
 	// very stupid autoreconnect routine
 	int delay;
 	const char *delay_s;
-	if ((delay_s = g_hash_table_lookup(config,"auto_reconnect")) && (reason != LM_DISCONNECT_REASON_OK)) {
+	if ((delay_s = g_hash_table_lookup(config, "auto_reconnect")) && (reason != LM_DISCONNECT_REASON_OK)) {
 		delay = atoi(delay_s);
 		logs("Reconnecting in %ds\n", delay);
 		sleep(delay);

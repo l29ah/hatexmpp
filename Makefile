@@ -29,4 +29,4 @@ install: $(EXE)
 	install $(EXE) $(DESTDIR)/usr/bin
 
 astyle:
-	astyle --style=linux --indent=tab --unpad-paren --pad-header *.c *.h
+	astyle --style=linux --indent=tab --unpad-paren --pad-header --pad-oper *.c *.h

@@ -25,7 +25,7 @@ gchar *eventstr(gchar *str)  	/* TODO const */
 		logf("Event: fd_events = %d, str = %s", fd_events, str);
 #endif
 		if (fd_events != -1) {
-			write(fd_events, str, strlen(str)+1);
+			write(fd_events, str, strlen(str) + 1);
 #ifdef DEBUG
 			logf("write to fd_events = %d errno = %d", fd_events, errno);
 #endif
@@ -44,7 +44,7 @@ gchar * logstr(gchar *msg)  	/* TODO const */
 {
 	size_t len;
 
-	g_printf("LOGF: %s",msg);
+	g_printf("LOGF: %s", msg);
 	len = strlen(msg);
 	logs(msg, len);
 
