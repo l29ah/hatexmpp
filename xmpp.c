@@ -119,7 +119,7 @@ int joinmuc(const gchar *jid, const gchar *password, const gchar *nick)
 	lm_message_node_set_attribute(node, "xmlns", XMPP_MUC_XMLNS);
 
 	if (password) {
-		lm_message_node_add_child (node, "password", password);
+		lm_message_node_add_child(node, "password", password);
 	}
 
 	lm_connection_send(connection, m, NULL);
@@ -251,7 +251,7 @@ static LmHandlerResult message_rcvd_cb(LmMessageHandler *handler, LmConnection *
 		eventf("msg %s %s %s", from, to, body);
 		jid = get_jid(from);
 		ri = g_hash_table_lookup(roster, jid);
-		if(ri) {
+		if (ri) {
 			ri->lastmsgtime = time(NULL);
 			if (ri->type == MUC)
 				jid = get_resource(from);
@@ -308,7 +308,7 @@ static LmHandlerResult iq_rcvd_cb(LmMessageHandler *handler, LmConnection *conne
 
 	// working with roster
 	if (strcmp(xmlns, "jabber:iq:roster") == 0) {
-		item  = lm_message_node_get_child (query, "item");
+		item  = lm_message_node_get_child(query, "item");
 		rosteritem *ri;
 		const gchar *jid;
 		while (item) {
@@ -409,7 +409,7 @@ static void connection_auth_cb(LmConnection *connection, gboolean success, void 
 		if (TRUE != lm_connection_send(connection, m, NULL)) {
 			logstr("Failed to request the roster\n");
 		}
-		lm_message_unref (m);
+		lm_message_unref(m);
 
 		time(&last_activity_time);
 		eventstr("auth_ok");
@@ -421,7 +421,7 @@ static void connection_auth_cb(LmConnection *connection, gboolean success, void 
 	}
 }
 
-static void connection_open_cb (LmConnection *connection, gboolean success, void *data)
+static void connection_open_cb(LmConnection *connection, gboolean success, void *data)
 {
 	if (!success) {
 		connection_state = OFFLINE;
@@ -437,11 +437,11 @@ static void connection_open_cb (LmConnection *connection, gboolean success, void
 		if (g_hash_table_lookup(config, "register"))
 			xmpp_register_request(g_hash_table_lookup(config, "username"), g_hash_table_lookup(config, "password"), "lol@lol.com"); // TODO email input
 
-		if (!lm_connection_authenticate (connection,
-		                                 g_hash_table_lookup(config, "username"),
-		                                 g_hash_table_lookup(config, "password"),
-		                                 g_hash_table_lookup(config, "resource"),
-		                                 (LmResultFunction) connection_auth_cb, NULL, g_free, NULL)) {
+		if (!lm_connection_authenticate(connection,
+		                                g_hash_table_lookup(config, "username"),
+		                                g_hash_table_lookup(config, "password"),
+		                                g_hash_table_lookup(config, "resource"),
+		                                (LmResultFunction) connection_auth_cb, NULL, g_free, NULL)) {
 			logstr("lm_connection_authenticate failed\n");
 			return;
 		}
@@ -450,7 +450,7 @@ static void connection_open_cb (LmConnection *connection, gboolean success, void
 	eventstr("connect_ok");
 }
 
-void connection_close_cb (LmConnection *connection, LmDisconnectReason reason, gpointer data)
+void connection_close_cb(LmConnection *connection, LmDisconnectReason reason, gpointer data)
 {
 	gchar *str;
 	switch (reason) {
@@ -515,7 +515,7 @@ void xmpp_connect()
 	logstr("Connecting...\n");
 	connection_state = CONNECTING;
 	// TODO: moar c011b4ckz!
-	lm_connection_register_message_handler(connection, lm_message_handler_new(iq_rcvd_cb, NULL, NULL ), LM_MESSAGE_TYPE_IQ, LM_HANDLER_PRIORITY_NORMAL);
+	lm_connection_register_message_handler(connection, lm_message_handler_new(iq_rcvd_cb, NULL, NULL), LM_MESSAGE_TYPE_IQ, LM_HANDLER_PRIORITY_NORMAL);
 	lm_connection_register_message_handler(connection, lm_message_handler_new(presence_rcvd_cb, NULL, NULL), LM_MESSAGE_TYPE_PRESENCE, LM_HANDLER_PRIORITY_NORMAL);
 	lm_connection_register_message_handler(connection, lm_message_handler_new(message_rcvd_cb, NULL, NULL), LM_MESSAGE_TYPE_MESSAGE, LM_HANDLER_PRIORITY_NORMAL);
 	lm_connection_set_disconnect_function(connection, connection_close_cb, NULL, g_free);
@@ -531,7 +531,7 @@ void xmpp_connect()
 			lm_proxy_set_username(proxy, p_user);
 			lm_proxy_set_password(proxy, p_pasw);
 		}
-		lm_connection_set_proxy (connection, proxy);
+		lm_connection_set_proxy(connection, proxy);
 	}
 #endif
 
@@ -569,7 +569,7 @@ void xmpp_send(const gchar *to, const gchar *body)
 	rosteritem *ri;
 	ri = g_hash_table_lookup(roster, get_jid(to));
 	gchar *b;
-	if(ri) {
+	if (ri) {
 		/* TODO: NO WAI!
 		if (strncmp(body, "/clear", 6) == 0) {
 			logf("Clearing log of %s", ri->jid);
@@ -577,7 +577,7 @@ void xmpp_send(const gchar *to, const gchar *body)
 			return;
 		}
 		*/
-		if(ri->type == MUC) {
+		if (ri->type == MUC) {
 			if (strchr(to, '/'))
 				m = lm_message_new_with_sub_type(to, LM_MESSAGE_TYPE_MESSAGE, LM_MESSAGE_SUB_TYPE_CHAT);
 			else
@@ -600,7 +600,7 @@ void xmpp_add_to_roster(const gchar *jid)
 {
 	if (connection_state != ONLINE) return;
 // TODO: this may work, but better to follow protocol. XMPP is so XMPP!
-	if(!g_hash_table_lookup(roster, jid)) {
+	if (!g_hash_table_lookup(roster, jid)) {
 		logf("Adding contact %s to roster\n", jid);
 		LmMessage *msg = lm_message_new_with_sub_type(NULL, LM_MESSAGE_TYPE_IQ, LM_MESSAGE_SUB_TYPE_SET);
 		LmMessageNode *query = lm_message_node_add_child(msg->node, "query", NULL);

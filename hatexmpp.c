@@ -64,7 +64,7 @@ rosteritem *addri(const gchar *jid, GHashTable *resources, unsigned type)
 	rosteritem *ri;
 
 	logf("Adding %s to roster\n", jid);
-	eventf("add_ri %s %s", jid, (type == MUC) ? "MUC" : "BUDDY" );
+	eventf("add_ri %s %s", jid, (type == MUC) ? "MUC" : "BUDDY");
 	ri = g_new(rosteritem, 1);
 	if (ri) {
 		ri->jid = g_strdup(jid);
@@ -84,10 +84,10 @@ void destroy_ri(rosteritem *RI)
 {
 	if (!RI) return;
 	eventf("del_ri %s", RI->jid);
-	if(RI->jid) g_free(RI->jid);
-	if(RI->resources) g_hash_table_destroy(RI->resources);
-	if(RI->log) g_array_free(RI->log, TRUE);
-	if(RI->self_resource) g_free(RI->self_resource);
+	if (RI->jid) g_free(RI->jid);
+	if (RI->resources) g_hash_table_destroy(RI->resources);
+	if (RI->log) g_array_free(RI->log, TRUE);
+	if (RI->self_resource) g_free(RI->self_resource);
 	g_free(RI);
 }
 

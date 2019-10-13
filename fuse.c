@@ -86,8 +86,8 @@ static int fsrmdir(const char *path)
 
 		path += 8;
 		ri = getri(path);
-		if(ri) {
-			if(ri->type == MUC) {
+		if (ri) {
+			if (ri->type == MUC) {
 				partmuc(path, NULL, "TODO here must be default leave message :-)");
 				g_hash_table_remove(roster, path);
 			} else logstr("Roster items removal isn't implemented\n");; /* TODO */
@@ -117,7 +117,7 @@ static int fsmkdir(const char *path, mode_t mode)
 {
 	if (strcmp(path, "/roster") == 0) {
 		logstr("Make roster!\n");
-		if(connection && lm_connection_is_open(connection)) {
+		if (connection && lm_connection_is_open(connection)) {
 			return -EPERM;
 		} else {
 			pthread_create(&thr, NULL, mainloopthread, NULL);
@@ -173,7 +173,7 @@ static int fsgetattr(const char *path, struct stat *stbuf)
 		stbuf->st_mode = S_IFREG | 0644;
 		stbuf->st_nlink = 1;
 		conf = g_hash_table_lookup(config, path);
-		if(conf) stbuf->st_size = strlen(conf);
+		if (conf) stbuf->st_size = strlen(conf);
 		return 0;
 	}
 	if (strncmp(path, "/roster/", 8) == 0) {
@@ -218,7 +218,7 @@ static int fsreaddir(const char *path, void *buf, fuse_fill_dir_t filler,
 		filler(buf, "..", NULL, 0);
 		GHashTableIter iter;
 		gchar *key;
-		g_hash_table_iter_init (&iter, config);
+		g_hash_table_iter_init(&iter, config);
 		while (g_hash_table_iter_next(&iter, (gpointer *)&key, NULL)) {
 			filler(buf, key, NULL, 0);
 		}
@@ -233,7 +233,7 @@ static int fsreaddir(const char *path, void *buf, fuse_fill_dir_t filler,
 
 		GHashTableIter iter;
 		rosteritem *ri;
-		g_hash_table_iter_init (&iter, roster);
+		g_hash_table_iter_init(&iter, roster);
 		while (g_hash_table_iter_next(&iter, NULL, (gpointer) &ri))
 			filler(buf, ri->jid, NULL, 0);
 		return 0;
@@ -251,7 +251,7 @@ static int fsreaddir(const char *path, void *buf, fuse_fill_dir_t filler,
 				filler(buf, "__nick", NULL, 0);
 			GHashTableIter iter;
 			gchar *res;
-			g_hash_table_iter_init (&iter, ri->resources);
+			g_hash_table_iter_init(&iter, ri->resources);
 			while (g_hash_table_iter_next(&iter, (gpointer) &res, NULL))
 				filler(buf, res, NULL, 0);
 		}
@@ -344,9 +344,9 @@ static int fsread(const char *path, char *buf, size_t size, off_t offset,
 		path += 8;
 		ri = getri(path);
 		gchar *resource = get_resource(path);
-		if(ri && ((strcmp(path, "__nick") == 0) || (resource && strcmp(resource, "__nick") == 0)) && ri->type == MUC) {
+		if (ri && ((strcmp(path, "__nick") == 0) || (resource && strcmp(resource, "__nick") == 0)) && ri->type == MUC) {
 			size_t len = strlen(ri->self_resource->name);
-			if(offset + size < len) {
+			if (offset + size < len) {
 				memcpy(buf, ri->self_resource->name + offset, size);
 				return size;
 			} else {
@@ -354,10 +354,10 @@ static int fsread(const char *path, char *buf, size_t size, off_t offset,
 				return len - offset;
 			}
 		}
-		if(ri) {
+		if (ri) {
 //			if ((ri->type == MUC) && (strcmp(path + strlen(ri->jid)+1)));
 			log = ri->log;
-			if(offset + size < log->len) {
+			if (offset + size < log->len) {
 				memcpy(buf, log->data + offset, size);
 				return size;
 			} else {
@@ -482,14 +482,14 @@ static int fswrite(const char *path, const char *buf, size_t size, off_t offset,
 
 		path += 8;
 		gchar *res = get_resource(path);
-		if (res && (strncmp(res, "__chat", 2) == 0 )) {
+		if (res && (strncmp(res, "__chat", 2) == 0)) {
 			path = get_jid(path);
 		}
 
 		msg = g_malloc(msg_len + 1);
 		memcpy(msg, buf, msg_len);
 		msg[msg_len] = 0;
-		if (res && (strncmp(res, "__nick", 6) == 0 ))
+		if (res && (strncmp(res, "__nick", 6) == 0))
 			xmpp_muc_change_nick(get_jid(path), msg);
 		else
 			xmpp_send(path, msg);
@@ -550,7 +550,7 @@ static void fsdestroy(void *privdata)
 	if (connection)
 		xmpp_disconnect();
 	free_all();
-	if(main_loop) {
+	if (main_loop) {
 		g_main_loop_quit(main_loop);
 		g_main_destroy(main_loop);
 	}
