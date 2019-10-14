@@ -1,6 +1,6 @@
 CFLAGS+=-std=gnu99
 ifdef DEBUG
-	CFLAGS+=-ggdb -DDEBUG -O0 -Wall -pedantic
+	CFLAGS+=-ggdb3 -DDEBUG -Og -Wall -pedantic
 else
 	CFLAGS+=-DNDEBUG
 endif
