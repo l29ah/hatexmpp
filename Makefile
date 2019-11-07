@@ -9,7 +9,12 @@ EXE=hatexmpp
 CFLAGS+=$(shell pkg-config fuse loudmouth-1.0 --cflags)
 LDLIBS=$(shell pkg-config fuse loudmouth-1.0 --libs)
 
-all: $(EXE)
+all: main-build
+
+main-build: astyle
+	$(MAKE) --no-print-directory target
+
+target: $(EXE)
 
 SRCS = $(wildcard *.c) version.c
 OBJS = $(SRCS:%.c=%.o)
@@ -17,8 +22,6 @@ OBJS = $(SRCS:%.c=%.o)
 $(EXE): $(OBJS)
 
 .PHONY:	clean astyle
-
-$(OBJS): astyle
 
 CPPFLAGS = -MMD
 -include $(SRCS:.c=.d)
