@@ -12,9 +12,7 @@ LDLIBS=$(shell pkg-config fuse loudmouth-1.0 --libs)
 all: main-build
 
 main-build: astyle
-	$(MAKE) --no-print-directory target
-
-target: $(EXE)
+	$(MAKE) --no-print-directory $(EXE)
 
 SRCS = $(wildcard *.c) version.c
 OBJS = $(SRCS:%.c=%.o)
