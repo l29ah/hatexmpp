@@ -21,7 +21,7 @@ $(EXE): $(OBJS)
 
 .PHONY:	clean astyle
 
-CPPFLAGS = -MMD
+CPPFLAGS += -MMD
 -include $(SRCS:.c=.d)
 
 version.c:
