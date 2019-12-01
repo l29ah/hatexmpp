@@ -541,12 +541,15 @@ void xmpp_connect()
 		connection_state = OFFLINE;
 		return;
 	}
-	char *jid = malloc(3071); // see rfc3920bis
-	strcpy(jid, g_hash_table_lookup(config, "username"));
+
+	// see rfc3920
+#define MAX_JID_COMPONENT_LEN 1023
+#define MAX_JID_LEN (MAX_JID_COMPONENT_LEN * 3 + 2)
+	char jid[MAX_JID_LEN + 1];
+	strncpy(jid, g_hash_table_lookup(config, "username"), MAX_JID_COMPONENT_LEN);
 	strcat(jid, "@");
 	strcat(jid, lm_connection_get_server(connection));
 	lm_connection_set_jid(connection, jid); // loudmouth doesn't set it itself somewhy
-	free(jid);
 
 	lm_connection_set_keep_alive_rate(connection, 240);
 
