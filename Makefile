@@ -7,15 +7,15 @@ endif
 
 EXE=hatexmpp
 CFLAGS+=$(shell pkg-config fuse loudmouth-1.0 --cflags)
-LDLIBS=$(shell pkg-config fuse loudmouth-1.0 --libs)
+LDLIBS:=$(shell pkg-config fuse loudmouth-1.0 --libs)
 
 all: main-build
 
 main-build: astyle
 	$(MAKE) --no-print-directory $(EXE)
 
-SRCS = $(wildcard *.c) version.c
-OBJS = $(SRCS:%.c=%.o)
+SRCS := $(wildcard *.c) version.c
+OBJS := $(SRCS:%.c=%.o)
 
 $(EXE): $(OBJS)
 
