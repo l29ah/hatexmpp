@@ -552,7 +552,7 @@ static void fsdestroy(void *privdata)
 	free_all();
 	if (main_loop) {
 		g_main_loop_quit(main_loop);
-		g_main_destroy(main_loop);
+		g_main_loop_unref(main_loop);
 	}
 	return;
 }
