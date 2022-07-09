@@ -103,7 +103,7 @@ extern time_t last_activity_time;
 
 extern int banmuc(const char *mucjid, const char *who);
 
-enum connection_state_e {
+extern enum connection_state_e {
 	OFFLINE,
 	CONNECTING,
 	ONLINE
